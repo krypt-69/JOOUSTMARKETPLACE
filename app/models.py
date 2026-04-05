@@ -348,26 +348,30 @@ class Product(db.Model):
         self.agreement_user_id = user_id
         self.agreement_expires_at = datetime.utcnow() + timedelta(hours=48)
         
-        Offer.query.filter_by(
-            product_id=self.id,
-            buyer_id=user_id,
-            status='active'
-        ).update({'status': 'accepted'})
+        # Accept the chosen user's offer
+        Offer.query.filter(
+            Offer.product_id == self.id,
+            Offer.buyer_id == user_id,
+            Offer.status == 'active'
+        ).update({'status': 'accepted'}, synchronize_session=False)
         
-        Offer.query.filter_by(
-            product_id=self.id,
-            status='active'
-        ).filter(Offer.buyer_id != user_id).update({'status': 'rejected'})
+        # Reject all other active offers
+        Offer.query.filter(
+            Offer.product_id == self.id,
+            Offer.status == 'active',
+            Offer.buyer_id != user_id
+        ).update({'status': 'rejected'}, synchronize_session=False)
     
     def cancel_agreement(self):
         self.status = 'available'
         self.agreement_user_id = None
         self.agreement_expires_at = None
         
-        Offer.query.filter_by(
-            product_id=self.id,
-            status__in=['accepted', 'rejected']
-        ).update({'status': 'active'})
+        # Fix: Use .in_() instead of __in
+        Offer.query.filter(
+            Offer.product_id == self.id,
+            Offer.status.in_(['accepted', 'rejected'])
+        ).update({'status': 'active'}, synchronize_session=False)
     
     def mark_booked(self):
         self.is_sold = True
