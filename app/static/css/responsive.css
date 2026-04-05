@@ -1,0 +1,428 @@
+/* ===== RESPONSIVE.CSS - ALL MEDIA QUERIES ===== */
+@media (min-width: 769px) {
+    .mobile-bottom-nav {
+        display: none !important;
+    }
+    
+    body {
+        padding-bottom: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .nav-container {
+        padding: 0 0.75rem;
+    }
+
+    .container {
+        padding: 0.75rem;
+        margin-bottom: 0;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .mobile-bottom-nav {
+        padding: 0.5rem 0.4rem;
+    }
+
+    .mobile-nav-item {
+        font-size: 0.6rem;
+        padding: 0.35rem 0.2rem;
+        max-width: 65px;
+    }
+
+    .mobile-nav-item i {
+        font-size: 1rem;
+    }
+    
+    /* Auth responsive */
+    .auth-card {
+        padding: 1.5rem;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .auth-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .social-auth {
+        grid-template-columns: 1fr;
+    }
+    
+    .auth-features {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-input {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.9rem;
+    }
+    
+    .auth-btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        font-size: 1.1rem;
+    }
+    
+    .logo i {
+        font-size: 1.3rem;
+    }
+    
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .navbar {
+        padding: 0.6rem 0;
+    }
+    
+    .mobile-nav-item {
+        font-size: 0.55rem;
+        padding: 0.3rem 0.15rem;
+        max-width: 60px;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 0.95rem;
+    }
+    
+    .mobile-bottom-nav {
+        padding: 0.4rem 0.3rem;
+    }
+
+    .notification-badge {
+        width: 14px;
+        height: 14px;
+        font-size: 0.55rem;
+        top: 1px;
+        right: 6px;
+    }
+
+    .token-balance {
+        font-size: 0.45rem;
+        top: -4px;
+        right: 3px;
+        padding: 1px 3px;
+    }
+    
+    /* Index responsive */
+    .hero {
+        padding: 1.5rem 0.75rem;
+        border-radius: 0 0 25px 25px;
+    }
+    
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+        border-radius: 25px;
+    }
+    
+    .compact-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    
+    .compact-card {
+        height: 160px;
+        border-radius: 18px;
+    }
+    
+    .card-image {
+        height: 120px;
+        border-radius: 18px 18px 0 0;
+    }
+    
+    .card-image img {
+        border-radius: 18px 18px 0 0;
+    }
+    
+    .card-content {
+        padding: 0.3rem;
+        min-height: 35px;
+    }
+    
+    .card-price {
+        font-size: 0.75rem;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+    }
+    
+    /* Auth responsive */
+    .auth-container {
+        padding: 0.5rem 0;
+        gap: 1.5rem;
+    }
+    
+    .auth-card {
+        padding: 1.25rem;
+        margin: 0 0.5rem;
+    }
+    
+    .auth-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .auth-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.85rem;
+    }
+    
+    .form-input {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .form-hint {
+        font-size: 0.75rem;
+    }
+    
+    .checkbox-container {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+    
+    .terms-text {
+        line-height: 1.2;
+    }
+    
+    .auth-btn {
+        padding: 0.7rem 1.25rem;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .auth-divider {
+        margin: 1rem 0;
+        font-size: 0.8rem;
+    }
+    
+    .social-btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .auth-footer p {
+        font-size: 0.8rem;
+    }
+    
+    .feature-item {
+        padding: 1.25rem;
+    }
+    
+    .feature-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+    
+    .feature-item h3 {
+        font-size: 1rem;
+    }
+    
+    .feature-item p {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .flash-message {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .footer {
+        padding: 1.5rem 0 1rem;
+    }
+    
+    .footer-section h3 {
+        font-size: 1rem;
+    }
+    
+    .mobile-nav-item {
+        max-width: 55px;
+        font-size: 0.5rem;
+        padding: 0.25rem 0.1rem;
+    }
+
+    .mobile-nav-item i {
+        font-size: 0.9rem;
+    }
+
+    .mobile-nav-item span {
+        line-height: 1;
+    }
+}
+
+@media (max-width: 360px) {
+    .mobile-nav-item {
+        font-size: 0.45rem;
+        padding: 0.2rem 0.1rem;
+        max-width: 50px;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 0.85rem;
+    }
+    
+    .mobile-bottom-nav {
+        padding: 0.35rem 0.25rem;
+    }
+    
+    .mobile-nav-item span {
+        line-height: 1;
+    }
+
+    .notification-badge {
+        width: 12px;
+        height: 12px;
+        font-size: 0.5rem;
+        top: 0;
+        right: 4px;
+    }
+
+    .token-balance {
+        font-size: 0.4rem;
+        top: -3px;
+        right: 2px;
+    }
+    
+    /* Index responsive */
+    .compact-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .compact-card {
+        height: 150px;
+        border-radius: 16px;
+    }
+    
+    .card-image {
+        height: 110px;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 140px;
+        justify-content: center;
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    /* Auth responsive */
+    .auth-card {
+        padding: 1rem;
+        margin: 0 0.25rem;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .form-input {
+        padding: 0.5rem 0.7rem;
+    }
+    
+    .auth-btn {
+        padding: 0.6rem 1rem;
+    }
+    
+    .feature-item {
+        padding: 1rem;
+    }
+}
+
+/* Index grid responsive */
+@media (min-width: 481px) and (max-width: 768px) {
+    .compact-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .compact-card {
+        height: 170px;
+    }
+    
+    .card-image {
+        height: 130px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .compact-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    .compact-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+}
+
+@media (min-width: 1440px) {
+    .compact-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+/* Auth responsive */
+@media (max-width: 1024px) {
+    .auth-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 1rem 0;
+    }
+    
+    .auth-features {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}

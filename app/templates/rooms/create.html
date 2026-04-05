@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+
+{% block title %}Post Your Room - Marketplace{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        /* Rich Dark Color Palette - Calm but vibrant */
+        --primary: #5f9ea0;        /* Cadet Blue - calming teal */
+        --primary-dark: #4a7c7e;    /* Darker teal */
+        --primary-light: #7bb2b4;   /* Light teal */
+        --secondary: #b39b8e;       /* Warm taupe */
+        --secondary-dark: #8e7a6f;  /* Darker taupe */
+        --accent: #8aa9b5;          /* Soft blue-gray */
+        --accent-purple: #9b8aa9;    /* Muted lavender */
+        
+        /* Rich Background colors */
+        --bg-deep: #0a0f16;         /* Deep navy-black */
+        --bg-dark: #141b24;          /* Rich dark blue-gray */
+        --bg-card: #1e2833;          /* Card background - deep slate */
+        --bg-surface: #2a3542;        /* Surface - slightly lighter */
+        --bg-hover: #334153;          /* Hover state */
+        
+        /* Border colors */
+        --border-light: #3e4a5a;      /* Subtle border */
+        --border-medium: #4d5b6b;      /* Medium border */
+        
+        /* Text colors - crisp and readable */
+        --text-primary: #ffffff;        /* Pure white for primary text */
+        --text-secondary: #d3dce6;      /* Soft white for secondary */
+        --text-muted: #9aa9b9;          /* Muted blue-gray */
+        --text-accent: #c1d0da;          /* Very light blue-gray */
+        
+        /* Status colors */
+        --success: #6b9e7a;               /* Muted green */
+        --info: #7b9ec9;                   /* Muted blue */
+        --info-light: #94b2d9;              /* Lighter info */
+        
+        /* Gradients */
+        --gradient-primary: linear-gradient(135deg, #5f9ea0, #8aa9b5);
+        --gradient-dark: linear-gradient(135deg, #1e2833, #0a0f16);
+        
+        /* Shadows */
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
+        
+        /* Border radius */
+        --radius: 16px;
+        --radius-sm: 12px;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-deep);
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+
+    /* Mobile-First Container */
+    .container {
+        padding-left: 16px;
+        padding-right: 16px;
+        max-width: 100%;
+    }
+
+    /* Main Card */
+    .post-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        margin: 16px 0 32px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .card-header {
+        background: var(--gradient-primary);
+        padding: 20px 16px;
+        border-bottom: 1px solid var(--border-medium);
+    }
+
+    .card-header h4 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin: 0;
+        color: white;
+        letter-spacing: -0.02em;
+    }
+
+    .card-body {
+        padding: 24px 16px;
+    }
+
+    /* Section Headers */
+    .section-title {
+        color: var(--primary-light);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 24px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-light);
+        letter-spacing: -0.01em;
+    }
+
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
+
+    /* Form Labels */
+    .form-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .text-danger {
+        color: var(--error) !important;
+    }
+
+    /* Form Controls */
+    .form-control, .form-select {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        color: var(--text-primary);
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: var(--bg-hover);
+        box-shadow: 0 0 0 3px rgba(95, 158, 160, 0.2);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    /* Textarea */
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    /* Form Text */
+    .form-text {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-top: 6px;
+    }
+
+    /* Row Layout for Mobile */
+    .row {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 0;
+    }
+
+    .row.g-2 {
+        gap: 12px;
+    }
+
+    [class*="col-"] {
+        width: 100%;
+        padding: 0;
+    }
+
+    /* Commission Card */
+    .commission-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        margin: 20px 0;
+    }
+
+    /* Checkbox Styling */
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        background: var(--bg-surface);
+        border: 2px solid var(--border-medium);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .form-check-input:checked {
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .form-check-label {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .form-check-label strong {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    /* Commission Fields */
+    #commissionFields {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-light);
+    }
+
+    /* Alert/Info Box */
+    .alert-info {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        margin: 20px 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .alert-info i {
+        color: var(--info);
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    /* Horizontal Rule */
+    hr {
+        border: none;
+        border-top: 1px solid var(--border-light);
+        margin: 24px 0;
+    }
+
+    /* Button Styles */
+    .btn-primary {
+        background: var(--gradient-primary);
+        border: none;
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        font-weight: 600;
+        font-size: 1rem;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+    }
+
+    .btn-primary:hover,
+    .btn-primary:active {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        font-weight: 500;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        width: 100%;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+    }
+
+    .btn-outline-secondary:hover,
+    .btn-outline-secondary:active {
+        background: var(--bg-surface);
+        border-color: var(--primary);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .btn-lg {
+        font-size: 1.1rem;
+        padding: 18px 20px;
+    }
+
+    .d-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Number input styling */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        opacity: 1;
+        height: 24px;
+        background: var(--bg-surface);
+    }
+
+    /* File input styling */
+    input[type=file] {
+        padding: 10px;
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+    }
+
+    input[type=file]::file-selector-button {
+        background: var(--primary);
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 10px 16px;
+        color: white;
+        font-weight: 500;
+        margin-right: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    input[type=file]::file-selector-button:hover {
+        background: var(--primary-dark);
+    }
+
+    /* Tablet and Desktop Improvements */
+    @media (min-width: 768px) {
+        .container {
+            padding-left: 24px;
+            padding-right: 24px;
+        }
+
+        .card-body {
+            padding: 32px;
+        }
+
+        .row {
+            flex-direction: row;
+            flex-wrap: wrap;
+            margin: 0 -8px;
+            gap: 0;
+        }
+
+        [class*="col-"] {
+            padding: 0 8px;
+        }
+
+        .col-md-6 {
+            width: 50%;
+        }
+
+        .col-md-8 {
+            width: 66.666%;
+        }
+
+        .col-md-12 {
+            width: 100%;
+        }
+
+        .d-grid {
+            flex-direction: row;
+        }
+
+        .btn-primary, .btn-outline-secondary {
+            width: auto;
+            flex: 1;
+        }
+
+        .card-header h4 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Touch-friendly targets */
+    button, 
+    .btn-primary, 
+    .btn-outline-secondary,
+    .form-check-input,
+    input[type=file]::file-selector-button {
+        min-height: 48px;
+    }
+
+    /* Focus states for accessibility */
+    *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+</style>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="post-card">
+                <div class="card-header">
+                    <h4>Post Your Room for Takeover</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('rooms.create') }}" enctype="multipart/form-data">
+                        <!-- Basic Information -->
+                        <div class="section-title">Basic Information</div>
+                        
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Listing Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="e.g., Cozy Single Room near Campus" required>
+                            <div class="form-text">Choose a clear, descriptive title for your listing</div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="hostel_name" class="form-label">Hostel Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="hostel_name" name="hostel_name" placeholder="e.g., Kelvin Heights" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Kiharu" required>
+                                <div class="form-text">Area or campus location</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe your room, facilities, nearby amenities and any other relevant information..."></textarea>
+                            <div class="form-text">Include details about the room size, amenities, roommate preferences, etc.</div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="room_type" class="form-label">Room Type</label>
+                                <select class="form-select" id="room_type" name="room_type">
+                                    <option value="single">Single Room</option>
+                                    <option value="double">Double Room</option>
+                                    <option value="studio">Studio</option>
+                                    <option value="bedsitter">Bedsitter</option>
+                                    <option value="one_bedroom">One Bedroom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="leave_date" class="form-label">Leave Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="leave_date" name="leave_date" required>
+                                <div class="form-text">When are you moving out?</div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Details -->
+                        <div class="section-title">Financial Details</div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="price" class="form-label">Monthly Rent (KES) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="price" name="price" required min="0" step="100" placeholder="e.g., 5000">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="deposit" class="form-label">Deposit Amount (KES)</label>
+                                <input type="number" class="form-control" id="deposit" name="deposit" min="0" step="100" value="0" placeholder="e.g., 5000">
+                                <div class="form-text">Enter 0 if no deposit required</div>
+                            </div>
+                        </div>
+
+                        <!-- Commission Option -->
+                        <div class="commission-card">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="is_commission_listing" name="is_commission_listing">
+                                <label class="form-check-label" for="is_commission_listing">
+                                    <strong>Commission-based listing</strong> - No deposit required, small commission instead
+                                </label>
+                            </div>
+
+                            <div id="commissionFields" style="display: none;">
+                                <label for="commission_percentage" class="form-label">Commission Percentage (%)</label>
+                                <input type="number" class="form-control" id="commission_percentage" name="commission_percentage" min="0" step="0.5" value="9" placeholder="9">
+                                <div class="form-text">Recommended: 9% of monthly rent. Charged only upon successful takeover.</div>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div class="section-title">Room Photos</div>
+                        <div class="mb-4">
+                            <label for="images" class="form-label">Upload Images</label>
+                            <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                            <div class="form-text">You can upload multiple photos. The first image will be used as the cover. Supported formats: JPG, PNG, GIF</div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="section-title">Contact Information</div>
+                        
+                        <div class="alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <div>Contact details are hidden by default and only revealed to verified users who unlock your listing for 1 coin.</div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ current_user.phone_number or '' }}" placeholder="e.g., 0712345678">
+                                <div class="form-text">Primary contact number</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="whatsapp" class="form-label">WhatsApp Number</label>
+                                <input type="tel" class="form-control" id="whatsapp" name="whatsapp" value="{{ current_user.whatsapp_number or '' }}" placeholder="e.g., 0712345678">
+                                <div class="form-text">For WhatsApp communication</div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn-primary btn-lg">Post Room Listing</button>
+                            <a href="{{ url_for('rooms.index') }}" class="btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide commission fields based on checkbox
+    const commissionCheckbox = document.getElementById('is_commission_listing');
+    const commissionFields = document.getElementById('commissionFields');
+    
+    commissionCheckbox.addEventListener('change', function() {
+        commissionFields.style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Set minimum date for leave_date to today
+    const today = new Date().toISOString().split('T')[0];
+    const leaveDateInput = document.getElementById('leave_date');
+    leaveDateInput.setAttribute('min', today);
+    
+    // Format number inputs to show proper currency format
+    const priceInput = document.getElementById('price');
+    const depositInput = document.getElementById('deposit');
+    
+    function formatNumberInput(input) {
+        if (input.value) {
+            // Remove non-numeric characters except decimal
+            input.value = input.value.replace(/[^\d.]/g, '');
+        }
+    }
+    
+    priceInput.addEventListener('input', function() { formatNumberInput(this); });
+    depositInput.addEventListener('input', function() { formatNumberInput(this); });
+});
+</script>
+{% endblock %}

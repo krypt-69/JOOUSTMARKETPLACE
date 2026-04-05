@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% block title %}My Room Listings - Marketplace{% endblock %}
+
+{% block content %}
+<style>
+    /* Clean White-Based Layout - Professional & Mobile-Friendly */
+    :root {
+        --primary: #2c7da0;
+        --primary-dark: #1f5e7a;
+        --primary-light: #489fb5;
+        --primary-soft: #eef7fc;
+        --gray-bg: #f8fafc;
+        --card-white: #ffffff;
+        --border-light: #eef2f6;
+        --border-medium: #e2e8f0;
+        --text-dark: #0f172a;
+        --text-muted: #475569;
+        --text-light: #64748b;
+        --success: #2b7e3a;
+        --success-light: #e6f7ec;
+        --warning: #e68a2e;
+        --warning-light: #fff3e6;
+        --error: #b91c1c;
+        --error-light: #fee2e2;
+        --info: #3b7c9e;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+        --radius: 16px;
+        --radius-sm: 12px;
+    }
+
+    .my-rooms-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Header Section */
+    .page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, var(--text-dark), var(--primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .btn-primary-action {
+        background: var(--primary);
+        border: none;
+        border-radius: 40px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+        width: 100%;
+    }
+
+    .btn-primary-action:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        text-decoration: none;
+        color: white;
+    }
+
+    /* Listings Grid */
+    .listings-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Room Card - Clean White */
+    .room-card {
+        background: var(--card-white);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .room-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-medium);
+    }
+
+    /* Image Section - Square */
+    .card-image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 100%;
+        background: var(--gray-bg);
+        overflow: hidden;
+    }
+
+    .image-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .room-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .room-card:hover .room-image {
+        transform: scale(1.03);
+    }
+
+    .image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        color: #94a3b8;
+        font-size: 2.5rem;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 0.25rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        z-index: 2;
+        backdrop-filter: blur(2px);
+    }
+
+    .badge-available {
+        background: var(--success);
+        color: white;
+    }
+
+    .badge-pending {
+        background: var(--warning);
+        color: white;
+    }
+
+    .badge-booked {
+        background: #6c757d;
+        color: white;
+    }
+
+    .badge-expired {
+        background: var(--error);
+        color: white;
+    }
+
+    /* Card Content - Compact */
+    .card-content {
+        padding: 1rem;
+    }
+
+    .room-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: var(--text-dark);
+        line-height: 1.3;
+    }
+
+    .room-location {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 0.75rem;
+    }
+
+    .room-location i {
+        color: var(--primary);
+        font-size: 0.7rem;
+    }
+
+    /* Details Grid - Compact */
+    .room-details {
+        background: var(--gray-bg);
+        border-radius: var(--radius-sm);
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+    }
+
+    .detail-label {
+        color: var(--text-light);
+    }
+
+    .detail-value {
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .rent-value {
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .unlock-value {
+        background: var(--card-white);
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+
+    .post-date {
+        color: var(--text-light);
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 0.5rem;
+    }
+
+    .post-date i {
+        color: var(--primary);
+        font-size: 0.7rem;
+    }
+
+    /* Card Footer - Action Buttons */
+    .card-footer {
+        border-top: 1px solid var(--border-light);
+        background: var(--card-white);
+        padding: 0.75rem 1rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-view {
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--border-medium);
+        border-radius: 40px;
+        padding: 0.6rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view:hover {
+        background: var(--gray-bg);
+        border-color: var(--primary);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .btn-offers {
+        flex: 1;
+        background: var(--success-light);
+        border: 1px solid var(--success);
+        border-radius: 40px;
+        padding: 0.6rem;
+        color: var(--success);
+        font-weight: 500;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-offers:hover {
+        background: var(--success);
+        color: white;
+        text-decoration: none;
+    }
+
+    .offer-count {
+        background: white;
+        padding: 0.15rem 0.45rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--success);
+        margin-left: 4px;
+    }
+
+    .btn-offers:hover .offer-count {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+        background: var(--card-white);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        text-align: center;
+        padding: 3rem 1.5rem;
+        margin: 1rem 0;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .empty-state i {
+        font-size: 3.5rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-empty-action {
+        background: var(--primary);
+        border: none;
+        border-radius: 40px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-empty-action:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        text-decoration: none;
+        color: white;
+    }
+
+    /* Tablet and Desktop */
+    @media (min-width: 640px) {
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+        
+        .page-header {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .btn-primary-action {
+            width: auto;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .listings-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .my-rooms-container {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .listings-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .room-card {
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    /* Touch-friendly */
+    .btn-primary-action,
+    .btn-view,
+    .btn-offers,
+    .btn-empty-action {
+        min-height: 44px;
+    }
+
+    /* Focus states */
+    *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+</style>
+
+<div class="my-rooms-container">
+    <!-- Header Section -->
+    <div class="page-header">
+        <h1><i class="fas fa-door-open" style="background: none; -webkit-text-fill-color: var(--primary);"></i> My Room Listings</h1>
+        <a href="{{ url_for('rooms.create') }}" class="btn-primary-action">
+            <i class="fas fa-plus-circle"></i>
+            Post New Room
+        </a>
+    </div>
+
+    {% if listings and listings|length > 0 %}
+    <!-- Listings Grid -->
+    <div class="listings-grid">
+        {% for room in listings %}
+        <div class="room-card">
+            <!-- Square Image Section -->
+            <div class="card-image-wrapper">
+                <div class="image-container">
+                    {% set images_list = room.images|list if room.images else [] %}
+                    {% if images_list and images_list|length > 0 %}
+                    <img src="{{ url_for('static', filename='uploads/product_images/' + images_list[0].filename) }}" class="room-image" alt="{{ room.title }}">
+                    {% else %}
+                    <div class="image-placeholder">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Status Badge -->
+                {% if room.status == 'available' %}
+                <span class="status-badge badge-available"><i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Available</span>
+                {% elif room.status == 'pending' %}
+                <span class="status-badge badge-pending"><i class="fas fa-clock" style="font-size: 0.5rem; margin-right: 4px;"></i> Pending</span>
+                {% elif room.status == 'booked' %}
+                <span class="status-badge badge-booked"><i class="fas fa-check-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Booked</span>
+                {% elif room.status == 'expired' %}
+                <span class="status-badge badge-expired"><i class="fas fa-times-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Expired</span>
+                {% endif %}
+            </div>
+
+            <!-- Card Content - Compact -->
+            <div class="card-content">
+                <h3 class="room-title">{{ room.title|truncate(40) }}</h3>
+                
+                <div class="room-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ room.hostel_name }}, {{ room.location|truncate(25) }}</span>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="room-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Monthly Rent</span>
+                        <span class="detail-value rent-value">KES {{ "%.0f"|format(room.price) }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Deposit</span>
+                        <span class="detail-value">{{ room.get_deposit_display() }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Views</span>
+                        <span class="detail-value unlock-value">{{ room.total_unlocks }}</span>
+                    </div>
+                    {% if room.leave_date and room.days_until_leave() > 0 %}
+                    <div class="detail-item">
+                        <span class="detail-label">Days Left</span>
+                        <span class="detail-value" style="color: var(--warning);">{{ room.days_until_leave() }} days</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="post-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>Posted: {{ room.created_at.strftime('%b %d, %Y') }}</span>
+                </div>
+            </div>
+
+            <!-- Card Footer - Action Buttons -->
+            <div class="card-footer">
+                <div class="action-buttons">
+                    <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn-view">
+                        <i class="fas fa-eye"></i>
+                        View Details
+                    </a>
+                    {% set active_offers = room.offers|selectattr('status', 'equalto', 'active')|list if room.offers else [] %}
+                    {% if active_offers|length > 0 %}
+                    <a href="{{ url_for('rooms.detail', room_id=room.id) }}#offers" class="btn-offers">
+                        <i class="fas fa-tag"></i>
+                        Offers
+                        <span class="offer-count">{{ active_offers|length }}</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-door-open"></i>
+        <h3>No Listings Yet</h3>
+        <p>You haven't posted any rooms for takeover. Start by listing your first room!</p>
+        <a href="{{ url_for('rooms.create') }}" class="btn-empty-action">
+            <i class="fas fa-plus-circle"></i>
+            Post Your First Room
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "announcements/base.html" %}
+
+{% block announcements_content %}
+<div class="form-container">
+    <h2>Edit Announcement</h2>
+    
+    <form method="POST" action="{{ url_for('announcements.admin_edit', announcement_id=announcement.id) }}" class="announcement-form">
+        <div class="form-group">
+            <label for="title">Title *</label>
+            <input type="text" id="title" name="title" required class="form-control" value="{{ announcement.title }}" maxlength="200">
+        </div>
+        
+        <div class="form-group">
+            <label for="content_preview">Preview Text (2-3 lines) *</label>
+            <textarea id="content_preview" name="content_preview" required class="form-control" rows="2" maxlength="500">{{ announcement.content_preview }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="content_full">Full Content *</label>
+            <textarea id="content_full" name="content_full" required class="form-control" rows="8">{{ announcement.content_full }}</textarea>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="message_type">Message Type</label>
+                <select id="message_type" name="message_type" class="form-control">
+                    <option value="update" {% if announcement.message_type == 'update' %}selected{% endif %}>📢 Update</option>
+                    <option value="important" {% if announcement.message_type == 'important' %}selected{% endif %}>⚠️ Important</option>
+                    <option value="idea" {% if announcement.message_type == 'idea' %}selected{% endif %}>💡 Idea</option>
+                    <option value="issue" {% if announcement.message_type == 'issue' %}selected{% endif %}>🐛 Issue</option>
+                    <option value="improvement" {% if announcement.message_type == 'improvement' %}selected{% endif %}>✨ Improvement</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="normal" {% if announcement.status == 'normal' %}selected{% endif %}>Normal</option>
+                    <option value="in_progress" {% if announcement.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if announcement.status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_pinned" {% if announcement.is_pinned %}checked{% endif %}> Pin as Important Message
+            </label>
+            <small>Only one message can be pinned at a time</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Announcement</button>
+            <a href="{{ url_for('announcements.admin') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,303 @@
+// Update unread chat count
+function updateUnreadChatCount() {
+    fetch('/chat/unread_count')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const badge = document.getElementById('unreadChatCount');
+            const mobileBadge = document.getElementById('mobileUnreadChatCount');
+            
+            if (data.unread_count > 0) {
+                if (badge) {
+                    badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                    badge.style.display = 'inline-block';
+                }
+                if (mobileBadge) {
+                    mobileBadge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                    mobileBadge.style.display = 'inline-block';
+                }
+            } else {
+                if (badge) badge.style.display = 'none';
+                if (mobileBadge) mobileBadge.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching unread count:', error);
+        });
+}
+
+function toggleMenu() {
+    const navLinks = document.getElementById('navLinks');
+    navLinks.classList.toggle('active');
+}
+
+// Auto-hide flash messages after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize chat count updates if user is authenticated
+    if (document.querySelector('.chat-link')) {
+        updateUnreadChatCount();
+        setInterval(updateUnreadChatCount, 30000);
+        
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateUnreadChatCount();
+            }
+        });
+    }
+    
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(message => {
+        setTimeout(() => {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(-8px)';
+            setTimeout(() => message.remove(), 300);
+        }, 5000);
+    });
+    
+    // Set active state for mobile bottom nav items
+    const currentPath = window.location.pathname;
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+    
+    mobileNavItems.forEach(item => {
+        if (item.getAttribute('href') === currentPath) {
+            item.classList.add('active');
+        }
+    });
+
+    // Enhanced touch feedback for mobile nav
+    mobileNavItems.forEach(item => {
+        item.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.92)';
+        });
+        
+        item.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
+    });
+
+    // Add click animation for premium buttons
+    const premiumButtons = document.querySelectorAll('.token-item, .sell-item, .notification-item, .myitems-item');
+    premiumButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.style.cssText = `
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.3);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                pointer-events: none;
+            `;
+            
+            const size = Math.max(this.offsetWidth, this.offsetHeight);
+            const rect = this.getBoundingClientRect();
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = e.clientX - rect.left - size/2 + 'px';
+            ripple.style.top = e.clientY - rect.top - size/2 + 'px';
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Adaptive mobile navigation layout
+    function adjustMobileNav() {
+        const navContainer = document.getElementById('mobileNavContainer');
+        if (!navContainer) return;
+        
+        const navItems = navContainer.querySelectorAll('.mobile-nav-item');
+        
+        if (window.innerWidth <= 320 && navItems.length > 4) {
+            navContainer.classList.add('mobile-nav-compact');
+            navContainer.classList.remove('mobile-nav-scrollable');
+        } else if (window.innerWidth <= 380 && navItems.length > 5) {
+            navContainer.classList.add('mobile-nav-scrollable');
+            navContainer.classList.remove('mobile-nav-compact');
+        } else {
+            navContainer.classList.remove('mobile-nav-scrollable', 'mobile-nav-compact');
+        }
+    }
+
+    adjustMobileNav();
+    window.addEventListener('resize', adjustMobileNav);
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+// Make functions available globally
+window.updateUnreadChatCount = updateUnreadChatCount;
+window.toggleMenu = toggleMenu;
+
+
+// Main Index Page specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Only run if we're on the index page
+    if (!document.querySelector('.hero')) return;
+    
+    // Add loading animation
+    const cards = document.querySelectorAll('.compact-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.05}s`;
+    });
+    
+    // Add touch feedback
+    cards.forEach(card => {
+        card.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+        
+        card.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
+    });
+    
+    // Parallax effect for hero
+    const hero = document.querySelector('.hero');
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const rate = scrolled * -0.5;
+        hero.style.transform = `translateY(${rate}px)`;
+    });
+
+    // Debug image loading
+    console.log('Total cards:', cards.length);
+    cards.forEach((card, index) => {
+        const img = card.querySelector('img');
+        if (img) {
+            console.log(`Card ${index} image src:`, img.src);
+            img.onerror = function() {
+                console.log(`Image failed to load: ${this.src}`);
+                this.style.display = 'none';
+                const placeholder = this.nextElementSibling;
+                if (placeholder && placeholder.classList.contains('image-placeholder')) {
+                    placeholder.style.display = 'flex';
+                }
+            };
+            img.onload = function() {
+                console.log(`Image loaded successfully: ${this.src}`);
+            };
+        }
+    });
+});
+// Auth Login page specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Only run if we're on login page
+    if (!document.querySelector('.auth-container')) return;
+    
+    // Password visibility toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    // Auto-dismiss flash messages after 5 seconds
+    const alerts = document.querySelectorAll('[class*="alert-"]');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
+    });
+
+    // Add focus effect to input groups
+    const inputs = document.querySelectorAll('.form-input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary)';
+            this.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.2)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-dark)';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+// Auth Register page specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Only run if we're on register page
+    if (!document.querySelector('.auth-container') || !document.getElementById('password')) return;
+    
+    const passwordInput = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm-password');
+    const strengthFill = document.querySelector('.strength-fill');
+    const strengthText = document.querySelector('.strength-text');
+    const form = document.querySelector('.auth-form');
+
+    // Password strength indicator
+    if (passwordInput && strengthFill) {
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            strengthFill.setAttribute('data-strength', strength);
+            const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+            if (strengthText) strengthText.textContent = strengthLabels[strength];
+        });
+    }
+
+    // Password confirmation validation
+    if (confirmPassword && passwordInput) {
+        confirmPassword.addEventListener('input', function() {
+            if (this.value !== passwordInput.value && this.value !== '') {
+                this.style.borderColor = '#ef4444';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+    }
+
+    // Form submission handler
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Only prevent if passwords don't match
+            if (passwordInput && confirmPassword && passwordInput.value !== confirmPassword.value) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return false;
+            }
+            
+            // Check if terms are accepted
+            const termsCheckbox = document.querySelector('input[name="terms"]');
+            if (termsCheckbox && !termsCheckbox.checked) {
+                e.preventDefault();
+                alert('Please accept the Terms of Service');
+                return false;
+            }
+            
+            // If all validations pass, allow form submission
+            return true;
+        });
+    }
+});

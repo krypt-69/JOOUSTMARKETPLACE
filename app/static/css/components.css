@@ -1,0 +1,225 @@
+/* ===== COMPONENTS.CSS - BUTTONS, CARDS, FLASH MESSAGES, FOOTER ===== */
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--calm-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(108, 140, 156, 0.3);
+}
+
+.btn-primary:hover {
+    background: var(--calm-primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 140, 156, 0.4);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--calm-primary);
+    border: 2px solid var(--calm-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--calm-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 140, 156, 0.3);
+}
+
+.btn-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    background: var(--calm-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(108, 140, 156, 0.3);
+}
+
+.btn-small:hover {
+    background: var(--calm-primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 140, 156, 0.4);
+}
+
+/* Flash Messages */
+.flash-messages {
+    margin: 0.75rem 0;
+}
+
+.flash-message {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-md);
+    animation: slideIn 0.3s ease-out;
+    font-size: 0.9rem;
+    background: var(--bg-card);
+    border-left: 4px solid;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.flash-success {
+    border-left-color: var(--success);
+    color: var(--text-primary);
+    background: linear-gradient(90deg, rgba(107, 158, 122, 0.1), transparent);
+}
+
+.flash-error {
+    border-left-color: var(--error);
+    color: var(--text-primary);
+    background: linear-gradient(90deg, rgba(201, 123, 107, 0.1), transparent);
+}
+
+.flash-warning {
+    border-left-color: var(--warning);
+    color: var(--text-primary);
+    background: linear-gradient(90deg, rgba(201, 160, 107, 0.1), transparent);
+}
+
+.flash-info {
+    border-left-color: var(--info);
+    color: var(--text-primary);
+    background: linear-gradient(90deg, rgba(123, 158, 201, 0.1), transparent);
+}
+
+.flash-message i {
+    font-size: 1.1rem;
+}
+
+.flash-success i {
+    color: var(--success);
+}
+
+.flash-error i {
+    color: var(--error);
+}
+
+.flash-warning i {
+    color: var(--warning);
+}
+
+.flash-info i {
+    color: var(--info);
+}
+
+/* Chat badge */
+.chat-badge {
+    background: var(--error);
+    color: white;
+    border-radius: 12px;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    margin-left: 0.25rem;
+    box-shadow: 0 2px 8px rgba(201, 123, 107, 0.5);
+}
+
+/* Footer */
+.footer {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    padding: 2rem 0 1.5rem;
+    margin-top: 3rem;
+    border-top: 1px solid rgba(95, 158, 160, 0.3);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.footer-section h3 {
+    color: var(--soft-gold);
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.footer-section p {
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 0.4rem;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: inline-block;
+}
+
+.footer-links a:hover {
+    color: var(--soft-gold);
+    transform: translateX(5px);
+}
+
+.social-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.social-links a {
+    color: var(--text-primary);
+    background: rgba(95, 158, 160, 0.2);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    border: 1px solid rgba(95, 158, 160, 0.3);
+}
+
+.social-links a:hover {
+    background: var(--primary);
+    transform: translateY(-2px);
+    border-color: var(--soft-gold);
+    box-shadow: var(--shadow-md);
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(95, 158, 160, 0.2);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}

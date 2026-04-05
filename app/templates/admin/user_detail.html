@@ -1,0 +1,133 @@
+{% extends "admin/base.html" %}
+
+{% block title %}User Details - Admin Dashboard{% endblock %}
+{% block header_title %}User Details: {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- User Info Card -->
+    <div class="card p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center space-x-4 mb-4 lg:mb-0">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span class="text-xl font-bold text-white">{{ user.username[0]|upper }}</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">{{ user.username }}</h2>
+                    <p class="text-gray-400">User ID: {{ user.id }}</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm">
+                        <i class="fas fa-cog mr-2"></i>Manage User
+                    </button>
+                </form>
+                <a href="{{ url_for('admin.users_management') }}" 
+                   class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Users
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 text-center">
+            <div class="text-2xl font-bold text-white mb-2">{{ products_count }}</div>
+            <div class="text-gray-400">Total Products</div>
+        </div>
+        <div class="card p-6 text-center">
+            <div class="text-2xl font-bold text-white mb-2">{{ active_products }}</div>
+            <div class="text-gray-400">Active Products</div>
+        </div>
+        <div class="card p-6 text-center">
+            <div class="text-2xl font-bold text-white mb-2">KES {{ "%.2f"|format(total_revenue) }}</div>
+            <div class="text-gray-400">Total Revenue</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- User Details -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">User Information</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Email:</span>
+                    <span class="text-white">{{ user.email }}</span>
+                </div>
+                {% if user.phone_number %}
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Phone:</span>
+                    <span class="text-white">{{ user.phone_number }}</span>
+                </div>
+                {% endif %}
+                {% if user.campus_location %}
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Campus:</span>
+                    <span class="text-white">{{ user.campus_location }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Member Since:</span>
+                    <span class="text-white">{{ user.created_at.strftime('%B %d, %Y') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Products -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Recent Products</h3>
+            <div class="space-y-3">
+                {% for product in recent_products %}
+                <div class="flex items-center justify-between p-3 rounded-lg bg-gray-800/50">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">{{ product.title }}</p>
+                        <p class="text-xs text-gray-400">KES {{ "%.0f"|format(product.price) }} • {{ product.created_at.strftime('%b %d') }}</p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full {% if product.is_active and not product.is_sold %}bg-green-500/20 text-green-400{% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                        {% if product.is_sold %}Sold{% elif product.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                {% else %}
+                <p class="text-gray-400 text-center py-4">No products found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Unlocks -->
+    <div class="card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Recent Unlocks</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-800">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs text-gray-400">Product</th>
+                        <th class="px-4 py-2 text-left text-xs text-gray-400">Amount</th>
+                        <th class="px-4 py-2 text-left text-xs text-gray-400">Date</th>
+                        <th class="px-4 py-2 text-left text-xs text-gray-400">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    {% for unlock in recent_unlocks %}
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-white">{{ unlock.product.title }}</td>
+                        <td class="px-4 py-3 text-sm text-white">KES {{ "%.0f"|format(unlock.amount) }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">{{ unlock.completed_at.strftime('%b %d, %H:%M') }}</td>
+                        <td class="px-4 py-3">
+                            <span class="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">Completed</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-4 text-center text-gray-400">No unlocks found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

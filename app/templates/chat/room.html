@@ -1,0 +1,1434 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Chat Header - WhatsApp Style -->
+    <div class="chat-header">
+        <div class="header-left">
+            <a href="{{ url_for('chat.index') }}" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            
+            <div class="chat-info">
+                <div class="chat-avatar">
+                    {% if other_user.profile_picture %}
+                        <img src="{{ other_user.profile_picture }}" alt="{{ other_user.username }}">
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            {{ other_user.username[0]|upper }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Product Indicator -->
+                    <div class="product-indicator" title="{{ product.title }}">
+                        {% if product.images %}
+                            <img src="{{ url_for('static', filename='uploads/' + product.images[0].filename) }}" 
+                                 alt="{{ product.title }}">
+                        {% else %}
+                            <i class="fas fa-box"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="chat-details">
+                    <h4>{{ other_user.username }}</h4>
+                    <div class="product-info">
+                        <span class="product-name">{{ product.title|truncate(25) }}</span>
+                        <span class="product-price">KES {{ product.price }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <!-- Sold Button for Seller -->
+            {% if current_user.id == product.seller_id and not product.is_sold %}
+            <button class="action-btn sold-btn" onclick="markAsSold({{ product.id }}, {{ chat.id }})" title="Mark as sold">
+                <i class="fas fa-check-circle"></i>
+                <span>Sold</span>
+            </button>
+            {% endif %}
+            
+            <button class="action-btn" onclick="toggleMenu()" title="Menu">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" id="chatMenu">
+        <div class="menu-item" onclick="clearChat({{ chat.id }})">
+            <i class="fas fa-trash-alt"></i>
+            <span>Clear Chat</span>
+        </div>
+        <div class="menu-item" onclick="deleteChat({{ chat.id }})">
+            <i class="fas fa-trash-alt" style="color: var(--calm-error);"></i>
+            <span style="color: var(--calm-error);">Delete Chat</span>
+        </div>
+        {% if current_user.is_admin %}
+        <div class="menu-item" onclick="adminCleanup()">
+            <i class="fas fa-broom"></i>
+            <span>Admin Cleanup</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Chat Status Banner (if closed) -->
+    {% if not chat.is_active %}
+    <div class="chat-status">
+        <i class="fas fa-lock"></i>
+        <span>Chat closed{% if chat.closed_reason %} • {{ chat.closed_reason|replace('_', ' ')|title }}{% endif %}</span>
+    </div>
+    {% endif %}
+
+    <!-- Messages Area -->
+    <div class="messages-area" id="messagesContainer">
+        <div class="messages-wrapper" id="messagesList">
+            {% for message in messages %}
+            <div class="message-row {% if message.sender_id == current_user.id %}outgoing{% else %}incoming{% endif %}" 
+                 id="message-row-{{ message.id }}">
+                <div class="message-wrapper" id="message-{{ message.id }}">
+                    {% if message.is_deleted %}
+                    <div class="message deleted">
+                        <div class="deleted-message">
+                            <i class="fas fa-trash"></i>
+                            <span>{{ message.get_display_content(current_user.id) }}</span>
+                        </div>
+                        <div class="message-footer">
+                            <span class="time">{{ message.formatted_time }}</span>
+                        </div>
+                    </div>
+                    
+                    {% elif message.is_image %}
+                    <div class="message image-message">
+                        <div class="image-container" onclick="viewImage('{{ message.get_image_url() }}')">
+                            <img src="{{ message.get_image_url() }}" alt="Image" loading="lazy">
+                            {% if message.content %}
+                            <div class="image-caption">{{ message.content }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="message-footer">
+                            <span class="time">{{ message.formatted_time }}</span>
+                            {% if message.sender_id == current_user.id %}
+                            <span class="read-status">
+                                <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <div class="message text-message">
+                        <div class="message-content">{{ message.get_display_content(current_user.id) }}</div>
+                        <div class="message-footer">
+                            <span class="time">{{ message.formatted_time }}</span>
+                            {% if message.sender_id == current_user.id %}
+                            <span class="read-status">
+                                <i class="fas {% if message.is_read %}fa-check-double{% else %}fa-check{% endif %}"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Message Actions -->
+                    <div class="message-actions">
+                        {% if message.sender_id == current_user.id or message.receiver_id == current_user.id %}
+                        {% if not message.is_deleted %}
+                        <button class="action-btn delete-btn" onclick="deleteMessage({{ chat.id }}, {{ message.id }}, event)" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                        {% endif %}
+                        <button class="action-btn info-btn" onclick="showMessageInfo({{ message.id }}, event)" title="Info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Message Input Area - WhatsApp Style -->
+    {% if chat.is_active %}
+    <div class="input-area">
+        <form id="messageForm" class="input-form" onsubmit="sendMessage(event)">
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            
+            <button type="button" class="attach-button" id="attachBtn" onclick="document.getElementById('imageInput').click()">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <div class="input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Type a message" 
+                    rows="1"
+                    maxlength="1000"
+                    oninput="autoResize(this); updateCharCounter()"
+                ></textarea>
+                <span class="char-counter" id="charCounter">0/1000</span>
+            </div>
+            
+            <button type="submit" class="send-button" id="sendBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Message Info Modal -->
+<div class="modal" id="messageInfoModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Message Info</h3>
+            <button class="close-btn" onclick="closeModal('messageInfoModal')">&times;</button>
+        </div>
+        <div class="modal-body" id="messageInfoContent"></div>
+    </div>
+</div>
+
+<!-- Image View Modal -->
+<div class="modal" id="imageViewModal" onclick="closeModal('imageViewModal')">
+    <div class="image-view-content">
+        <img id="expandedImage" src="" alt="Expanded view">
+        <button class="close-image-btn" onclick="closeModal('imageViewModal')">&times;</button>
+    </div>
+</div>
+
+<style>
+/* WhatsApp-like Chat Room Styles - Using your calm color palette */
+:root {
+    /* Calm, muted background colors */
+    --calm-bg: #1a1e24;
+    --calm-card-bg: #252b33;
+    --calm-surface: #2f3640;
+    --calm-border: #3a424e;
+    
+    /* Text colors - soft and readable */
+    --calm-text: #e9edf2;
+    --calm-text-secondary: #b4bcc8;
+    --calm-text-muted: #8f9aaa;
+
+    /* Calm accent colors - muted and peaceful */
+    --calm-primary: #6c8c9c;
+    --calm-primary-light: #8aa9bc;
+    --calm-secondary: #7c9a8e;
+    --calm-tertiary: #a58d7f;
+    
+    /* Status colors - muted */
+    --calm-success: #7c9a8e;
+    --calm-warning: #c9a78b;
+    --calm-error: #b58c8c;
+    --calm-info: #8aa5b5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--calm-bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Main Container */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--calm-bg);
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Header - WhatsApp Style */
+.chat-header {
+    background: var(--calm-card-bg);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--calm-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.back-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--calm-text);
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.back-button:hover {
+    background: var(--calm-surface);
+}
+
+.chat-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.chat-avatar {
+    position: relative;
+    width: 45px;
+    height: 45px;
+}
+
+.chat-avatar img,
+.avatar-placeholder {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--calm-border);
+}
+
+.avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--calm-primary);
+    color: var(--calm-text);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Product Indicator */
+.product-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--calm-card-bg);
+    overflow: hidden;
+    background: var(--calm-secondary);
+}
+
+.product-indicator img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-indicator i {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--calm-text);
+}
+
+.chat-details h4 {
+    color: var(--calm-text);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.product-name {
+    color: var(--calm-text-secondary);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.product-price {
+    color: var(--calm-secondary);
+    font-weight: 600;
+    background: var(--calm-surface);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--calm-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.sold-btn {
+    width: auto;
+    padding: 0 16px;
+    border-radius: 20px;
+    background: var(--calm-success);
+    color: var(--calm-text);
+    gap: 8px;
+}
+
+.sold-btn:hover {
+    background: var(--calm-secondary);
+    transform: translateY(-1px);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    top: 70px;
+    right: 16px;
+    background: var(--calm-card-bg);
+    border: 1px solid var(--calm-border);
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 180px;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.menu-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--calm-text);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.menu-item:hover {
+    background: var(--calm-surface);
+}
+
+.menu-item i {
+    width: 18px;
+    color: var(--calm-text-secondary);
+}
+
+/* Chat Status */
+.chat-status {
+    background: var(--calm-surface);
+    color: var(--calm-warning);
+    padding: 8px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--calm-border);
+}
+
+/* Messages Area */
+.messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    background: var(--calm-bg);
+}
+
+.messages-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Message Rows */
+.message-row {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.message-row.outgoing {
+    justify-content: flex-end;
+}
+
+.message-row.incoming {
+    justify-content: flex-start;
+}
+
+.message-wrapper {
+    position: relative;
+    max-width: 75%;
+    min-width: 120px;
+}
+
+/* Message Bubbles */
+.message {
+    position: relative;
+    border-radius: 12px;
+    padding: 8px 12px;
+    word-wrap: break-word;
+}
+
+/* Outgoing Messages */
+.outgoing .message.text-message {
+    background: var(--calm-primary);
+    color: var(--calm-text);
+    border-top-right-radius: 4px;
+}
+
+/* Incoming Messages */
+.incoming .message.text-message {
+    background: var(--calm-card-bg);
+    color: var(--calm-text);
+    border: 1px solid var(--calm-border);
+    border-top-left-radius: 4px;
+}
+
+.message-content {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.message-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    font-size: 11px;
+}
+
+.outgoing .message-footer {
+    color: rgba(233, 237, 242, 0.7);
+}
+
+.incoming .message-footer {
+    color: var(--calm-text-muted);
+}
+
+.time {
+    font-size: 11px;
+}
+
+.read-status i {
+    font-size: 12px;
+}
+
+.read-status .fa-check-double {
+    color: var(--calm-info);
+}
+
+/* Image Messages */
+.message.image-message {
+    padding: 4px;
+    background: var(--calm-card-bg);
+}
+
+.image-container {
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.image-container img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.image-caption {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--calm-text);
+    font-size: 13px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    backdrop-filter: blur(4px);
+}
+
+/* Deleted Messages */
+.message.deleted {
+    background: var(--calm-surface);
+    opacity: 0.7;
+}
+
+.deleted-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--calm-text-muted);
+    font-style: italic;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.deleted-message i {
+    color: var(--calm-error);
+}
+
+/* Message Actions */
+.message-actions {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    background: var(--calm-card-bg);
+    border: 1px solid var(--calm-border);
+    border-radius: 20px;
+    padding: 4px;
+    display: none;
+    gap: 4px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.message-wrapper:hover .message-actions,
+.message-wrapper:active .message-actions {
+    display: flex;
+}
+
+.delete-btn:hover {
+    background: var(--calm-error);
+    color: var(--calm-text);
+}
+
+.info-btn:hover {
+    background: var(--calm-info);
+    color: var(--calm-text);
+}
+
+/* Input Area */
+.input-area {
+    background: var(--calm-card-bg);
+    padding: 12px 16px;
+    border-top: 1px solid var(--calm-border);
+}
+
+.input-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.attach-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--calm-surface);
+    color: var(--calm-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.attach-button:hover {
+    background: var(--calm-primary);
+    color: var(--calm-text);
+}
+
+.input-wrapper {
+    flex: 1;
+    background: var(--calm-surface);
+    border-radius: 24px;
+    padding: 8px 16px;
+    position: relative;
+    border: 1px solid var(--calm-border);
+}
+
+.input-wrapper textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 8px 40px 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: 100px;
+    resize: none;
+    outline: none;
+    color: var(--calm-text);
+    font-family: inherit;
+}
+
+.input-wrapper textarea::placeholder {
+    color: var(--calm-text-muted);
+}
+
+.char-counter {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    font-size: 10px;
+    color: var(--calm-text-muted);
+}
+
+.send-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--calm-primary);
+    color: var(--calm-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.send-button:hover {
+    background: var(--calm-primary-light);
+    transform: scale(1.05);
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 30, 36, 0.95);
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--calm-card-bg);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 340px;
+    border: 1px solid var(--calm-border);
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--calm-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h3 {
+    color: var(--calm-text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--calm-text-muted);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close-btn:hover {
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Image View Modal */
+#imageViewModal {
+    background: rgba(26, 30, 36, 0.98);
+}
+
+.image-view-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#expandedImage {
+    max-width: 90%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.close-image-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--calm-card-bg);
+    border: 1px solid var(--calm-border);
+    color: var(--calm-text);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.close-image-btn:hover {
+    background: var(--calm-surface);
+}
+
+/* Message Info Styles */
+.info-item {
+    margin-bottom: 16px;
+}
+
+.info-label {
+    font-size: 11px;
+    color: var(--calm-text-muted);
+    margin-bottom: 4px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 14px;
+    color: var(--calm-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-badge.delivered {
+    background: rgba(108, 140, 156, 0.1);
+    color: var(--calm-primary);
+    border: 1px solid rgba(108, 140, 156, 0.2);
+}
+
+.status-badge.deleted {
+    background: rgba(181, 140, 140, 0.1);
+    color: var(--calm-error);
+    border: 1px solid rgba(181, 140, 140, 0.2);
+}
+
+/* Scrollbar */
+.messages-area::-webkit-scrollbar {
+    width: 4px;
+}
+
+.messages-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages-area::-webkit-scrollbar-thumb {
+    background: var(--calm-surface);
+    border-radius: 10px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .chat-header {
+        padding: 8px 12px;
+    }
+
+    .chat-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .chat-avatar img,
+    .avatar-placeholder {
+        width: 40px;
+        height: 40px;
+    }
+
+    .product-indicator {
+        width: 18px;
+        height: 18px;
+    }
+
+    .chat-details h4 {
+        font-size: 15px;
+    }
+
+    .message-wrapper {
+        max-width: 85%;
+    }
+}
+
+@media (max-width: 480px) {
+    .sold-btn span {
+        display: none;
+    }
+
+    .sold-btn {
+        width: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+
+/* Safe Area for Notch */
+@supports (padding: max(0px)) {
+    .chat-header {
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+    
+    .input-area {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+}
+</style>
+
+<script>
+// ==================== GLOBAL VARIABLES ====================
+let chatId = {{ chat.id }};
+let lastMessageId = {{ messages[-1].id if messages else 0 }};
+let pollingInterval = null;
+let currentUserId = {{ current_user.id }};
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Chat room initialized');
+    scrollToBottom();
+    startPolling();
+    updateCharCounter();
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('chatMenu');
+        const menuBtn = e.target.closest('.action-btn[onclick="toggleMenu()"]');
+        
+        if (menu && menu.classList.contains('show') && !menuBtn && !menu.contains(e.target)) {
+            menu.classList.remove('show');
+        }
+    });
+});
+
+// ==================== MESSAGE SENDING ====================
+function sendMessage(event) {
+    event.preventDefault();
+    console.log('Send message triggered');
+    
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    const imageInput = document.getElementById('imageInput');
+    const imageFile = imageInput.files[0];
+    
+    if (!content && !imageFile) {
+        console.log('No content or image');
+        return;
+    }
+    
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    if (imageFile) formData.append('image', imageFile);
+    
+    const sendBtn = document.getElementById('sendBtn');
+    const originalHTML = sendBtn.innerHTML;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    sendBtn.disabled = true;
+    
+    console.log('Sending message to:', `/chat/${chatId}/send`);
+    
+    fetch(`/chat/${chatId}/send`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Send response:', data);
+        if (data.success) {
+            input.value = '';
+            input.style.height = 'auto';
+            imageInput.value = '';
+            
+            // Append message immediately
+            appendMessage(data);
+            scrollToBottom();
+            updateCharCounter();
+            
+            lastMessageId = data.message_id;
+        } else {
+            showToast(data.error || 'Failed to send message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+        showToast('Network error. Please try again.', 'error');
+    })
+    .finally(() => {
+        sendBtn.innerHTML = originalHTML;
+        sendBtn.disabled = false;
+    });
+}
+
+// ==================== APPEND NEW MESSAGE ====================
+function appendMessage(msg) {
+    console.log('Appending message:', msg);
+    const messagesList = document.getElementById('messagesList');
+    const isMine = msg.sender_id === currentUserId;
+    
+    let messageHtml = '';
+    
+    if (msg.is_image) {
+        messageHtml = `
+            <div class="message-row ${isMine ? 'outgoing' : 'incoming'}" id="message-row-${msg.id}">
+                <div class="message-wrapper" id="message-${msg.id}">
+                    <div class="message image-message">
+                        <div class="image-container" onclick="viewImage('${msg.image_url}')">
+                            <img src="${msg.image_url}" alt="Image" loading="lazy">
+                            ${msg.content ? `<div class="image-caption">${msg.content}</div>` : ''}
+                        </div>
+                        <div class="message-footer">
+                            <span class="time">${msg.formatted_time}</span>
+                            ${isMine ? '<span class="read-status"><i class="fas fa-check"></i></span>' : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="message-actions">
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${chatId}, ${msg.id}, event)" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="action-btn info-btn" onclick="showMessageInfo(${msg.id}, event)" title="Info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        messageHtml = `
+            <div class="message-row ${isMine ? 'outgoing' : 'incoming'}" id="message-row-${msg.id}">
+                <div class="message-wrapper" id="message-${msg.id}">
+                    <div class="message text-message">
+                        <div class="message-content">${msg.content}</div>
+                        <div class="message-footer">
+                            <span class="time">${msg.formatted_time}</span>
+                            ${isMine ? '<span class="read-status"><i class="fas fa-check"></i></span>' : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="message-actions">
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${chatId}, ${msg.id}, event)" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="action-btn info-btn" onclick="showMessageInfo(${msg.id}, event)" title="Info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    messagesList.insertAdjacentHTML('beforeend', messageHtml);
+}
+
+// ==================== POLLING FOR NEW MESSAGES ====================
+function startPolling() {
+    if (pollingInterval) clearInterval(pollingInterval);
+    
+    pollingInterval = setInterval(() => {
+        fetch(`/chat/${chatId}/messages?last_id=${lastMessageId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    appendMessage(msg);
+                    if (msg.id > lastMessageId) {
+                        lastMessageId = msg.id;
+                    }
+                });
+                scrollToBottom();
+            }
+        })
+        .catch(error => console.error('Polling error:', error));
+    }, 3000);
+}
+
+// ==================== DELETE MESSAGE ====================
+function deleteMessage(chatId, messageId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    console.log('Deleting message:', messageId);
+    
+    const toast = showToast('Deleting message...', 'info');
+    
+    fetch(`/chat/${chatId}/messages/${messageId}/delete`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        toast.remove();
+        if (data.success) {
+            const messageRow = document.getElementById(`message-row-${messageId}`);
+            if (messageRow) {
+                const isOutgoing = messageRow.classList.contains('outgoing');
+                messageRow.outerHTML = `
+                    <div class="message-row ${isOutgoing ? 'outgoing' : 'incoming'}" id="message-row-${messageId}">
+                        <div class="message-wrapper" id="message-${messageId}">
+                            <div class="message deleted">
+                                <div class="deleted-message">
+                                    <i class="fas fa-trash"></i>
+                                    <span>${data.display_content}</span>
+                                </div>
+                                <div class="message-footer">
+                                    <span class="time">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            showToast('Message deleted', 'success');
+        } else {
+            showToast(data.error || 'Failed to delete message', 'error');
+        }
+    })
+    .catch(error => {
+        toast.remove();
+        console.error('Error:', error);
+        showToast('Failed to delete message', 'error');
+    });
+}
+
+// ==================== MARK AS SOLD ====================
+function markAsSold(productId, chatId) {
+    if (!confirm('Mark this product as sold? This will close the chat and notify the buyer.')) return;
+    
+    const toast = showToast('Marking as sold...', 'info');
+    
+    fetch(`/products/mark-sold/${productId}`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            return fetch(`/chat/${chatId}/close`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            });
+        } else {
+            throw new Error(data.message || 'Failed to mark as sold');
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        toast.remove();
+        if (data.success) {
+            showToast('Product marked as sold and chat closed', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        }
+    })
+    .catch(error => {
+        toast.remove();
+        console.error('Error:', error);
+        showToast(error.message || 'Failed to mark as sold', 'error');
+    });
+}
+
+// ==================== CLEAR CHAT ====================
+function clearChat(chatId) {
+    if (!confirm('Clear all messages? This cannot be undone.')) return;
+    
+    const toast = showToast('Clearing chat...', 'info');
+    
+    fetch(`/chat/${chatId}/clear`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        toast.remove();
+        if (data.success) {
+            showToast(`Cleared ${data.cleared_count} messages`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.error || 'Failed to clear chat', 'error');
+        }
+    })
+    .catch(error => {
+        toast.remove();
+        console.error('Error:', error);
+        showToast('Failed to clear chat', 'error');
+    });
+}
+
+// ==================== DELETE CHAT ====================
+function deleteChat(chatId) {
+    if (!confirm('Delete this entire chat? This action cannot be undone.')) return;
+    
+    const toast = showToast('Deleting chat...', 'info');
+    
+    fetch(`/chat/${chatId}/delete`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        toast.remove();
+        if (data.success) {
+            showToast('Chat deleted', 'success');
+            setTimeout(() => window.location.href = '/chat', 1000);
+        } else {
+            showToast(data.error || 'Failed to delete chat', 'error');
+        }
+    })
+    .catch(error => {
+        toast.remove();
+        console.error('Error:', error);
+        showToast('Failed to delete chat', 'error');
+    });
+}
+
+// ==================== TOGGLE MENU ====================
+function toggleMenu() {
+    const menu = document.getElementById('chatMenu');
+    menu.classList.toggle('show');
+}
+
+// ==================== VIEW IMAGE ====================
+function viewImage(imageUrl) {
+    const modal = document.getElementById('imageViewModal');
+    const img = document.getElementById('expandedImage');
+    img.src = imageUrl;
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+// ==================== CLOSE MODAL ====================
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+    document.body.style.overflow = 'auto';
+}
+
+// ==================== SHOW MESSAGE INFO ====================
+function showMessageInfo(messageId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const messageDiv = document.getElementById(`message-${messageId}`);
+    if (!messageDiv) return;
+    
+    const messageRow = document.getElementById(`message-row-${messageId}`);
+    const isOutgoing = messageRow.classList.contains('outgoing');
+    const isDeleted = messageDiv.querySelector('.message').classList.contains('deleted');
+    const timeElement = messageDiv.querySelector('.time');
+    const time = timeElement ? timeElement.textContent : 'Unknown';
+    
+    const infoContent = document.getElementById('messageInfoContent');
+    infoContent.innerHTML = `
+        <div class="info-item">
+            <span class="info-label">Status</span>
+            <div class="info-value">
+                <span class="status-badge ${isDeleted ? 'deleted' : 'delivered'}">
+                    <i class="fas ${isDeleted ? 'fa-trash' : 'fa-check-circle'}"></i>
+                    ${isDeleted ? 'Deleted' : 'Delivered'}
+                </span>
+            </div>
+        </div>
+        
+        <div class="info-item">
+            <span class="info-label">Sent</span>
+            <div class="info-value">${time}</div>
+        </div>
+        
+        <div class="info-item">
+            <span class="info-label">Direction</span>
+            <div class="info-value">
+                <i class="fas fa-${isOutgoing ? 'arrow-up' : 'arrow-down'}" style="color: ${isOutgoing ? 'var(--calm-primary)' : 'var(--calm-info)'}"></i>
+                ${isOutgoing ? 'You → Them' : 'Them → You'}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('messageInfoModal').classList.add('show');
+}
+
+// ==================== SCROLL TO BOTTOM ====================
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+// ==================== AUTO RESIZE TEXTAREA ====================
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// ==================== UPDATE CHAR COUNTER ====================
+function updateCharCounter() {
+    const input = document.getElementById('messageInput');
+    const counter = document.getElementById('charCounter');
+    if (input && counter) {
+        counter.textContent = `${input.value.length}/1000`;
+    }
+}
+
+// ==================== SHOW TOAST ====================
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    
+    let bgColor, icon;
+    switch(type) {
+        case 'success':
+            bgColor = 'var(--calm-success)';
+            icon = 'fa-check-circle';
+            break;
+        case 'error':
+            bgColor = 'var(--calm-error)';
+            icon = 'fa-exclamation-circle';
+            break;
+        case 'warning':
+            bgColor = 'var(--calm-warning)';
+            icon = 'fa-exclamation-triangle';
+            break;
+        default:
+            bgColor = 'var(--calm-primary)';
+            icon = 'fa-info-circle';
+    }
+    
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: ${bgColor};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 3000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease;
+        max-width: 90%;
+    `;
+    
+    toast.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    }, 100);
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+    
+    return toast;
+}
+
+// ==================== CLEAN UP ====================
+window.addEventListener('beforeunload', () => {
+    if (pollingInterval) clearInterval(pollingInterval);
+});
+</script>
+{% endblock %}

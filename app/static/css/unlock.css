@@ -1,0 +1,407 @@
+/* ===== UNLOCK.CSS - COMPACT UNLOCK PRODUCT PAGE STYLES ===== */
+
+.unlock-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0.6rem;
+    background: var(--bg-deep);
+    min-height: 100vh;
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header - Compact */
+.unlock-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding-top: 0.5rem;
+}
+
+.unlock-container .calm-gradient-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.6rem;
+    box-shadow: 0 2px 8px rgba(95, 158, 160, 0.2);
+}
+
+.unlock-header h1 {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+}
+
+.unlock-header p {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+/* Product Card - Compact */
+.unlock-container .product-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.unlock-container .product-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--border-light);
+}
+
+.unlock-container .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.unlock-container .product-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.6rem;
+}
+
+.unlock-container .product-info {
+    flex: 1;
+}
+
+.unlock-container .product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.unlock-container .product-info h3 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.unlock-container .calm-badge {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--text-primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.unlock-container .product-price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.2rem;
+}
+
+.unlock-container .product-condition {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+    border: 1px solid var(--border-light);
+}
+
+.unlock-container .product-description {
+    color: var(--text-muted);
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+    font-size: 0.65rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.unlock-container .seller-info {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+}
+
+.unlock-container .seller-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Unlock Details - Compact */
+.unlock-details {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.unlock-fee {
+    text-align: center;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.free-message {
+    text-align: center;
+    margin-bottom: 0.8rem;
+    padding: 0.5rem;
+    background: rgba(95, 158, 160, 0.08);
+    border-radius: 10px;
+    color: var(--text-primary);
+    border: 1px solid rgba(95, 158, 160, 0.15);
+    font-size: 0.65rem;
+}
+
+.free-message strong {
+    color: var(--primary);
+}
+
+.fee-badge {
+    background: var(--bg-surface);
+    border: 1px solid var(--primary);
+    border-radius: 16px;
+    padding: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.fee-badge h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.1rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.fee-badge span {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+
+.unlock-fee p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.65rem;
+}
+
+.unlock-form {
+    margin-bottom: 0.8rem;
+}
+
+.unlock-container .btn-unlock {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+    border: none;
+    border-radius: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+}
+
+.unlock-container .btn-unlock:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(95, 158, 160, 0.2);
+}
+
+.unlock-container .btn-unlock:active {
+    transform: translateY(0);
+}
+
+/* Benefits Section - Compact */
+.unlock-benefits {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 0.8rem;
+}
+
+.unlock-benefits h4 {
+    color: var(--text-primary);
+    margin-bottom: 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: relative;
+    display: inline-block;
+}
+
+.unlock-benefits h4::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 2px;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.benefit-item:hover {
+    background: rgba(95, 158, 160, 0.08);
+    transform: translateY(-1px);
+    border-color: rgba(95, 158, 160, 0.2);
+}
+
+.benefit-item span {
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+}
+
+/* Security Notice - Compact */
+.security-notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .unlock-container {
+        padding: 0.5rem;
+    }
+    
+    .unlock-container .product-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 0.7rem;
+        align-items: center;
+    }
+    
+    .unlock-container .product-image {
+        width: 100%;
+        max-width: 140px;
+        margin: 0 auto;
+        height: 140px;
+    }
+    
+    .unlock-container .product-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .unlock-container .calm-badge {
+        margin-left: 0;
+    }
+    
+    .unlock-header h1 {
+        font-size: 1rem;
+    }
+    
+    .unlock-header p {
+        font-size: 0.65rem;
+    }
+    
+    .unlock-details {
+        padding: 0.7rem;
+    }
+    
+    .benefits-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .unlock-container .calm-gradient-circle {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .unlock-container {
+        padding: 0.4rem;
+    }
+    
+    .unlock-header h1 {
+        font-size: 0.9rem;
+    }
+    
+    .unlock-container .product-card {
+        padding: 0.6rem;
+    }
+    
+    .unlock-details {
+        padding: 0.6rem;
+    }
+    
+    .unlock-container .btn-unlock {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.75rem;
+    }
+    
+    .fee-badge h3 {
+        font-size: 1rem;
+    }
+    
+    .benefit-item span {
+        font-size: 0.6rem;
+    }
+    
+    .security-notice {
+        font-size: 0.55rem;
+    }
+}

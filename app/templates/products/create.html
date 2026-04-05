@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="create-product-container">
+    <div class="create-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <i class="fas fa-plus-circle"></i>
+                Sell Your Item
+            </h1>
+            <p class="page-subtitle">List your item and reach thousands of campus buyers</p>
+        </div>
+    </div>
+
+    <div class="create-wizard">
+        <!-- Compact wizard steps - all in one row -->
+        <div class="wizard-steps compact">
+            <div class="step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-info">
+                    <div class="step-title">Product Details</div>
+                    <div class="step-desc">Basic info</div>
+                </div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-info">
+                    <div class="step-title">Pricing & Delivery</div>
+                    <div class="step-desc">Set price & shipping</div>
+                </div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-info">
+                    <div class="step-title">Payment & Review</div>
+                    <div class="step-desc">Pay & publish</div>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="product-form" id="productForm">
+            <!-- Step 1: Product Details -->
+            <div class="form-step active" data-step="1">
+                <div class="step-content">
+                    <h3 class="step-title">Product Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="title" class="form-label">
+                            <i class="fas fa-heading"></i>
+                            Product Title *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="title"
+                            name="title" 
+                            class="form-input" 
+                            placeholder="e.g., MacBook Pro 2020, Calculus Textbook, Office Chair"
+                            required
+                            maxlength="100"
+                        >
+                        <div class="form-hint">Be descriptive but concise (max 100 characters)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category_id" class="form-label">
+                            <i class="fas fa-layer-group"></i>
+                            Category *
+                        </label>
+                        <select id="category_id" name="category_id" class="form-select" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="condition" class="form-label">
+                            <i class="fas fa-tag"></i>
+                            Condition *
+                        </label>
+                        <select id="condition" name="condition" class="form-select" required>
+                            <option value="">Select condition</option>
+                            <option value="new">Brand New</option>
+                            <option value="like_new">Like New</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="needs_repair">Needs Repair</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-camera"></i>
+                            Product Images *
+                        </label>
+                        <div class="image-upload-container">
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h4>Upload Product Images</h4>
+                                <p>Drag & drop images or click to browse</p>
+                                <span class="upload-hint">Recommended: 3-5 clear images (Max 15MB each)</span>
+                                <input type="file" id="image" name="images" accept="image/*" class="file-input" multiple required>
+                            </div>
+                            <div class="image-preview" id="imagePreview">
+                                <!-- Preview will be added here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left"></i>
+                            Description *
+                        </label>
+                        <textarea 
+                            id="description"
+                            name="description" 
+                            class="form-textarea" 
+                            placeholder="Describe your item in detail. Include specifications, features, any flaws, and why you're selling it..."
+                            rows="5"
+                            required
+                            maxlength="1000"
+                        ></textarea>
+                        <div class="form-hint">
+                            <span id="charCount">0</span>/1000 characters
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button type="button" class="btn btn-next" data-next="2">
+                        Next: Pricing & Delivery
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Pricing & Delivery -->
+            <div class="form-step" data-step="2">
+                <div class="step-content">
+                    <h3 class="step-title">Pricing & Delivery Options</h3>
+                    
+                    <div class="form-group">
+                        <label for="price" class="form-label">
+                            <i class="fas fa-tag"></i>
+                            Price (KES) *
+                        </label>
+                        <div class="price-input-container">
+                            <span class="currency-symbol">KES</span>
+                            <input 
+                                type="number" 
+                                id="price"
+                                name="price" 
+                                class="form-input price-input" 
+                                placeholder="0.00"
+                                min="0"
+                                step="0.01"
+                                required
+                            >
+                        </div>
+                        <div class="form-hint">Set a fair price for your item</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-percentage"></i>
+                            Campus Token Discount
+                        </label>
+                        <div class="discount-options">
+                            <label class="radio-container">
+                                <input type="radio" name="token_discount" value="none" checked>
+                                <span class="radio-checkmark"></span>
+                                No discount
+                            </label>
+                            <label class="radio-container">
+                                <input type="radio" name="token_discount" value="5">
+                                <span class="radio-checkmark"></span>
+                                5% discount for token holders
+                            </label>
+                            <label class="radio-container">
+                                <input type="radio" name="token_discount" value="10">
+                                <span class="radio-checkmark"></span>
+                                10% discount for token holders
+                            </label>
+                            <label class="radio-container">
+                                <input type="radio" name="token_discount" value="15">
+                                <span class="radio-checkmark"></span>
+                                15% discount for token holders
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-truck"></i>
+                            Delivery Options *
+                        </label>
+                        <div class="delivery-options">
+                            <label class="radio-container">
+                                <input type="radio" name="delivery_option" value="free" required>
+                                <span class="radio-checkmark"></span>
+                                <div class="option-content">
+                                    <div class="option-title">Free Delivery</div>
+                                    <div class="option-desc">I offer free delivery within campus</div>
+                                    <div class="option-fields" id="freeDeliveryFields">
+                                        <input type="text" name="delivery_address" placeholder="Your wallet address or M-Pesa number" class="form-input">
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-container">
+                                <input type="radio" name="delivery_option" value="meetup" required>
+                                <span class="radio-checkmark"></span>
+                                <div class="option-content">
+                                    <div class="option-title">Campus Meetup</div>
+                                    <div class="option-desc">Buyer and seller arrange meetup location</div>
+                                    <div class="option-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        We'll connect you with buyers to arrange meetup details
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-container">
+                                <input type="radio" name="delivery_option" value="paid" required>
+                                <span class="radio-checkmark"></span>
+                                <div class="option-content">
+                                    <div class="option-title">Paid Delivery</div>
+                                    <div class="option-desc">Delivery available for extra fee</div>
+                                    <div class="option-fields" id="paidDeliveryFields">
+                                        <input type="number" name="delivery_fee" placeholder="Delivery fee in KES" class="form-input" min="0">
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="is_fast_moving">
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <div class="checkbox-title">Mark as Fast Moving</div>
+                                <div class="checkbox-desc">Feature this item on the homepage for better visibility</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button type="button" class="btn btn-prev" data-prev="1">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-next" data-next="3">
+                        Next: Review & Pay
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment & Review -->
+            <div class="form-step" data-step="3">
+                <div class="step-content">
+                    <h3 class="step-title">Review & Payment</h3>
+                    
+                    <div class="review-summary">
+                        <div class="review-section">
+                            <h4>Product Details</h4>
+                            <div class="review-item">
+                                <span class="review-label">Title:</span>
+                                <span id="review-title" class="review-value">-</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Category:</span>
+                                <span id="review-category" class="review-value">-</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Condition:</span>
+                                <span id="review-condition" class="review-value">-</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Description:</span>
+                                <span id="review-description" class="review-value">-</span>
+                            </div>
+                        </div>
+
+                        <div class="review-section">
+                            <h4>Pricing & Delivery</h4>
+                            <div class="review-item">
+                                <span class="review-label">Price:</span>
+                                <span id="review-price" class="review-value">-</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Token Discount:</span>
+                                <span id="review-discount" class="review-value">-</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Delivery:</span>
+                                <span id="review-delivery" class="review-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-section">
+                        <div class="payment-info">
+                            <div class="payment-header">
+                                <i class="fas fa-shield-alt"></i>
+                                <h4>Listing Fee: KES 50</h4>
+                            </div>
+                            <p class="payment-desc">
+                                Pay a small fee to list your item. This helps maintain the quality of our marketplace and ensures serious sellers.
+                            </p>
+                            
+                            <div class="payment-options">
+                                <label class="radio-container">
+                                    <input type="radio" name="payment_method" value="mpesa" required checked>
+                                    <span class="radio-checkmark"></span>
+                                    <div class="option-content">
+                                        <div class="option-title">
+                                            <i class="fas fa-mobile-alt"></i>
+                                            M-Pesa
+                                        </div>
+                                        <div class="option-desc">Pay instantly via M-Pesa</div>
+                                        <div class="option-fields" id="mpesaFields">
+                                            <!-- Hidden input with the fixed phone number -->
+                                            <input type="hidden" id="mpesa_phone" name="mpesa_phone" value="0733221100">
+                                            <!-- Upload button -->
+                                            <div class="form-group">
+                                                <label class="form-label">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    Payment Upload
+                                                </label>
+                                                <button type="button" class="btn-upload ig-gradient" id="uploadPaymentBtn">
+                                                    <i class="fas fa-upload"></i>
+                                                    Upload Payment (0733221100)
+                                                </button>
+                                                <div class="form-hint">Click to upload payment with the number 0733221100</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-container">
+                                    <input type="radio" name="payment_method" value="token" required>
+                                    <span class="radio-checkmark"></span>
+                                    <div class="option-content">
+                                        <div class="option-title">
+                                            <i class="fas fa-coins"></i>
+                                            Campus Token
+                                        </div>
+                                        <div class="option-desc">Pay with your campus tokens</div>
+                                        <div class="option-fields" id="tokenFields">
+                                            <div class="form-group">
+                                                <label for="token_address" class="form-label">
+                                                    <i class="fas fa-wallet"></i>
+                                                    Token Wallet Address *
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    id="token_address"
+                                                    name="token_address" 
+                                                    class="form-input" 
+                                                    placeholder="Enter your token wallet address"
+                                                    value=""
+                                                >
+                                                <div class="form-hint">Enter your campus token wallet address</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button type="button" class="btn btn-prev" data-prev="2">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
+                        <i class="fas fa-credit-card"></i>
+                        Pay & List Item
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Processing Modal -->
+<div id="paymentProcessingModal">
+    <div>
+        <div class="spinner"></div>
+        <h3>Processing Payment</h3>
+        <p id="paymentStatusText">Initiating M-Pesa payment...</p>
+        <p>Please check your phone to complete the payment</p>
+    </div>
+</div>
+{% endblock %}

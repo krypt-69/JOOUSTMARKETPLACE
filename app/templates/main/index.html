@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">CampusMarket</h1>
+        <p class="hero-subtitle">Buy & Sell on Campus</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('products.all_products') }}" class="btn btn-primary">
+                <i class="fas fa-shopping-bag"></i>Shop
+            </a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('products.create_product') }}" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i>Sell
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-secondary">
+                    <i class="fas fa-user-plus"></i>Join
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="hero-animation">
+        <div class="floating-icons">
+            <i class="fas fa-laptop"></i>
+            <i class="fas fa-book"></i>
+            <i class="fas fa-couch"></i>
+            <i class="fas fa-mobile-alt"></i>
+        </div>
+    </div>
+</section>
+
+<!-- Search Radial Menu - Semi Circle -->
+<div class="search-fab">
+    <button class="search-fab-btn" id="searchFabBtn">
+        <i class="fas fa-search"></i>
+    </button>
+    <div class="radial-menu" id="radialMenu">
+        <button class="radial-item" data-section="hotdeals">
+            <i class="fas fa-fire"></i>
+            <span>Hot</span>
+        </button>
+        <button class="radial-item" data-section="latest">
+            <i class="fas fa-clock"></i>
+            <span>Latest</span>
+        </button>
+        {% for category in categories %}
+            {% set cat_name = category.name %}
+            {% if cat_name == "Electronics" %}
+            <button class="radial-item" data-section="electronics">
+                <i class="fas fa-laptop-code"></i>
+                <span>Tech</span>
+            </button>
+            {% elif cat_name == "Books" %}
+            <button class="radial-item" data-section="books">
+                <i class="fas fa-book-open"></i>
+                <span>Books</span>
+            </button>
+            {% elif cat_name == "Furniture" %}
+            <button class="radial-item" data-section="furniture">
+                <i class="fas fa-couch"></i>
+                <span>Home</span>
+            </button>
+            {% elif cat_name == "Fashion" %}
+            <button class="radial-item" data-section="fashion">
+                <i class="fas fa-tshirt"></i>
+                <span>Fashion</span>
+            </button>
+            {% elif cat_name == "Sports" %}
+            <button class="radial-item" data-section="sports">
+                <i class="fas fa-futbol"></i>
+                <span>Sports</span>
+            </button>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Fast Moving Items (Hot Deals) -->
+<section id="hotdeals" class="compact-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-fire"></i> Hot Deals
+        </h2>
+        <a href="{{ url_for('products.all_products') }}" class="view-all">View All</a>
+    </div>
+
+    {% if fast_moving %}
+        <div class="compact-grid">
+            {% for product in fast_moving %}
+                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
+                    <div class="card-image">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                 alt="{{ product.title }}"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" style="display: none;">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% else %}
+                            <div class="image-placeholder">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-compact">
+            <i class="fas fa-box-open"></i>
+            <p>No hot deals yet</p>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('products.create_product') }}" class="btn-small">
+                    <i class="fas fa-plus"></i>List Item
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+
+<!-- Latest Items -->
+<section id="latest" class="compact-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-clock"></i> Latest
+        </h2>
+        <a href="{{ url_for('products.all_products') }}" class="view-all">View All</a>
+    </div>
+
+    {% if all_products %}
+        <div class="compact-grid">
+            {% for product in all_products %}
+                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
+                    <div class="card-image">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                 alt="{{ product.title }}"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" style="display: none;">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% else %}
+                            <div class="image-placeholder">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-compact">
+            <i class="fas fa-box-open"></i>
+            <p>No items yet</p>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('products.create_product') }}" class="btn-small">
+                    <i class="fas fa-plus"></i>List Item
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn-small">
+                    <i class="fas fa-user-plus"></i>Join Now
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+
+<!-- Electronics Section - Using products_by_category -->
+<section id="electronics" class="compact-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-laptop-code"></i> Electronics
+        </h2>
+        <a href="{{ url_for('products.all_products') }}?category=electronics" class="view-all">View All</a>
+    </div>
+
+    {% set electronics_category = categories|selectattr("name", "equalto", "Electronics")|first %}
+    {% set electronics_products = products_by_category.get(electronics_category.id, []) if electronics_category else [] %}
+    
+    {% if electronics_products %}
+        <div class="compact-grid">
+            {% for product in electronics_products[:8] %}
+                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
+                    <div class="card-image">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                 alt="{{ product.title }}"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" style="display: none;">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% else %}
+                            <div class="image-placeholder">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-compact">
+            <i class="fas fa-laptop-code"></i>
+            <p>No electronics yet</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Books Section - Using products_by_category -->
+<section id="books" class="compact-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-book-open"></i> Books
+        </h2>
+        <a href="{{ url_for('products.all_products') }}?category=books" class="view-all">View All</a>
+    </div>
+
+    {% set books_category = categories|selectattr("name", "equalto", "Books")|first %}
+    {% set books_products = products_by_category.get(books_category.id, []) if books_category else [] %}
+    
+    {% if books_products %}
+        <div class="compact-grid">
+            {% for product in books_products[:8] %}
+                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
+                    <div class="card-image">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                 alt="{{ product.title }}"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" style="display: none;">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% else %}
+                            <div class="image-placeholder">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-compact">
+            <i class="fas fa-book-open"></i>
+            <p>No books yet</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Furniture Section - Using products_by_category -->
+<section id="furniture" class="compact-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-couch"></i> Furniture
+        </h2>
+        <a href="{{ url_for('products.all_products') }}?category=furniture" class="view-all">View All</a>
+    </div>
+
+    {% set furniture_category = categories|selectattr("name", "equalto", "Furniture")|first %}
+    {% set furniture_products = products_by_category.get(furniture_category.id, []) if furniture_category else [] %}
+    
+    {% if furniture_products %}
+        <div class="compact-grid">
+            {% for product in furniture_products[:8] %}
+                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
+                    <div class="card-image">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                 alt="{{ product.title }}"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" style="display: none;">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% else %}
+                            <div class="image-placeholder">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-compact">
+            <i class="fas fa-couch"></i>
+            <p>No furniture yet</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Fashion Section - Using products_by_category -->
+<section id="fashion" class="compact-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-tshirt"></i> Fashion
+        </h2>
+        <a href="{{ url_for('products.all_products') }}?category=fashion" class="view-all">View All</a>
+    </div>
+
+    {% set fashion_category = categories|selectattr("name", "equalto", "Fashion")|first %}
+    {% set fashion_products = products_by_category.get(fashion_category.id, []) if fashion_category else [] %}
+    
+    {% if fashion_products %}
+        <div class="compact-grid">
+            {% for product in fashion_products[:8] %}
+                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
+                    <div class="card-image">
+                        {% if product.image %}
+                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                 alt="{{ product.title }}"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" style="display: none;">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% else %}
+                            <div class="image-placeholder">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-compact">
+            <i class="fas fa-tshirt"></i>
+            <p>No fashion items yet</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

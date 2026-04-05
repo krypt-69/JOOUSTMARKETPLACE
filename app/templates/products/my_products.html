@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="my-products-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="header-background"></div>
+        <div class="header-content">
+            <div class="profile-main">
+                <div class="profile-avatar">
+                    <div class="avatar-circle"></div>
+                    <div class="online-indicator"></div>
+                </div>
+                <div class="profile-details">
+                    <h1 class="profile-name">{{ current_user.username }}</h1>
+                    <div class="profile-bio">
+                        <p>Campus Marketplace Seller</p>
+                        <p>{{ products|length }} items • {{ products|selectattr('is_sold')|list|length }} sold</p>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat">
+                    <span class="stat-number">{{ products|length }}</span>
+                    <span class="stat-label">Products</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ products|selectattr('is_sold')|list|length }}</span>
+                    <span class="stat-label">Sold</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ products|selectattr('is_fast_moving')|list|length }}</span>
+                    <span class="stat-label">Featured</span>
+                </div>
+            </div>
+            <a href="{{ url_for('products.create_product') }}" class="btn btn-primary add-product-btn">
+                New Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <div class="filter-scroll">
+            <button class="filter-btn active" data-filter="all">
+                <div class="filter-circle all-circle"></div>
+                <span>All</span>
+            </button>
+            <button class="filter-btn" data-filter="available">
+                <div class="filter-circle available-circle"></div>
+                <span>Available</span>
+            </button>
+            <button class="filter-btn" data-filter="sold">
+                <div class="filter-circle sold-circle"></div>
+                <span>Sold</span>
+            </button>
+            <button class="filter-btn" data-filter="featured">
+                <div class="filter-circle featured-circle"></div>
+                <span>Featured</span>
+            </button>
+            {% for category in categories %}
+            <button class="filter-btn" data-filter="{{ category.name }}">
+                <div class="filter-circle category-circle"></div>
+                <span>{{ category.name }}</span>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Search and Sort Bar -->
+    <div class="search-sort-bar">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search your products...">
+            <button class="search-clear">Clear</button>
+        </div>
+        <div class="sort-container">
+            <select id="sortSelect" class="sort-select">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="price_high">Price: High to Low</option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="name">Name: A to Z</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-section">
+        {% if products %}
+            <div class="products-grid" id="productsGrid">
+                {% for product in products %}
+                    <div class="product-card" 
+                         data-status="{{ 'sold' if product.is_sold else 'available' }}"
+                         data-category="{{ product.category.name if product.category else 'Other' }}"
+                         data-featured="{{ 'true' if product.is_fast_moving else 'false' }}"
+                         data-name="{{ product.title.lower() }}"
+                         data-price="{{ product.price }}"
+                         data-date="{{ product.created_at.timestamp() }}"
+                         data-product-id="{{ product.id }}">
+                        
+                        <!-- Product Image - Click to view gallery -->
+                        <div class="product-image-section" onclick="openImageGallery({{ product.id }}, [
+                            {% if product.image %}
+                                '{{ url_for('static', filename='uploads/product_images/' + product.image) }}'
+                                {% if product.images %}
+                                    {% for img in product.images %}
+                                        , '{{ url_for('static', filename='uploads/product_images/' + img.filename) }}'
+                                    {% endfor %}
+                                {% endif %}
+                            {% endif %}
+                        ])">
+                            {% if product.image %}
+                                <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
+                                     alt="{{ product.title }}"
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% endif %}
+                            <div class="product-image-placeholder {% if product.image %}hidden{% endif %}">
+                                <span>No Image</span>
+                            </div>
+
+                            <!-- Status Badges -->
+                            <div class="product-badges">
+                                {% if product.is_sold %}
+                                <div class="badge sold">
+                                    <span>Sold on {{ product.updated_at.strftime('%b %d, %Y') if product.updated_at else product.created_at.strftime('%b %d, %Y') }}</span>
+                                </div>
+                                {% elif product.is_fast_moving %}
+                                <div class="badge featured">
+                                    <span>Featured</span>
+                                </div>
+                                {% endif %}
+                                {% if product.Token and product.Token > 0 %}
+                                <div class="badge discount">
+                                    <span>{{ product.Token }}% OFF</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Multiple Images Indicator -->
+                            {% if product.images %}
+                            <div class="multiple-images-indicator">
+                                <span>{{ product.images|length }} photos</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Product Content -->
+                        <div class="product-content">
+                            <div class="product-header">
+                                <h3 class="product-title">{{ product.title }}</h3>
+                                <div class="product-price">KES {{ "{:,.2f}".format(product.price) }}</div>
+                            </div>
+
+                            <p class="product-description">
+                                {{ product.description[:120] }}{% if product.description|length > 120 %}...{% endif %}
+                            </p>
+
+                            <div class="product-meta">
+                                <span class="meta-item">{{ product.condition|replace('_', ' ')|title }}</span>
+                                <span class="meta-item">{{ product.category.name if product.category else 'General' }}</span>
+                                <span class="meta-item">{{ product.created_at.strftime('%b %d') }}</span>
+                            </div>
+
+                            <div class="product-actions">
+                                <a href="{{ url_for('products.view_product', product_id=product.id) }}" class="btn btn-view">View</a>
+                                
+                                {% if not product.is_sold %}
+                                <button class="btn btn-mark-sold" onclick="markAsSold({{ product.id }})">Mark Sold</button>
+                                {% endif %}
+                                
+                                <button class="btn btn-delete" onclick="deleteProduct({{ product.id }})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Empty State for Filtered Results -->
+            <div class="empty-state filtered" id="emptyFiltered" style="display: none;">
+                <div class="empty-illustration"></div>
+                <h3>No Products Found</h3>
+                <p>Try adjusting your search or filters.</p>
+                <button class="btn btn-reset" id="resetFilters">Reset Filters</button>
+            </div>
+        {% else %}
+            <!-- Empty State for No Products -->
+            <div class="empty-state">
+                <div class="empty-illustration"></div>
+                <h3>Your Shop is Empty</h3>
+                <p>Start your selling journey by listing your first item.</p>
+                <a href="{{ url_for('products.create_product') }}" class="btn btn-primary">List Your First Item</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Image Gallery Modal -->
+<div id="imageGalleryModal" class="gallery-modal">
+    <div class="gallery-modal-content">
+        <span class="gallery-close" onclick="closeImageGallery()">×</span>
+        <div class="gallery-container">
+            <button class="gallery-nav prev" onclick="changeImage(-1)">‹</button>
+            <div class="gallery-image-container">
+                <img id="galleryImage" src="" alt="Product Image">
+            </div>
+            <button class="gallery-nav next" onclick="changeImage(1)">›</button>
+        </div>
+        <div class="gallery-thumbnails" id="galleryThumbnails"></div>
+        <div class="gallery-counter" id="galleryCounter"></div>
+    </div>
+</div>
+{% endblock %}

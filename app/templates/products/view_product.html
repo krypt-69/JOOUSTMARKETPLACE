@@ -1,0 +1,645 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="product-page">
+    <!-- Header -->
+    <div class="product-header">
+        <div class="header-content">
+            <a href="{{ url_for('products.all_products') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">
+                <h1>{{ product.title|truncate(25) }}</h1>
+                <div class="header-meta">
+                    <span class="seller-tag">{{ product.seller.username|truncate(12) }}</span>
+                    <span class="date-tag">{{ product.created_at.strftime('%b %d') }}</span>
+                </div>
+            </div>
+            <button class="action-btn share-btn" onclick="shareProduct()">
+                <i class="fas fa-share-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="product-content">
+        <!-- Image Gallery - Square -->
+        <div class="image-gallery">
+            {% if product.images %}
+                <div class="main-image-container">
+                    <img id="mainProductImage" 
+                         src="{{ url_for('static', filename='uploads/product_images/' + product.images[0].filename) }}" 
+                         alt="{{ product.title }}" 
+                         class="product-image">
+                </div>
+                {% if product.images|length > 1 %}
+                <div class="thumbnail-strip">
+                    {% for image in product.images %}
+                    <div class="thumbnail" data-image="{{ url_for('static', filename='uploads/product_images/' + image.filename) }}">
+                        <img src="{{ url_for('static', filename='uploads/product_images/' + image.filename) }}" alt="Thumbnail">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="image-placeholder">
+                    <i class="fas fa-camera"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-info">
+            <!-- Price -->
+            <div class="price-card">
+                <div class="price">KES {{ "{:,.0f}".format(product.price) }}</div>
+                <div class="tags">
+                    <span class="tag">{{ product.condition|replace('_',' ')|title }}</span>
+                    <span class="tag">{{ product.category.name if product.category else 'General' }}</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="info-card">
+                <div class="card-title">Description</div>
+                <p class="description">{{ product.description }}</p>
+            </div>
+
+            <!-- Seller -->
+            <div class="info-card">
+                <div class="card-title">Seller</div>
+                <div class="seller-row">
+                    <div class="seller-avatar">
+                        {{ product.seller.username[0]|upper }}
+                    </div>
+                    <div class="seller-info">
+                        <div class="seller-name">{{ product.seller.username }}</div>
+                        <div class="seller-date">Member since {{ product.seller.created_at.strftime('%b %Y') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-bar">
+                {% if is_authenticated %}
+                    {% if product.seller_id == current_user.id %}
+                        <!-- Seller View -->
+                        <a href="{{ url_for('products.edit_product', product_id=product.id) }}" class="btn-primary">
+                            <i class="fas fa-edit"></i> Edit Listing
+                        </a>
+                        <a href="{{ url_for('chat.index') }}" class="btn-secondary">
+                            <i class="fas fa-comments"></i> My Chats
+                        </a>
+                    {% else %}
+                        {% if product.is_sold %}
+                            <div class="sold-message">
+                                <i class="fas fa-check-circle"></i> Sold
+                            </div>
+                        {% else %}
+                            {% if has_access %}
+                                <!-- Has access - show contact and chat -->
+                                <a href="{{ url_for('products.view_buyer_contact', product_id=product.id) }}" class="btn-primary">
+                                    <i class="fas fa-phone"></i> View Contact
+                                </a>
+                                <form action="{{ url_for('chat.start_chat', product_id=product.id) }}" method="POST" style="width: 100%;">
+                                    <button type="submit" class="btn-primary" id="chatButton">
+                                        <i class="fas fa-comment"></i> Message Seller
+                                    </button>
+                                </form>
+                            {% else %}
+                                <!-- Need to unlock -->
+                                <a href="{{ url_for('products.unlock_product', product_id=product.id) }}" class="btn-primary btn-pulse">
+                                    <i class="fas fa-lock-open"></i> Unlock Contact
+                                    <span class="fee">KES {{ product.get_unlock_fee() }}</span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <!-- Not logged in -->
+                    <a href="{{ url_for('auth.login', next=request.path) }}" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login to Contact
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn-secondary">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Dark Theme Colors */
+:root {
+    --primary: #5f9ea0;
+    --primary-dark: #4a7c7e;
+    --primary-light: #7bb2b4;
+    --secondary: #b39b8e;
+    --secondary-dark: #8e7a6f;
+    --accent: #8aa9b5;
+    --accent-purple: #9b8aa9;
+    
+    --bg-deep: #0a0f16;
+    --bg-dark: #141b24;
+    --bg-card: #1e2833;
+    --bg-surface: #2a3542;
+    --bg-hover: #334153;
+    
+    --border-light: #3e4a5a;
+    --border-medium: #4d5b6b;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #d3dce6;
+    --text-muted: #9aa9b9;
+    --text-accent: #c1d0da;
+    
+    --success: #6b9e7a;
+    --warning: #c9a06b;
+    --error: #c97b6b;
+    --info: #7b9ec9;
+    
+    --radius: 16px;
+    --radius-sm: 12px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.product-page {
+    background: var(--bg-deep);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding-bottom: 1rem;
+}
+
+/* Header */
+.product-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.back-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
+    background: var(--bg-hover);
+}
+
+.header-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-title h1 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 0.2rem 0;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.seller-tag {
+    color: var(--primary-light);
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Product Content */
+.product-content {
+    padding: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Image Gallery - Square */
+.image-gallery {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+}
+
+.main-image-container {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--bg-dark);
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-strip {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-light);
+    overflow-x: auto;
+}
+
+.thumbnail {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.thumbnail.active {
+    border-color: var(--primary);
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-placeholder {
+    aspect-ratio: 1 / 1;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 2rem;
+}
+
+/* Info Cards */
+.product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.price-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-bottom: 0.5rem;
+}
+
+.tags {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tag {
+    padding: 0.25rem 0.6rem;
+    background: var(--bg-surface);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.description {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.seller-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.seller-avatar {
+    width: 44px;
+    height: 44px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.seller-info {
+    flex: 1;
+}
+
+.seller-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+
+.seller-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Action Bar */
+.action-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-medium);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+}
+
+.btn-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; box-shadow: 0 0 0 2px rgba(95,158,160,0.3); }
+}
+
+.fee {
+    background: rgba(255,255,255,0.15);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+.sold-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    background: var(--bg-surface);
+    border-radius: 40px;
+    color: var(--success);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Status Message */
+#chatStatus {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.status-success {
+    background: var(--success);
+    color: white;
+}
+
+.status-error {
+    background: var(--error);
+    color: white;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+    .product-content {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+    
+    .product-header {
+        max-width: 480px;
+        margin: 0 auto;
+        border-left: 1px solid var(--border-light);
+        border-right: 1px solid var(--border-light);
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .product-content {
+        padding: 0.75rem;
+    }
+    
+    .price {
+        font-size: 1.3rem;
+    }
+    
+    .thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+}
+</style>
+
+<script>
+// Thumbnail click handler
+document.addEventListener('DOMContentLoaded', function() {
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const mainImage = document.getElementById('mainProductImage');
+    
+    if (thumbnails.length > 0 && mainImage) {
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', function() {
+                const newSrc = this.dataset.image;
+                mainImage.src = newSrc;
+                
+                thumbnails.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        if (thumbnails[0]) thumbnails[0].classList.add('active');
+    }
+    
+    // Check for flash messages about chat creation
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(msg => {
+        if (msg.textContent.includes('chat') || msg.textContent.includes('unlock')) {
+            setTimeout(() => {
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            }, 3000);
+        }
+    });
+});
+
+function shareProduct() {
+    const url = window.location.href;
+    const title = '{{ product.title|escape }}';
+    
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            text: 'Check out this item on CampusMarket',
+            url: url
+        }).catch(function() {});
+    } else {
+        copyToClipboard(url);
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            showStatus('Link copied!', 'success');
+        }).catch(function() {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showStatus('Link copied!', 'success');
+    } catch (err) {
+        showStatus('Unable to copy link', 'error');
+    }
+    
+    document.body.removeChild(textarea);
+}
+
+function showStatus(message, type) {
+    const existing = document.getElementById('chatStatus');
+    if (existing) existing.remove();
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.id = 'chatStatus';
+    statusDiv.className = type === 'success' ? 'status-success' : 'status-error';
+    statusDiv.textContent = message;
+    document.body.appendChild(statusDiv);
+    
+    setTimeout(() => {
+        if (statusDiv) statusDiv.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

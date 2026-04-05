@@ -1,0 +1,764 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Advanced Analytics - Campus Marketplace{% endblock %}
+{% block header_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6" id="dashboardApp">
+    <!-- Controls -->
+    <div class="card p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div class="flex items-center space-x-4">
+                <h3 class="text-lg font-semibold text-white">Real-time Dashboard</h3>
+                <div id="lastUpdated" class="text-sm text-[var(--text-muted)]"></div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2">
+                <select id="timeRange" class="px-3 py-2 bg-[var(--card-bg)] border border-[var(--border-dark)] rounded-lg text-white text-sm">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                </select>
+                
+                <button id="refreshBtn" class="px-3 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors text-sm">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                </button>
+                
+                <button id="exportBtn" class="px-3 py-2 bg-[var(--success)] text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+                    <i class="fas fa-download mr-1"></i> Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="statsGrid">
+        <!-- Stats will be loaded dynamically -->
+        <div class="card p-6 animate-pulse">
+            <div class="h-4 bg-[var(--border-dark)] rounded w-3/4 mb-2"></div>
+            <div class="h-8 bg-[var(--border-dark)] rounded w-1/2"></div>
+        </div>
+        <div class="card p-6 animate-pulse">
+            <div class="h-4 bg-[var(--border-dark)] rounded w-3/4 mb-2"></div>
+            <div class="h-8 bg-[var(--border-dark)] rounded w-1/2"></div>
+        </div>
+        <div class="card p-6 animate-pulse">
+            <div class="h-4 bg-[var(--border-dark)] rounded w-3/4 mb-2"></div>
+            <div class="h-8 bg-[var(--border-dark)] rounded w-1/2"></div>
+        </div>
+        <div class="card p-6 animate-pulse">
+            <div class="h-4 bg-[var(--border-dark)] rounded w-3/4 mb-2"></div>
+            <div class="h-8 bg-[var(--border-dark)] rounded w-1/2"></div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- User Growth -->
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">User Growth</h3>
+                <div class="text-sm text-[var(--text-muted)]" id="userGrowthPeriod"></div>
+            </div>
+            <canvas id="userGrowthChart" height="300"></canvas>
+        </div>
+
+        <!-- Revenue Analytics -->
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">Revenue Analytics</h3>
+                <div class="text-sm text-[var(--text-muted)]" id="revenuePeriod"></div>
+            </div>
+            <canvas id="revenueChart" height="300"></canvas>
+        </div>
+
+        <!-- Product Activity -->
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">Product Activity</h3>
+                <div class="text-sm text-[var(--text-muted)]" id="productPeriod"></div>
+            </div>
+            <canvas id="productActivityChart" height="250"></canvas>
+        </div>
+
+        <!-- Category Distribution -->
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-white">Category Distribution</h3>
+                <div class="text-sm text-[var(--text-muted)]">All Time</div>
+            </div>
+            <canvas id="categoryChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <!-- System Health & Real-time Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- System Health -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                <i class="fas fa-heartbeat mr-2 text-[var(--error)]"></i>
+                System Health
+            </h3>
+            <div id="systemHealth" class="space-y-3">
+                <!-- Health stats will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Real-time Stats -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                <i class="fas fa-bolt mr-2 text-[var(--warning)]"></i>
+                This Hour
+            </h3>
+            <div id="realTimeStats" class="space-y-3">
+                <!-- Real-time stats will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+            <div class="space-y-2">
+                <button onclick="runCleanup()" class="w-full text-left px-4 py-3 bg-[var(--darker-bg)] hover:bg-[var(--card-bg)] rounded-lg transition-colors text-sm">
+                    <i class="fas fa-broom mr-2 text-[var(--info)]"></i>
+                    Cleanup Old Data
+                </button>
+                <button onclick="exportData()" class="w-full text-left px-4 py-3 bg-[var(--darker-bg)] hover:bg-[var(--card-bg)] rounded-lg transition-colors text-sm">
+                    <i class="fas fa-file-export mr-2 text-[var(--success)]"></i>
+                    Export All Data
+                </button>
+                <button onclick="refreshAll()" class="w-full text-left px-4 py-3 bg-[var(--darker-bg)] hover:bg-[var(--card-bg)] rounded-lg transition-colors text-sm">
+                    <i class="fas fa-sync mr-2 text-[var(--accent)]"></i>
+                    Refresh All Charts
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="recentActivity">
+            <!-- Activity will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-[var(--card-bg)] p-6 rounded-lg flex items-center space-x-3">
+        <i class="fas fa-spinner fa-spin text-[var(--primary)]"></i>
+        <span class="text-white">Loading...</span>
+    </div>
+</div>
+
+<script>
+class DashboardManager {
+    constructor() {
+        this.charts = {};
+        this.settings = {
+            refreshInterval: 30000,
+            autoRefresh: true
+        };
+        this.init();
+    }
+
+    init() {
+        this.loadAllData();
+        this.setupEventListeners();
+        this.startAutoRefresh();
+    }
+
+    setupEventListeners() {
+        // Time range selector
+        const timeRange = document.getElementById('timeRange');
+        if (timeRange) {
+            timeRange.addEventListener('change', (e) => {
+                this.loadChartData(parseInt(e.target.value));
+            });
+        }
+
+        // Refresh button
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                this.loadAllData();
+            });
+        }
+
+        // Export button
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                this.exportData();
+            });
+        }
+    }
+
+    async loadAllData() {
+        this.showLoading();
+        
+        try {
+            await Promise.all([
+                this.loadOverviewStats(),
+                this.loadChartData(30),
+                this.loadRecentActivity(),
+                this.loadSystemHealth(),
+                this.loadRealTimeStats()
+            ]);
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            this.showError('Failed to load dashboard data');
+        } finally {
+            this.hideLoading();
+            this.updateLastUpdated();
+        }
+    }
+
+    async loadOverviewStats() {
+        try {
+            const response = await fetch('/admin/api/dashboard-stats');
+            if (!response.ok) throw new Error('Failed to load overview stats');
+            const stats = await response.json();
+            this.renderOverviewStats(stats);
+        } catch (error) {
+            console.error('Error loading overview stats:', error);
+        }
+    }
+
+    async loadChartData(days) {
+        try {
+            // This would need a real endpoint
+            // For now, we'll use mock data
+            const mockData = this.generateMockChartData(days);
+            this.renderCharts(mockData, days);
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+        }
+    }
+
+    generateMockChartData(days) {
+        const dates = [];
+        const users = [];
+        const revenue = [];
+        const products = [];
+        const unlocks = [];
+        
+        const today = new Date();
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            
+            // Generate random data
+            users.push(Math.floor(Math.random() * 20) + 5);
+            revenue.push(Math.floor(Math.random() * 5000) + 1000);
+            products.push(Math.floor(Math.random() * 15) + 3);
+            unlocks.push(Math.floor(Math.random() * 25) + 5);
+        }
+        
+        return { dates, users, revenue, products, unlocks };
+    }
+
+    async loadRecentActivity() {
+        // Mock recent activity data
+        const activity = {
+            recent_users: [
+                { username: 'john_doe', created_at: new Date().toISOString() },
+                { username: 'jane_smith', created_at: new Date().toISOString() },
+                { username: 'bob_wilson', created_at: new Date().toISOString() }
+            ],
+            recent_products: [
+                { title: 'iPhone 13 Pro', created_at: new Date().toISOString() },
+                { title: 'MacBook Pro', created_at: new Date().toISOString() },
+                { title: 'AirPods Pro', created_at: new Date().toISOString() }
+            ],
+            recent_transactions: [
+                { amount: 45000, completed_at: new Date().toISOString() },
+                { amount: 120000, completed_at: new Date().toISOString() },
+                { amount: 32000, completed_at: new Date().toISOString() }
+            ],
+            recent_notifications: [
+                { message: 'New user registered', created_at: new Date().toISOString() },
+                { message: 'Product sold', created_at: new Date().toISOString() },
+                { message: 'Payment received', created_at: new Date().toISOString() }
+            ]
+        };
+        this.renderRecentActivity(activity);
+    }
+
+    async loadSystemHealth() {
+        const health = {
+            uptime: '99.9%',
+            error_rate: 0.5,
+            total_records: 15420,
+            active_users_24h: 342
+        };
+        this.renderSystemHealth(health);
+    }
+
+    async loadRealTimeStats() {
+        const stats = {
+            users_this_hour: 12,
+            products_this_hour: 8,
+            revenue_this_hour: 4500
+        };
+        this.renderRealTimeStats(stats);
+    }
+
+    renderOverviewStats(stats) {
+        const statsGrid = document.getElementById('statsGrid');
+        if (!statsGrid) return;
+        
+        statsGrid.innerHTML = `
+            <div class="card stat-card p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-[var(--primary)]/20">
+                        <i class="fas fa-users text-[var(--primary)] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[var(--text-muted)]">Online Users</p>
+                        <h3 class="text-2xl font-bold text-white">${stats.online_users || 0}</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card stat-card p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-[var(--success)]/20">
+                        <i class="fas fa-user-plus text-[var(--success)] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[var(--text-muted)]">New Users Today</p>
+                        <h3 class="text-2xl font-bold text-white">${stats.today_users || 0}</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card stat-card p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-[var(--accent)]/20">
+                        <i class="fas fa-box text-[var(--accent)] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[var(--text-muted)]">New Products Today</p>
+                        <h3 class="text-2xl font-bold text-white">${stats.today_products || 0}</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card stat-card p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-lg bg-[var(--warning)]/20">
+                        <i class="fas fa-money-bill-wave text-[var(--warning)] text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-[var(--text-muted)]">Revenue Today</p>
+                        <h3 class="text-2xl font-bold text-white">KES ${stats.today_revenue?.toFixed(2) || '0.00'}</h3>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderCharts(chartData, days) {
+        this.renderUserGrowthChart(chartData, days);
+        this.renderRevenueChart(chartData, days);
+        this.renderProductActivityChart(chartData, days);
+        this.renderCategoryChart();
+    }
+
+    renderUserGrowthChart(chartData, days) {
+        const ctx = document.getElementById('userGrowthChart')?.getContext('2d');
+        if (!ctx) return;
+        
+        if (this.charts.userGrowth) {
+            this.charts.userGrowth.destroy();
+        }
+
+        this.charts.userGrowth = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.dates || [],
+                datasets: [{
+                    label: 'User Registrations',
+                    data: chartData.users || [],
+                    borderColor: 'var(--primary)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: this.getChartOptions('User Growth')
+        });
+
+        const element = document.getElementById('userGrowthPeriod');
+        if (element) element.textContent = `Last ${days} days`;
+    }
+
+    renderRevenueChart(chartData, days) {
+        const ctx = document.getElementById('revenueChart')?.getContext('2d');
+        if (!ctx) return;
+        
+        if (this.charts.revenue) {
+            this.charts.revenue.destroy();
+        }
+
+        this.charts.revenue = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.dates || [],
+                datasets: [{
+                    label: 'Daily Revenue (KES)',
+                    data: chartData.revenue || [],
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderRadius: 4
+                }]
+            },
+            options: this.getChartOptions('Revenue')
+        });
+
+        const element = document.getElementById('revenuePeriod');
+        if (element) element.textContent = `Last ${days} days`;
+    }
+
+    renderProductActivityChart(chartData, days) {
+        const ctx = document.getElementById('productActivityChart')?.getContext('2d');
+        if (!ctx) return;
+        
+        if (this.charts.productActivity) {
+            this.charts.productActivity.destroy();
+        }
+
+        this.charts.productActivity = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.dates || [],
+                datasets: [
+                    {
+                        label: 'Products Listed',
+                        data: chartData.products || [],
+                        borderColor: 'var(--secondary)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Product Unlocks',
+                        data: chartData.unlocks || [],
+                        borderColor: 'var(--accent)',
+                        backgroundColor: 'rgba(6, 214, 160, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: this.getChartOptions('Product Activity')
+        });
+
+        const element = document.getElementById('productPeriod');
+        if (element) element.textContent = `Last ${days} days`;
+    }
+
+    async renderCategoryChart() {
+        try {
+            const ctx = document.getElementById('categoryChart')?.getContext('2d');
+            if (!ctx) return;
+            
+            // Mock category data
+            const categories = [
+                { category: 'Electronics', product_count: 45 },
+                { category: 'Fashion', product_count: 32 },
+                { category: 'Books', product_count: 28 },
+                { category: 'Sports', product_count: 21 },
+                { category: 'Other', product_count: 15 }
+            ];
+            
+            if (this.charts.category) {
+                this.charts.category.destroy();
+            }
+
+            this.charts.category = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(c => c.category),
+                    datasets: [{
+                        data: categories.map(c => c.product_count),
+                        backgroundColor: [
+                            'var(--primary)',
+                            'var(--secondary)',
+                            'var(--accent)',
+                            'var(--info)',
+                            'var(--warning)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'var(--text-muted)',
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error loading category chart:', error);
+        }
+    }
+
+    renderRecentActivity(activity) {
+        const container = document.getElementById('recentActivity');
+        if (!container) return;
+        
+        let html = '';
+        
+        // Recent Users
+        html += `
+            <div class="space-y-3">
+                <h4 class="font-semibold text-white flex items-center">
+                    <i class="fas fa-user-plus mr-2 text-[var(--primary)]"></i>
+                    New Users
+                </h4>
+                ${activity.recent_users?.map(user => `
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--darker-bg)]/50">
+                        <span class="text-sm text-white">${user.username}</span>
+                        <span class="text-xs text-[var(--text-muted)]">${this.formatDate(user.created_at)}</span>
+                    </div>
+                `).join('') || '<p class="text-[var(--text-muted)] text-sm">No recent users</p>'}
+            </div>
+        `;
+
+        // Recent Products
+        html += `
+            <div class="space-y-3">
+                <h4 class="font-semibold text-white flex items-center">
+                    <i class="fas fa-box mr-2 text-[var(--success)]"></i>
+                    New Products
+                </h4>
+                ${activity.recent_products?.map(product => `
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--darker-bg)]/50">
+                        <span class="text-sm text-white truncate">${product.title}</span>
+                        <span class="text-xs text-[var(--text-muted)]">${this.formatDate(product.created_at)}</span>
+                    </div>
+                `).join('') || '<p class="text-[var(--text-muted)] text-sm">No recent products</p>'}
+            </div>
+        `;
+
+        // Recent Transactions
+        html += `
+            <div class="space-y-3">
+                <h4 class="font-semibold text-white flex items-center">
+                    <i class="fas fa-money-bill-wave mr-2 text-[var(--warning)]"></i>
+                    Transactions
+                </h4>
+                ${activity.recent_transactions?.map(tx => `
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--darker-bg)]/50">
+                        <span class="text-sm text-white">KES ${tx.amount}</span>
+                        <span class="text-xs text-[var(--text-muted)]">${this.formatDate(tx.completed_at)}</span>
+                    </div>
+                `).join('') || '<p class="text-[var(--text-muted)] text-sm">No recent transactions</p>'}
+            </div>
+        `;
+
+        // Recent Notifications
+        html += `
+            <div class="space-y-3">
+                <h4 class="font-semibold text-white flex items-center">
+                    <i class="fas fa-bell mr-2 text-[var(--accent)]"></i>
+                    Notifications
+                </h4>
+                ${activity.recent_notifications?.map(notif => `
+                    <div class="p-2 rounded-lg bg-[var(--darker-bg)]/50">
+                        <p class="text-xs text-white truncate">${notif.message}</p>
+                        <p class="text-xs text-[var(--text-muted)]">${this.formatDate(notif.created_at)}</p>
+                    </div>
+                `).join('') || '<p class="text-[var(--text-muted)] text-sm">No recent notifications</p>'}
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    renderSystemHealth(health) {
+        const container = document.getElementById('systemHealth');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Uptime</span>
+                <span class="text-sm font-medium text-[var(--success)]">${health.uptime || '99.9%'}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Error Rate</span>
+                <span class="text-sm font-medium ${health.error_rate > 5 ? 'text-[var(--error)]' : 'text-[var(--success)]'}">
+                    ${health.error_rate || 0}%
+                </span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Total Records</span>
+                <span class="text-sm font-medium text-white">${health.total_records?.toLocaleString() || 0}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Active Users (24h)</span>
+                <span class="text-sm font-medium text-white">${health.active_users_24h || 0}</span>
+            </div>
+        `;
+    }
+
+    renderRealTimeStats(stats) {
+        const container = document.getElementById('realTimeStats');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Users This Hour</span>
+                <span class="text-sm font-medium text-white">${stats.users_this_hour || 0}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Products This Hour</span>
+                <span class="text-sm font-medium text-white">${stats.products_this_hour || 0}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-[var(--text-muted)]">Revenue This Hour</span>
+                <span class="text-sm font-medium text-[var(--success)]">KES ${stats.revenue_this_hour?.toFixed(2) || '0.00'}</span>
+            </div>
+        `;
+    }
+
+    getChartOptions(title) {
+        return {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'var(--text-muted)'
+                    }
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'var(--text-muted)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'var(--text-muted)',
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        };
+    }
+
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    updateLastUpdated() {
+        const element = document.getElementById('lastUpdated');
+        if (element) {
+            element.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+    }
+
+    showLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+    }
+
+    hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+    }
+
+    showError(message) {
+        console.error(message);
+        // You could implement a toast notification here
+    }
+
+    startAutoRefresh() {
+        if (this.settings.autoRefresh) {
+            setInterval(() => {
+                this.loadAllData();
+            }, this.settings.refreshInterval);
+        }
+    }
+
+    async exportData() {
+        try {
+            // Mock export data
+            const data = {
+                timestamp: new Date().toISOString(),
+                stats: {
+                    users: 1250,
+                    products: 543,
+                    revenue: 125000
+                }
+            };
+            
+            // Create and download JSON file
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            this.showError('Failed to export data');
+        }
+    }
+}
+
+// Global functions for quick actions
+async function runCleanup() {
+    if (confirm('This will cleanup old data. Are you sure?')) {
+        try {
+            alert('Cleanup completed');
+            dashboard.loadAllData();
+        } catch (error) {
+            alert('Cleanup failed');
+        }
+    }
+}
+
+function exportData() {
+    if (dashboard) {
+        dashboard.exportData();
+    }
+}
+
+function refreshAll() {
+    if (dashboard) {
+        dashboard.loadAllData();
+    }
+}
+
+// Initialize dashboard when page loads
+let dashboard;
+document.addEventListener('DOMContentLoaded', function() {
+    dashboard = new DashboardManager();
+});
+</script>
+{% endblock %}

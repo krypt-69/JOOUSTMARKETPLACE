@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Campus Marketplace{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h1>Notifications</h1>
+
+        {% if notifications.items %}
+        <form method="POST" action="{{ url_for('main.mark_all_notifications_read') }}" id="markAllForm">
+            <button type="submit" class="mark-all-read-btn" id="markAllBtn">
+                Mark All as Read
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if notifications.items %}
+        <div id="notificationsList">
+            {% for notification in notifications.items %}
+            <div class="notification-card {% if not notification.is_read %}unread{% endif %}" 
+                 data-notification-id="{{ notification.id }}"
+                 data-read="{{ notification.is_read }}">
+                
+                <div class="notification-message">
+                    {{ notification.message }}
+                </div>
+                
+                <div class="notification-meta">
+                    <div class="notification-time">
+                        {{ notification.created_at.strftime('%Y-%m-%d at %H:%M') }}
+                    </div>
+                    {% if notification.product %}
+                    <div class="notification-product">
+                        {{ notification.product.title }} • Unlock Fee KES {{ notification.unlock.amount|default(5) }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="notification-actions">
+                    {% if notification.product %}
+                    <a href="{{ url_for('products.view_product', product_id=notification.product.id) }}" 
+                       class="view-product-btn"
+                       data-product-id="{{ notification.product.id }}">
+                        View Product
+                    </a>
+                    {% endif %}
+                    
+                    {% if not notification.is_read %}
+                    <button type="button" 
+                            class="mark-read-btn"
+                            data-notification-id="{{ notification.id }}">
+                        Mark as Read
+                    </button>
+                    {% endif %}
+                </div>
+                
+                {% if notification.is_read %}
+                    <span class="badge read">Read</span>
+                {% else %}
+                    <span class="badge unread">New</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if notifications.pages > 1 %}
+        <div class="pagination">
+            {% if notifications.has_prev %}
+            <a class="page-link" href="{{ url_for('main.notifications', page=notifications.prev_num) }}">Previous</a>
+            {% endif %}
+
+            {% for page_num in notifications.iter_pages() %}
+            {% if page_num %}
+                <a class="page-link {% if page_num == notifications.page %}active{% endif %}" 
+                   href="{{ url_for('main.notifications', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <span class="page-link">...</span>
+            {% endif %}
+            {% endfor %}
+
+            {% if notifications.has_next %}
+            <a class="page-link" href="{{ url_for('main.notifications', page=notifications.next_num) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <span>📋</span>
+            </div>
+            <h4>No notifications yet</h4>
+            <p>When someone unlocks your products, you'll see notifications here.</p>
+            <a href="{{ url_for('main.index') }}">Browse Marketplace</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

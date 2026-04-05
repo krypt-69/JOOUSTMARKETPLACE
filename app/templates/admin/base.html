@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>{% block title %}Admin Dashboard - Campus Marketplace{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --accent: #06d6a0;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --darker-bg: #0a0f1c;
+            --text-light: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-dark: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --radius: 10px;
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-secondary: linear-gradient(135deg, #f59e0b, #eab308);
+            --gradient-accent: linear-gradient(135deg, #06d6a0, #10b981);
+            --gradient-premium: linear-gradient(135deg, #f97316, #dc2626);
+            --gradient-dark: linear-gradient(135deg, #1e293b, #0f172a);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Mobile-first layout */
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Mobile Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: var(--darker-bg);
+            border-right: 1px solid var(--border-dark);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+        
+        .sidebar.open {
+            left: 0;
+        }
+        
+        /* Desktop Sidebar */
+        @media (min-width: 1024px) {
+            .app-wrapper {
+                flex-direction: row;
+            }
+            
+            .sidebar {
+                position: sticky;
+                left: 0;
+                width: 280px;
+                height: 100vh;
+            }
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-dark);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        @media (min-width: 768px) {
+            .header {
+                padding: 1rem 1.5rem;
+            }
+        }
+        
+        /* Mobile Menu Button */
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius);
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        @media (min-width: 1024px) {
+            .menu-btn {
+                display: none;
+            }
+        }
+        
+        /* Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+        
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        /* Navigation Items */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+            margin: 0.25rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .nav-item i {
+            width: 24px;
+            font-size: 1.1rem;
+            margin-right: 0.75rem;
+        }
+        
+        .nav-item:hover {
+            background: var(--card-bg);
+            color: var(--text-light);
+        }
+        
+        .nav-item.active {
+            background: var(--gradient-primary);
+            color: white;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+        
+        @media (min-width: 768px) {
+            .card {
+                padding: 1.5rem;
+            }
+        }
+        
+        /* Flash Messages */
+        .flash-message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius);
+            animation: slideIn 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-1rem);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .flash-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .flash-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+        
+        .flash-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        .flash-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--info);
+            color: var(--info);
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--darker-bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-dark);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        @media (min-width: 768px) {
+            .content-area {
+                padding: 1.5rem;
+            }
+        }
+        
+        /* Utility Classes */
+        .text-gradient-primary {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .badge-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        /* Loading animation */
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+
+        /* Stat card hover effect */
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="p-4 md:p-6">
+                <!-- Logo Area -->
+                <div class="flex items-center justify-between mb-8">
+                    <h1 class="text-xl md:text-2xl font-bold">
+                        <span class="text-gradient-primary">
+                            <i class="fas fa-shield-alt mr-2"></i>
+                        </span>
+                        <span class="text-white">Admin</span>
+                    </h1>
+                    
+                    <!-- Close button for mobile -->
+                    <button class="menu-btn lg:hidden" id="closeSidebar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="space-y-1">
+                    <a href="{{ url_for('admin.dashboard') }}" 
+                       class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-pie"></i>
+                        Dashboard
+                    </a>
+                    
+                    <a href="{{ url_for('admin.users_management') }}" 
+                       class="nav-item {% if 'users' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        Users
+                    </a>
+                    
+                    <a href="{{ url_for('admin.products_management') }}" 
+                       class="nav-item {% if 'products' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-box"></i>
+                        Products
+                    </a>
+                    
+                    <a href="{{ url_for('admin.transactions_management') }}" 
+                       class="nav-item {% if 'transactions' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-credit-card"></i>
+                        Transactions
+                    </a>
+                    
+                    <a href="{{ url_for('admin.analytics') }}" 
+                       class="nav-item {% if 'analytics' in request.endpoint %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i>
+                        Analytics
+                    </a>
+                </nav>
+                
+                <!-- Bottom Links -->
+                <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 border-t border-[var(--border-dark)]">
+                    <a href="{{ url_for('main.index') }}" 
+                       class="nav-item w-full">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Site
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <!-- Mobile Menu Button -->
+                        <button class="menu-btn" id="menuToggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        
+                        <h2 class="text-lg md:text-xl font-semibold text-white">
+                            {% block header_title %}Dashboard{% endblock %}
+                        </h2>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2 md:space-x-4">
+                        <span class="text-sm text-[var(--text-muted)] hidden sm:inline">
+                            <i class="fas fa-user-circle mr-2"></i>
+                            {{ current_user.username }}
+                        </span>
+                        <span class="sm:hidden">
+                            <i class="fas fa-user-circle text-xl"></i>
+                        </span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <main class="content-area">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="space-y-3 mb-4">
+                            {% for category, message in messages %}
+                                <div class="flash-message flash-{{ category if category != 'error' else 'error' }}">
+                                    <div class="flex items-center">
+                                        {% if category == 'success' %}
+                                            <i class="fas fa-check-circle mr-2"></i>
+                                        {% elif category == 'error' %}
+                                            <i class="fas fa-exclamation-circle mr-2"></i>
+                                        {% elif category == 'warning' %}
+                                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                        {% endif %}
+                                        {{ message }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Mobile sidebar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const menuToggle = document.getElementById('menuToggle');
+            const closeSidebar = document.getElementById('closeSidebar');
+            
+            function openSidebar() {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeSidebarFunc() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', openSidebar);
+            }
+            
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', closeSidebarFunc);
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebarFunc);
+            }
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                    closeSidebarFunc();
+                }
+            });
+            
+            // Auto-dismiss flash messages
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'opacity 0.5s ease';
+                    message.style.opacity = '0';
+                    setTimeout(() => {
+                        if (message.parentNode) {
+                            message.remove();
+                        }
+                    }, 500);
+                }, 5000);
+            });
+            
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth >= 1024 && sidebar.classList.contains('open')) {
+                        closeSidebarFunc();
+                    }
+                }, 250);
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

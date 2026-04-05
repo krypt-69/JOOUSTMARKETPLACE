@@ -1,0 +1,1800 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="product-page">
+    <!-- Instagram-style Header -->
+    <div class="product-header">
+        <div class="header-content">
+            <a href="{{ url_for('products.all_products') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-title">
+                <h1>{{ product.title }}</h1>
+                <div class="header-meta">
+                    <span class="seller-tag">@{{ product.seller.username }}</span>
+                    <span class="date-tag">{{ product.created_at.strftime('%b %d') }}</span>
+                    <span class="image-count">
+                        <i class="fas fa-camera"></i> 
+                        {{ product.images|length }} photo{{ 's' if product.images|length != 1 else '' }}
+                    </span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn share-btn" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="product-content">
+        <!-- Image Gallery Section -->
+        <div class="image-gallery">
+            {% if product.images %}
+                <!-- Image Slider Container -->
+                <div class="image-slider" id="imageSlider">
+                    {% for image in product.images %}
+                        <div class="slide {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+                            <div class="main-image">
+                                <img src="{{ url_for('static', filename='uploads/product_images/' + image.filename) }}" 
+                                     alt="{{ product.title }} - Image {{ loop.index }}" 
+                                     class="product-image"
+                                     loading="lazy">
+                                <div class="image-overlay">
+                                    <button class="zoom-btn" onclick="zoomImage('{{ url_for('static', filename='uploads/product_images/' + image.filename) }}')" title="Zoom">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Image Navigation -->
+                {% if product.images|length > 1 %}
+                    <div class="image-nav">
+                        <button class="nav-btn prev-btn" onclick="prevSlide()" aria-label="Previous image">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <!-- Image dots/thumbs -->
+                        <div class="image-thumbs">
+                            {% for image in product.images %}
+                                <div class="thumb {% if loop.first %}active{% endif %}" 
+                                     onclick="goToSlide({{ loop.index0 }})"
+                                     title="Image {{ loop.index }}"
+                                     role="button"
+                                     tabindex="0"
+                                     aria-label="View image {{ loop.index }}">
+                                    <img src="{{ url_for('static', filename='uploads/product_images/' + image.filename) }}" 
+                                         alt="Thumbnail {{ loop.index }}"
+                                         loading="lazy">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <button class="nav-btn next-btn" onclick="nextSlide()" aria-label="Next image">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Image counter -->
+                    <div class="image-counter-display">
+                        <span id="currentSlide">1</span> / <span id="totalSlides">{{ product.images|length }}</span>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="image-placeholder">
+                    <div class="placeholder-content">
+                        <i class="fas fa-camera"></i>
+                        <h3>No Images Available</h3>
+                        <p>This product doesn't have any photos yet</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info Section -->
+        <div class="product-info">
+            <!-- Price and Status -->
+            <div class="price-status-card">
+                <div class="price-display">
+                    <span class="price">KES {{ "{:,.2f}".format(product.price) }}</span>
+                    {% if product.Token and product.Token > 0 %}
+                    <span class="discount-badge">
+                        <i class="fas fa-tag"></i> {{ product.Token }}% OFF
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="status-tags">
+                    <span class="status-tag condition">
+                        <i class="fas fa-star"></i> {{ product.condition|replace('_',' ')|title }}
+                    </span>
+                    <span class="status-tag category">
+                        <i class="fas fa-tag"></i> {{ product.category.name if product.category else 'General' }}
+                    </span>
+                    {% if product.is_fast_moving %}
+                    <span class="status-tag hot">
+                        <i class="fas fa-fire"></i> Hot Item
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description Card -->
+            <div class="description-card card-fade-in">
+                <div class="card-header">
+                    <i class="fas fa-align-left"></i>
+                    <h3>Description</h3>
+                </div>
+                <p class="product-description">{{ product.description }}</p>
+            </div>
+
+            <!-- Seller Info Card -->
+            <div class="seller-card card-fade-in">
+                <div class="card-header">
+                    <i class="fas fa-user-circle"></i>
+                    <h3>Seller Information</h3>
+                </div>
+                <div class="seller-info">
+                    <div class="seller-avatar">
+                        <div class="avatar-circle">
+                            {{ product.seller.username[0]|upper }}
+                        </div>
+                        {% if product.seller.is_verified %}
+                        <div class="verified-badge" title="Verified Seller">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="seller-details">
+                        <h4>@{{ product.seller.username }}</h4>
+                        <div class="seller-stats">
+                            <span class="stat">
+                                <i class="fas fa-star"></i>
+                                <span class="stat-value">4.8</span> • 24 reviews
+                            </span>
+                            <span class="stat">
+                                <i class="fas fa-shopping-bag"></i>
+                                12 items sold
+                            </span>
+                        </div>
+                        <div class="seller-joined">
+                            <i class="fas fa-calendar-alt"></i>
+                            Joined {{ product.seller.created_at.strftime('%b %Y') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Stats -->
+            <div class="stats-card card-fade-in">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">142</span>
+                        <span class="stat-label">Views</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">28</span>
+                        <span class="stat-label">Likes</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ product.created_at.strftime('%b %d') }}</span>
+                        <span class="stat-label">Listed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-section">
+                {% if current_user.is_authenticated %}
+                    {% if product.seller_id == current_user.id %}
+                        <!-- Seller Actions -->
+                        <div class="seller-actions">
+                            <a href="{{ url_for('products.edit_product', product_id=product.id) }}" 
+                               class="btn btn-edit">
+                                <i class="fas fa-edit"></i> Edit Product
+                            </a>
+                            <a href="{{ url_for('products.edit_contact_details', product_id=product.id) }}" 
+                               class="btn btn-contact">
+                                <i class="fas fa-address-card"></i> Contact Settings
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- Buyer Actions -->
+                        {% if product.is_sold %}
+                            <div class="sold-out-banner">
+                                <i class="fas fa-tag"></i>
+                                <span>This item has been sold</span>
+                            </div>
+                        {% else %}
+                            {% set user_has_access = product.is_unlocked_by(current_user) %}
+                            {% if user_has_access %}
+                                <!-- Already paid - show contact button -->
+                                <a href="{{ url_for('products.view_buyer_contact', product_id=product.id) }}" 
+                                   class="btn btn-primary btn-pulse">
+                                    <i class="fas fa-address-card"></i> View Seller Contact
+                                </a>
+                                <p class="access-note">
+                                    <i class="fas fa-check-circle"></i> You have access to seller's contact details
+                                </p>
+                            {% else %}
+                                <!-- Need to pay - show unlock button -->
+                                <a href="{{ url_for('products.unlock_product', product_id=product.id) }}" 
+                                   class="btn btn-primary btn-unlock">
+                                    <i class="fas fa-lock-open"></i> Unlock Contact - KES 5
+                                </a>
+                                <p class="unlock-note">
+                                    <i class="fas fa-info-circle"></i> Pay KES 5 to view seller's contact information
+                                </p>
+                            {% endif %}
+                            
+                            <!-- Additional buyer options -->
+                            <div class="buyer-options">
+                                <button class="action-btn like-btn" title="Save item">
+                                    <i class="far fa-heart"></i>
+                                    <span>Save</span>
+                                </button>
+                                <button class="action-btn share-btn" title="Share item">
+                                    <i class="fas fa-share-alt"></i>
+                                    <span>Share</span>
+                                </button>
+                                <button class="action-btn message-btn" title="Message seller">
+                                    <i class="far fa-comment"></i>
+                                    <span>Message</span>
+                                </button>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <!-- Not logged in -->
+                    <div class="guest-actions">
+                        <a href="{{ url_for('auth.login', next=request.path) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login to Contact Seller
+                        </a>
+                        <p class="guest-note">
+                            <i class="fas fa-user-plus"></i> Create an account to message the seller and unlock contact details
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Products Section -->
+    <div class="similar-products">
+        <div class="section-header">
+            <h3>Similar Products</h3>
+            <a href="{{ url_for('products.all_products') }}" class="view-all">View All</a>
+        </div>
+        <div class="products-grid">
+            <!-- Placeholder for similar products -->
+            <div class="no-products">
+                <div class="no-products-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <p>No similar products found</p>
+                <a href="{{ url_for('products.all_products') }}" class="btn btn-outline">
+                    Browse All Products
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal">
+    <span class="close-modal" onclick="closeModal()" title="Close">&times;</span>
+    <img class="modal-content" id="modalImage" alt="Zoomed product image">
+    <div class="modal-caption">
+        <span id="modalCaption"></span>
+    </div>
+    <div class="modal-nav">
+        <button class="modal-nav-btn prev" onclick="prevSlide()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="modal-nav-btn next" onclick="nextSlide()">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<style>
+/* ===== VARIABLES ===== */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --warning-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    --danger-gradient: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+    
+    --instagram-purple: #405DE6;
+    --instagram-blue: #5851DB;
+    --instagram-red: #FD1D1D;
+    --instagram-pink: #E1306C;
+    --instagram-orange: #FCAF45;
+    --instagram-yellow: #FFDC80;
+    
+    --card-bg: #ffffff;
+    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    --card-radius: 20px;
+    --text-dark: #1a1a1a;
+    --text-medium: #666666;
+    --text-light: #999999;
+    --border-color: #f0f0f0;
+    --bg-color: #f8f9fa;
+}
+
+/* ===== BASE STYLES ===== */
+.product-page {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    background: var(--bg-color);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-dark);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-10px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.card-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* ===== HEADER STYLES ===== */
+.product-header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 1rem;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.header-title {
+    flex: 1;
+    text-align: center;
+    animation: slideIn 0.5s ease-out;
+}
+
+.header-title h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+}
+
+.header-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.seller-tag {
+    color: var(--instagram-purple);
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    background: rgba(64, 93, 230, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.seller-tag:hover {
+    background: rgba(64, 93, 230, 0.2);
+}
+
+.date-tag {
+    color: var(--text-medium);
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+}
+
+.image-count {
+    color: var(--instagram-pink);
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    background: rgba(225, 48, 108, 0.1);
+    border-radius: 12px;
+}
+
+.header-actions .action-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.header-actions .action-btn:hover {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    transform: scale(1.1);
+}
+
+/* ===== MAIN CONTENT ===== */
+.product-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ===== IMAGE GALLERY ===== */
+.image-gallery {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    position: relative;
+}
+
+.image-slider {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: var(--card-radius) var(--card-radius) 0 0;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide.active {
+    opacity: 1;
+    z-index: 1;
+}
+
+.main-image {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.main-image:hover .product-image {
+    transform: scale(1.02);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.4));
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.main-image:hover .image-overlay {
+    opacity: 1;
+}
+
+.zoom-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.zoom-btn:hover {
+    background: white;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Image Navigation */
+.image-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+.nav-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--card-bg);
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.nav-btn:hover {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Image thumbs */
+.image-thumbs {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0 1rem;
+    overflow-x: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.image-thumbs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.image-thumbs::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.image-thumbs::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+.thumb {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    opacity: 0.6;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    position: relative;
+}
+
+.thumb::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.thumb:hover::after {
+    opacity: 1;
+}
+
+.thumb:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.thumb.active {
+    border-color: var(--instagram-purple);
+    opacity: 1;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(64, 93, 230, 0.3);
+}
+
+.thumb.active::after {
+    opacity: 0;
+}
+
+.thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.thumb:hover img {
+    transform: scale(1.1);
+}
+
+/* Image counter */
+.image-counter-display {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Placeholder */
+.image-placeholder {
+    width: 100%;
+    height: 400px;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.image-placeholder::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.placeholder-content {
+    text-align: center;
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.placeholder-content i {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+    animation: float 3s ease-in-out infinite;
+}
+
+.placeholder-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.placeholder-content p {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* ===== PRODUCT INFO CARDS ===== */
+.product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.price-status-card {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    animation: fadeIn 0.4s ease-out 0.1s forwards;
+    opacity: 0;
+}
+
+.price-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.price {
+    font-size: 2.25rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.discount-badge {
+    background: var(--danger-gradient);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: pulse 2s infinite;
+}
+
+.status-tags {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.status-tag {
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.status-tag:hover {
+    transform: translateY(-2px);
+}
+
+.status-tag.condition {
+    background: var(--primary-gradient);
+}
+
+.status-tag.category {
+    background: var(--secondary-gradient);
+}
+
+.status-tag.hot {
+    background: var(--warning-gradient);
+}
+
+/* Card Styles */
+.description-card,
+.seller-card,
+.stats-card {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    animation: fadeIn 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.description-card { animation-delay: 0.2s; }
+.seller-card { animation-delay: 0.3s; }
+.stats-card { animation-delay: 0.4s; }
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.card-header i {
+    font-size: 1.25rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.product-description {
+    color: var(--text-medium);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Seller Info */
+.seller-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.seller-avatar {
+    position: relative;
+}
+
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.verified-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: var(--success-gradient);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border: 2px solid var(--card-bg);
+}
+
+.seller-details {
+    flex: 1;
+}
+
+.seller-details h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 0.5rem 0;
+}
+
+.seller-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--text-medium);
+}
+
+.stat i {
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.seller-joined {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Stats Card */
+.stats-card {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    text-align: center;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    background: white;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+/* ===== ACTION SECTION ===== */
+.action-section {
+    margin-top: 1rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    margin-bottom: 1rem;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-unlock {
+    background: var(--secondary-gradient);
+}
+
+.btn-unlock:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
+}
+
+.btn-pulse {
+    animation: pulse 2s infinite;
+}
+
+.btn-edit {
+    background: var(--success-gradient);
+}
+
+.btn-contact {
+    background: var(--warning-gradient);
+}
+
+.seller-actions {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.buyer-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.buyer-options .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.buyer-options .action-btn:hover {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.buyer-options .action-btn i {
+    font-size: 1.25rem;
+}
+
+.buyer-options .action-btn span {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.access-note,
+.unlock-note,
+.guest-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.access-note i {
+    color: #00d2b5;
+}
+
+.unlock-note i {
+    color: var(--instagram-pink);
+}
+
+.guest-note i {
+    color: var(--instagram-purple);
+}
+
+.sold-out-banner {
+    background: var(--danger-gradient);
+    color: white;
+    padding: 1.25rem;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 15px rgba(255, 117, 140, 0.3);
+}
+
+/* ===== SIMILAR PRODUCTS ===== */
+.similar-products {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+}
+
+.view-all {
+    color: var(--instagram-purple);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.view-all:hover {
+    background: rgba(64, 93, 230, 0.1);
+    border-color: rgba(64, 93, 230, 0.2);
+}
+
+.products-grid {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+}
+
+.no-products-icon {
+    font-size: 3.5rem;
+    color: var(--instagram-purple);
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+}
+
+.no-products p {
+    color: var(--text-medium);
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--instagram-purple);
+    color: var(--instagram-purple);
+    padding: 0.75rem 1.5rem;
+}
+
+.btn-outline:hover {
+    background: var(--instagram-purple);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* ===== IMAGE MODAL ===== */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
+    padding: 1rem;
+}
+
+.modal-content {
+    max-width: 90%;
+    max-height: 80%;
+    object-fit: contain;
+    border-radius: 8px;
+    animation: zoomIn 0.3s;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.close-modal {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    color: white;
+    font-size: 50px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 2001;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.modal-caption {
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: 500;
+    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-nav {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.modal-nav-btn {
+    pointer-events: all;
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (min-width: 768px) {
+    .product-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        padding: 2rem;
+    }
+    
+    .image-slider {
+        height: 500px;
+    }
+    
+    .image-placeholder {
+        height: 500px;
+    }
+    
+    .thumb {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .buyer-options {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .header-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    .seller-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .product-content {
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 2.5rem;
+    }
+    
+    .thumb {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .stats-card {
+        padding: 2rem;
+    }
+    
+    .stat-item {
+        padding: 1.25rem;
+    }
+    
+    .btn {
+        font-size: 1.05rem;
+        padding: 1.1rem 1.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-content {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .image-slider {
+        height: 350px;
+    }
+    
+    .price {
+        font-size: 1.75rem;
+    }
+    
+    .header-meta {
+        font-size: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .seller-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .stats-card {
+        grid-template-columns: 1fr;
+    }
+    
+    .buyer-options {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .buyer-options .action-btn span {
+        font-size: 0.75rem;
+    }
+}
+</style>
+
+<script>
+// Enhanced Image slider functionality
+let currentSlide = 0;
+let slideInterval;
+const slides = document.querySelectorAll('.slide');
+const thumbs = document.querySelectorAll('.thumb');
+const totalSlides = slides.length;
+
+// Initialize slider
+function initSlider() {
+    if (totalSlides > 1) {
+        startAutoSlide();
+        // Add touch events
+        const slider = document.querySelector('.image-slider');
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        slider.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            stopAutoSlide();
+        }, { passive: true });
+
+        slider.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+            startAutoSlide();
+        }, { passive: true });
+    }
+    updateSlideCounter();
+}
+
+function showSlide(index) {
+    // Hide all slides
+    slides.forEach(slide => {
+        slide.classList.remove('active');
+        slide.style.opacity = '0';
+    });
+    
+    // Remove active class from all thumbs
+    thumbs.forEach(thumb => thumb.classList.remove('active'));
+    
+    // Show selected slide
+    const targetSlide = slides[index];
+    if (targetSlide) {
+        targetSlide.classList.add('active');
+        setTimeout(() => {
+            targetSlide.style.opacity = '1';
+        }, 10);
+    }
+    
+    // Activate corresponding thumb
+    const targetThumb = thumbs[index];
+    if (targetThumb) {
+        targetThumb.classList.add('active');
+        // Scroll thumb into view smoothly
+        targetThumb.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+        });
+    }
+    
+    currentSlide = index;
+    updateSlideCounter();
+    updateModal();
+}
+
+function nextSlide() {
+    const nextIndex = (currentSlide + 1) % totalSlides;
+    showSlide(nextIndex);
+}
+
+function prevSlide() {
+    const prevIndex = (currentSlide - 1 + totalSlides) % totalSlides;
+    showSlide(prevIndex);
+}
+
+function goToSlide(index) {
+    if (index >= 0 && index < totalSlides) {
+        showSlide(index);
+    }
+}
+
+function updateSlideCounter() {
+    const currentSlideEl = document.getElementById('currentSlide');
+    const totalSlidesEl = document.getElementById('totalSlides');
+    
+    if (currentSlideEl) {
+        currentSlideEl.textContent = currentSlide + 1;
+    }
+    if (totalSlidesEl) {
+        totalSlidesEl.textContent = totalSlides;
+    }
+}
+
+function startAutoSlide(interval = 5000) {
+    if (totalSlides > 1 && !slideInterval) {
+        slideInterval = setInterval(nextSlide, interval);
+    }
+}
+
+function stopAutoSlide() {
+    if (slideInterval) {
+        clearInterval(slideInterval);
+        slideInterval = null;
+    }
+}
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+            nextSlide();
+        } else {
+            prevSlide();
+        }
+    }
+}
+
+// Image modal functionality
+function zoomImage(imageSrc) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const caption = document.getElementById('modalCaption');
+    
+    if (modal && modalImg && caption) {
+        modal.style.display = 'flex';
+        modalImg.src = imageSrc;
+        caption.textContent = `${document.querySelector('.header-title h1').textContent} - Image ${currentSlide + 1} of ${totalSlides}`;
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function updateModal() {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const caption = document.getElementById('modalCaption');
+    
+    if (modal && modal.style.display === 'flex' && modalImg && caption) {
+        const currentImageSrc = slides[currentSlide].querySelector('img').src;
+        modalImg.src = currentImageSrc;
+        caption.textContent = `${document.querySelector('.header-title h1').textContent} - Image ${currentSlide + 1} of ${totalSlides}`;
+    }
+}
+
+// Interactive features
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize slider
+    initSlider();
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('imageModal');
+        const isModalOpen = modal && modal.style.display === 'flex';
+        
+        switch(e.key) {
+            case 'ArrowRight':
+                nextSlide();
+                break;
+            case 'ArrowLeft':
+                prevSlide();
+                break;
+            case 'Escape':
+                closeModal();
+                break;
+            case ' ':
+                if (!isModalOpen) {
+                    e.preventDefault();
+                    toggleAutoSlide();
+                }
+                break;
+        }
+    });
+    
+    // Pause auto-slide on hover
+    const imageGallery = document.querySelector('.image-gallery');
+    if (imageGallery && totalSlides > 1) {
+        imageGallery.addEventListener('mouseenter', stopAutoSlide);
+        imageGallery.addEventListener('mouseleave', () => startAutoSlide());
+        imageGallery.addEventListener('touchstart', stopAutoSlide, { passive: true });
+        imageGallery.addEventListener('touchend', () => startAutoSlide(), { passive: true });
+    }
+    
+    // Like button functionality
+    const likeBtn = document.querySelector('.like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            const isLiked = icon.classList.contains('fas');
+            
+            // Animate the heart
+            this.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 300);
+            
+            if (isLiked) {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                this.style.color = '';
+                showNotification('Removed from saved items');
+            } else {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                this.style.color = '#E1306C';
+                showNotification('Added to saved items');
+            }
+        });
+    }
+    
+    // Share functionality
+    const shareBtns = document.querySelectorAll('.share-btn');
+    shareBtns.forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const shareData = {
+                title: '{{ product.title }}',
+                text: 'Check out this amazing product on CampusMarket!',
+                url: window.location.href
+            };
+            
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                    showNotification('Shared successfully!');
+                } else {
+                    await navigator.clipboard.writeText(window.location.href);
+                    showNotification('Link copied to clipboard!');
+                }
+            } catch (err) {
+                console.log('Error sharing:', err);
+            }
+        });
+    });
+    
+    // Add loading states to buttons
+    const primaryButtons = document.querySelectorAll('.btn-primary, .btn-unlock');
+    primaryButtons.forEach(btn => {
+        if (btn.href) {
+            btn.addEventListener('click', function(e) {
+                if (!this.classList.contains('loading')) {
+                    const originalHTML = this.innerHTML;
+                    this.classList.add('loading');
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    this.disabled = true;
+                    
+                    // Allow navigation to proceed
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.classList.remove('loading');
+                        this.disabled = false;
+                    }, 2000);
+                }
+            });
+        }
+    });
+    
+    // Add hover effects to cards
+    const cards = document.querySelectorAll('.description-card, .seller-card, .stats-card, .price-status-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-5px)';
+            card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.12)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = 'var(--card-shadow)';
+        });
+    });
+    
+    // Initialize thumbnails click events
+    thumbs.forEach((thumb, index) => {
+        thumb.addEventListener('click', () => goToSlide(index));
+        thumb.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                goToSlide(index);
+            }
+        });
+    });
+    
+    // Close modal when clicking outside image
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this || e.target.classList.contains('close-modal')) {
+                closeModal();
+            }
+        });
+    }
+});
+
+// Utility function for notifications
+function showNotification(message, duration = 2000) {
+    // Remove existing notification
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        z-index: 3000;
+        font-weight: 600;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        animation: slideIn 0.3s ease-out;
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+        notification.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, duration);
+}
+
+// Toggle auto-slide
+function toggleAutoSlide() {
+    if (slideInterval) {
+        stopAutoSlide();
+        showNotification('Auto-slide paused');
+    } else {
+        startAutoSlide();
+        showNotification('Auto-slide resumed');
+    }
+}
+</script>
+{% endblock %}

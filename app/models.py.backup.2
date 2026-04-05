@@ -1,0 +1,828 @@
+from flask_login import UserMixin
+from flask import current_app
+from app import db, login_manager
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+from sqlalchemy import CheckConstraint
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    phone = db.Column(db.String(20))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Google OAuth fields
+    google_id = db.Column(db.String(100), unique=True, nullable=True)
+    profile_picture = db.Column(db.String(500), nullable=True)
+    
+    # Fix: Specify foreign_keys explicitly for products relationship
+    products = db.relationship('Product', 
+        foreign_keys='Product.seller_id',
+        back_populates='seller', 
+        lazy=True
+    )
+    
+    payments = db.relationship("Payment", back_populates="payment_user", lazy=True)
+    
+    # New contact fields
+    phone_number = db.Column(db.String(20))
+    campus_location = db.Column(db.String(100))
+    hostel_name = db.Column(db.String(100))
+    hostel_room = db.Column(db.String(20))
+    whatsapp_number = db.Column(db.String(20))
+    
+    # Seller preferences
+    show_contact_details = db.Column(db.Boolean, default=True)
+    contact_preference = db.Column(db.String(20), default='whatsapp')
+    is_admin = db.Column(db.Boolean, default=False)
+    
+    # Chat relationships
+    conversations_as_buyer = db.relationship('Chat', 
+        foreign_keys='Chat.buyer_id',
+        back_populates='buyer',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    conversations_as_seller = db.relationship('Chat', 
+        foreign_keys='Chat.seller_id',
+        back_populates='seller',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    sent_messages = db.relationship('Message',
+        foreign_keys='Message.sender_id',
+        back_populates='sender',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    
+    # New relationships for offers - use back_populates instead of backref
+    sent_offers = db.relationship('Offer', 
+        foreign_keys='Offer.buyer_id',
+        back_populates='offer_buyer',
+        lazy=True
+    )
+    received_offers = db.relationship('Offer',
+        foreign_keys='Offer.seller_id',
+        back_populates='offer_seller',
+        lazy=True
+    )
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
+    
+    @classmethod
+    def create_from_google(cls, google_data):
+        email = google_data['email']
+        name = google_data.get('name', '').strip()
+        google_id = google_data['id']
+        profile_picture = google_data.get('picture', '')
+        
+        if not name:
+            name = email.split('@')[0]
+        
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        
+        while cls.query.filter_by(username=username).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        user = cls(
+            username=username,
+            email=email,
+            google_id=google_id,
+            profile_picture=profile_picture,
+            password_hash=generate_password_hash(cls.generate_random_password())
+        )
+        
+        user.show_contact_details = True
+        user.contact_preference = 'whatsapp'
+        
+        return user
+    
+    @staticmethod
+    def generate_random_password():
+        import secrets
+        import string
+        alphabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for _ in range(24))
+    
+    def update_google_info(self, google_data):
+        if not self.google_id:
+            self.google_id = google_data['id']
+        
+        if not self.profile_picture and google_data.get('picture'):
+            self.profile_picture = google_data['picture']
+    
+    @property
+    def is_google_user(self):
+        return bool(self.google_id)
+    
+    def can_chat_with(self, other_user_id, product_id=None):
+        if self.id == other_user_id:
+            return False
+            
+        if product_id:
+            unlock = ProductUnlock.query.filter_by(
+                user_id=self.id,
+                product_id=product_id,
+                status='completed'
+            ).first()
+            return unlock is not None
+        
+        unlock = ProductUnlock.query.join(Product, ProductUnlock.product_id == Product.id)\
+            .filter(
+                ProductUnlock.user_id == self.id,
+                Product.seller_id == other_user_id,
+                ProductUnlock.status == 'completed'
+            ).first()
+        return unlock is not None
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class Category(db.Model):
+    __tablename__ = 'categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    
+    products = db.relationship('Product', back_populates='category', lazy=True)
+
+    def __repr__(self):
+        return f'<Category {self.name}>'
+
+class ProductImageGroup(db.Model):
+    """Parent table to group images for a product upload"""
+    __tablename__ = 'product_image_groups'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to images - cascade delete is on THIS side (the "one" side)
+    images = db.relationship('ProductImage', back_populates='group', lazy=True, cascade='all, delete-orphan')
+    
+    # Relationship to product - ONE group belongs to ONE product
+    product = db.relationship('Product', back_populates='image_group', lazy=True, uselist=False, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<ProductImageGroup {self.id}>'
+
+class ProductImage(db.Model):
+    """Individual product images"""
+    __tablename__ = 'product_images'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(500), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign key to group
+    group_id = db.Column(db.Integer, db.ForeignKey('product_image_groups.id'))
+    
+    def __repr__(self):
+        return f'<ProductImage {self.filename}>'
+
+class Product(db.Model):
+    __tablename__ = 'products'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Float, nullable=False)  # Monthly rent
+    condition = db.Column(db.String(20))
+    contact_info = db.Column(db.Text)
+    is_fast_moving = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    is_sold = db.Column(db.Boolean, default=False)
+    Token = db.Column(db.Float, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Link to image group
+    image_group_id = db.Column(db.Integer, db.ForeignKey('product_image_groups.id'), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # ===== NEW ROOM EXIT FIELDS =====
+    # Room details
+    hostel_name = db.Column(db.String(100), nullable=False, default='')
+    location = db.Column(db.String(100), nullable=False, default='')
+    leave_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    room_type = db.Column(db.String(20), default='single')  # single, double, studio
+    
+    # Financial details
+    deposit = db.Column(db.Float, default=0)  # Deposit amount (0 if none)
+    commission_percentage = db.Column(db.Float, default=0)  # 9% or other percentage
+    is_commission_listing = db.Column(db.Boolean, default=False)  # True if commission-based
+    
+    # Status management
+    status = db.Column(db.String(20), default='available')  # available, pending, booked, expired
+    agreement_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # User with current agreement
+    agreement_expires_at = db.Column(db.DateTime, nullable=True)  # 48hr agreement lock
+    booked_at = db.Column(db.DateTime, nullable=True)
+    
+    # Tracking
+    total_unlocks = db.Column(db.Integer, default=0)  # Denormalized count
+    last_interest_update = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # ===== END NEW FIELDS =====
+    
+    payments = db.relationship(
+        'Payment',
+        back_populates='product',
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
+    
+    # Chat relationship
+    chats = db.relationship('Chat', back_populates='product', lazy=True, cascade='all, delete-orphan')
+    
+    # New relationships
+    offers = db.relationship('Offer', back_populates='product', lazy=True, cascade='all, delete-orphan')
+    agreement_user = db.relationship('User', foreign_keys=[agreement_user_id])
+    
+    # Category relationship
+    category = db.relationship('Category', back_populates='products')
+    
+    # Seller relationship
+    seller = db.relationship('User', foreign_keys=[seller_id], back_populates='products')
+    
+    # Image group relationship
+    image_group = db.relationship('ProductImageGroup', back_populates='product')
+
+    # Helper property to get first image (for backward compatibility)
+    @property
+    def image(self):
+        """Get the first image for backward compatibility"""
+        if self.image_group and self.image_group.images:
+            return self.image_group.images[0].filename
+        return None
+    
+    # Helper property to get all images
+    @property
+    def images(self):
+        """Get all product images"""
+        if self.image_group:
+            return self.image_group.images
+        return []
+    
+    # Helper property to get image URLs
+    @property
+    def image_urls(self):
+        """Get all product image filenames"""
+        if self.image_group:
+            return [img.filename for img in self.image_group.images]
+        return []
+
+    def is_unlocked_by(self, user):
+        """Check if a user has unlocked this product"""
+        if not user or not user.is_authenticated:
+            return False
+            
+        unlock = ProductUnlock.query.filter_by(
+            product_id=self.id,
+            user_id=user.id,
+            status='completed'
+        ).first()
+        
+        return unlock is not None
+    
+    def get_unlock_fee(self):
+        """Calculate unlock fee - you can customize this logic"""
+        base_fee = current_app.config.get('UNLOCK_FEE', 1)  # Default KES 20
+        return base_fee
+    
+    # ===== NEW ROOM EXIT METHODS =====
+    
+    def get_commission_amount(self):
+        """Calculate commission amount based on percentage"""
+        if self.is_commission_listing and self.commission_percentage > 0:
+            return (self.price * self.commission_percentage) / 100
+        return 0
+    
+    def get_deposit_display(self):
+        """Return deposit text"""
+        if self.deposit and self.deposit > 0:
+            return f"KES {self.deposit:,.0f}"
+        return "No Deposit"
+    
+    def get_commission_display(self):
+        """Return commission text"""
+        if self.is_commission_listing and self.commission_percentage > 0:
+            amount = self.get_commission_amount()
+            return f"{self.commission_percentage}% (KES {amount:,.0f})"
+        return "No Commission"
+    
+    def days_until_leave(self):
+        """Get days until leave date"""
+        if not self.leave_date:
+            return 0
+        delta = self.leave_date - datetime.utcnow()
+        return max(0, delta.days)
+    
+    def is_expired(self):
+        """Check if listing has expired"""
+        return self.leave_date and self.leave_date < datetime.utcnow()
+    
+    def update_status(self):
+        """Update status based on business rules"""
+        now = datetime.utcnow()
+        
+        # Check expiry first
+        if self.is_expired():
+            self.status = 'expired'
+            return
+        
+        # Check agreement expiry
+        if self.status == 'pending' and self.agreement_expires_at:
+            if self.agreement_expires_at < now:
+                self.status = 'available'
+                self.agreement_user_id = None
+                self.agreement_expires_at = None
+        
+        # Check if booked
+        if self.is_sold:
+            self.status = 'booked'
+    
+    def can_make_offer(self, user):
+        """Check if user can make an offer"""
+        if not user or not user.is_authenticated:
+            return False
+        
+        # Must have unlocked
+        if not self.is_unlocked_by(user):
+            return False
+        
+        # Can't offer on own product
+        if user.id == self.seller_id:
+            return False
+        
+        # Check status
+        if self.status not in ['available', 'pending']:
+            return False
+        
+        # Count existing offers
+        offer_count = Offer.query.filter_by(
+            product_id=self.id,
+            buyer_id=user.id,
+            status='active'
+        ).count()
+        
+        # Max 3 active offers
+        return offer_count < 3
+    
+    def mark_agreement(self, user_id):
+        """Mark agreement with a user (48hr lock)"""
+        from datetime import timedelta
+        
+        self.status = 'pending'
+        self.agreement_user_id = user_id
+        self.agreement_expires_at = datetime.utcnow() + timedelta(hours=48)
+        
+        # Mark all user's offers as accepted
+        Offer.query.filter_by(
+            product_id=self.id,
+            buyer_id=user_id,
+            status='active'
+        ).update({'status': 'accepted'})
+        
+        # Reject all other offers
+        Offer.query.filter_by(
+            product_id=self.id,
+            status='active'
+        ).filter(Offer.buyer_id != user_id).update({'status': 'rejected'})
+    
+    def cancel_agreement(self):
+        """Cancel current agreement"""
+        self.status = 'available'
+        self.agreement_user_id = None
+        self.agreement_expires_at = None
+        
+        # Reset all offers to active
+        Offer.query.filter_by(
+            product_id=self.id,
+            status__in=['accepted', 'rejected']
+        ).update({'status': 'active'})
+    
+    def mark_booked(self):
+        """Mark listing as booked"""
+        self.is_sold = True
+        self.status = 'booked'
+        self.booked_at = datetime.utcnow()
+        
+        # Close all chats
+        for chat in self.chats:
+            chat.close_chat('booked')
+    
+    def increment_unlock_count(self):
+        """Increment total unlocks counter"""
+        self.total_unlocks += 1
+        self.last_interest_update = datetime.utcnow()
+    
+    # ===== END NEW METHODS =====
+    
+    def __repr__(self):
+        return f'<Product {self.title}>'
+
+# ===== NEW OFFER MODEL =====
+
+class Offer(db.Model):
+    """Structured offers for room negotiation"""
+    __tablename__ = 'offers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Relationships
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    buyer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Offer details
+    deposit_offer = db.Column(db.Float, nullable=True)  # Can be None if same as listing
+    commission_offer = db.Column(db.Float, nullable=True)  # Percentage offered
+    move_in_date = db.Column(db.DateTime, nullable=True)
+    message = db.Column(db.Text, nullable=True)
+    
+    # Original listing values for comparison
+    original_deposit = db.Column(db.Float)
+    original_commission = db.Column(db.Float)
+    
+    # Offer amount for comparison (calculated)
+    offer_value = db.Column(db.Float)  # Total value to seller
+    
+    # Status tracking
+    status = db.Column(db.String(20), default='active')  # active, accepted, rejected, withdrawn, countered
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Counter offer reference
+    parent_offer_id = db.Column(db.Integer, db.ForeignKey('offers.id'), nullable=True)
+    is_counter = db.Column(db.Boolean, default=False)
+    
+    # Relationships - use back_populates with unique names
+    product = db.relationship('Product', back_populates='offers')
+    offer_buyer = db.relationship('User', foreign_keys=[buyer_id], back_populates='sent_offers')
+    offer_seller = db.relationship('User', foreign_keys=[seller_id], back_populates='received_offers')
+    parent_offer = db.relationship('Offer', remote_side=[id], backref='counter_offers')
+    
+    def calculate_offer_value(self):
+        """Calculate total value of offer to seller"""
+        value = 0
+        
+        # Add deposit if offered
+        if self.deposit_offer:
+            value += self.deposit_offer
+        
+        # Add commission value if offered (based on rent)
+        if self.commission_offer and self.product:
+            value += (self.product.price * self.commission_offer) / 100
+        
+        self.offer_value = value
+        return value
+    
+    def is_better_than(self, other_offer):
+        """Compare if this offer is better than another"""
+        if not other_offer:
+            return True
+        return (self.offer_value or 0) > (other_offer.offer_value or 0)
+    
+    def accept(self):
+        """Accept this offer"""
+        self.status = 'accepted'
+        # Mark agreement on product
+        self.product.mark_agreement(self.buyer_id)
+    
+    def reject(self):
+        """Reject this offer"""
+        self.status = 'rejected'
+    
+    def withdraw(self):
+        """Withdraw this offer"""
+        self.status = 'withdrawn'
+    
+    def create_counter(self, deposit=None, commission=None, message=None):
+        """Create a counter offer"""
+        counter = Offer(
+            product_id=self.product_id,
+            buyer_id=self.buyer_id,
+            seller_id=self.seller_id,
+            deposit_offer=deposit if deposit is not None else self.deposit_offer,
+            commission_offer=commission if commission is not None else self.commission_offer,
+            move_in_date=self.move_in_date,
+            message=message,
+            original_deposit=self.product.deposit,
+            original_commission=self.product.commission_percentage,
+            parent_offer_id=self.id,
+            is_counter=True
+        )
+        counter.calculate_offer_value()
+        self.status = 'countered'
+        return counter
+    
+    def __repr__(self):
+        return f'<Offer {self.id} - Product {self.product_id} - Buyer {self.buyer_id}>'
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    phone_number = db.Column(db.String(20), nullable=False)
+    checkout_request_id = db.Column(db.String(100), unique=True)
+    merchant_request_id = db.Column(db.String(100))
+    mpesa_receipt_number = db.Column(db.String(50))
+    status = db.Column(db.String(20), default='pending')  # pending, completed, failed
+    transaction_date = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    
+    # Relationships
+    product = db.relationship('Product', back_populates='payments')
+    user = db.relationship('User', back_populates='payments')
+    # Relationship
+    payment_user = db.relationship("User", foreign_keys=[user_id], back_populates="payments")
+
+
+class ProductUnlock(db.Model):
+    __tablename__ = 'product_unlocks'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    # User who wants to unlock the product
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # Product they want to unlock
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    # Seller of the product (for quick access)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Payment details
+    amount = db.Column(db.Float, nullable=False)  # Unlock fee
+    phone_number = db.Column(db.String(20))  # Payer's phone number
+    checkout_request_id = db.Column(db.String(100), unique=True)
+    merchant_request_id = db.Column(db.String(100))
+    mpesa_receipt_number = db.Column(db.String(50))
+    
+    # Status and timestamps
+    status = db.Column(db.String(20), default='pending')  # pending, completed, failed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    unlocked_at = db.Column(db.DateTime)  # When they actually accessed the details
+    
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('unlocked_products', lazy=True))
+    product = db.relationship('Product', backref=db.backref('unlocks', lazy=True))
+    seller = db.relationship('User', foreign_keys=[seller_id], backref=db.backref('buyer_unlocks', lazy=True))
+    
+    # Chat relationship
+    chat = db.relationship('Chat', back_populates='unlock', lazy=True, uselist=False)
+
+    def __repr__(self):
+        return f'<ProductUnlock {self.id} - User {self.user_id} -> Product {self.product_id}>'
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    unlock_id = db.Column(db.Integer, db.ForeignKey('product_unlocks.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('notifications', lazy=True))
+    product = db.relationship('Product', backref=db.backref('notifications', lazy=True))
+    unlock = db.relationship('ProductUnlock', backref=db.backref('notification', lazy=True))
+
+    def __repr__(self):
+        return f'<Notification {self.id} for User {self.user_id}>'
+
+# ===== CHAT MODELS =====
+
+class Chat(db.Model):
+    """Chat conversation between buyer and seller for a specific product"""
+    __tablename__ = 'chats'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Participants
+    buyer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Product reference
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    
+    # Unlock reference (to validate chat access)
+    unlock_id = db.Column(db.Integer, db.ForeignKey('product_unlocks.id'), nullable=False, unique=True)
+    
+    # Chat metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Track last message and auto-close fields
+    last_message_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    closed_at = db.Column(db.DateTime, nullable=True)
+    closed_reason = db.Column(db.String(50), nullable=True)
+    
+    # New: Track agreement in this chat
+    has_agreement = db.Column(db.Boolean, default=False)
+    agreement_made_at = db.Column(db.DateTime, nullable=True)
+    
+    # Ensure buyer and seller are different
+    __table_args__ = (
+        CheckConstraint('buyer_id != seller_id', name='different_participants'),
+    )
+    
+    # Relationships
+    messages = db.relationship('Message', back_populates='chat', lazy=True, 
+                              cascade='all, delete-orphan', 
+                              order_by='Message.created_at.asc()')
+    
+    # Participant relationships
+    buyer = db.relationship('User', foreign_keys=[buyer_id], back_populates='conversations_as_buyer')
+    seller = db.relationship('User', foreign_keys=[seller_id], back_populates='conversations_as_seller')
+    product = db.relationship('Product', back_populates='chats')
+    unlock = db.relationship('ProductUnlock', back_populates='chat')
+    
+    def get_other_participant(self, current_user_id):
+        """Get the other user in the chat"""
+        if current_user_id == self.buyer_id:
+            return self.seller
+        return self.buyer
+    
+    def mark_messages_as_read(self, user_id):
+        """Mark all messages as read for a user"""
+        unread_messages = Message.query.filter_by(
+            chat_id=self.id,
+            receiver_id=user_id,
+            is_read=False,
+            is_deleted=False
+        ).all()
+        
+        for message in unread_messages:
+            message.is_read = True
+        
+        db.session.commit()
+    
+    @property
+    def unread_count(self, user_id):
+        """Count unread messages for a user"""
+        return Message.query.filter_by(
+            chat_id=self.id,
+            receiver_id=user_id,
+            is_read=False,
+            is_deleted=False
+        ).count()
+    
+    def close_chat(self, reason='manual'):
+        """Close the chat with a reason"""
+        self.is_active = False
+        self.closed_at = datetime.utcnow()
+        self.closed_reason = reason
+        self.updated_at = datetime.utcnow()
+    
+    def should_auto_close(self):
+        """Check if chat should be auto-closed"""
+        if not self.is_active:
+            return False
+        
+        # Check if product is sold
+        if self.product.is_sold:
+            return True
+        
+        # Check if 1 week of inactivity
+        from datetime import timedelta
+        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        if self.last_message_at and self.last_message_at < one_week_ago:
+            return True
+        
+        return False
+    
+    def get_messages_for_user(self, user_id):
+        """Get messages visible to a specific user"""
+        return [msg for msg in self.messages if msg.is_visible_to(user_id)]
+    
+    def mark_agreement(self):
+        """Mark that agreement was reached in this chat"""
+        self.has_agreement = True
+        self.agreement_made_at = datetime.utcnow()
+    
+    def __repr__(self):
+        return f'<Chat {self.id}: Buyer {self.buyer_id} - Seller {self.seller_id} (Product {self.product_id})>'
+
+class Message(db.Model):
+    """Individual message in a chat"""
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Chat reference
+    chat_id = db.Column(db.Integer, db.ForeignKey('chats.id'), nullable=False)
+    
+    # Message content
+    content = db.Column(db.Text, nullable=True)
+    is_image = db.Column(db.Boolean, default=False)
+    image_filename = db.Column(db.String(255), nullable=True)
+    
+    # Sender and receiver
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Message status
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Soft delete fields
+    is_deleted = db.Column(db.Boolean, default=False)
+    deleted_at = db.Column(db.DateTime, nullable=True)
+    deleted_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    
+    # Reference to offer (if this message is related to an offer)
+    offer_id = db.Column(db.Integer, db.ForeignKey('offers.id'), nullable=True)
+    
+    # Ensure sender and receiver are different
+    __table_args__ = (
+        CheckConstraint('sender_id != receiver_id', name='different_sender_receiver'),
+    )
+    
+    # Relationships
+    chat = db.relationship('Chat', back_populates='messages')
+    sender = db.relationship('User', foreign_keys=[sender_id], back_populates='sent_messages')
+    deleted_by = db.relationship('User', foreign_keys=[deleted_by_id], backref='deleted_messages')
+    offer = db.relationship('Offer', backref='messages')
+    
+    def get_image_url(self):
+        """Get URL for message image"""
+        if self.is_image and self.image_filename:
+            return f'/static/uploads/chat_images/{self.image_filename}'
+        return None
+    
+    @property
+    def formatted_time(self):
+        """Get formatted time for display"""
+        now = datetime.utcnow()
+        diff = now - self.created_at
+        
+        if diff.days == 0:
+            if diff.seconds < 60:
+                return "Just now"
+            elif diff.seconds < 3600:
+                return f"{diff.seconds // 60}m ago"
+            else:
+                return f"{diff.seconds // 3600}h ago"
+        elif diff.days == 1:
+            return "Yesterday"
+        elif diff.days < 7:
+            return f"{diff.days}d ago"
+        else:
+            return self.created_at.strftime("%b %d, %Y")
+    
+    def delete(self, user_id):
+        """Soft delete message"""
+        self.is_deleted = True
+        self.deleted_at = datetime.utcnow()
+        self.deleted_by_id = user_id
+        self.content = "[Message deleted]"
+        if self.is_image:
+            self.image_filename = None
+    
+    def is_visible_to(self, user_id):
+        """Check if message should be visible to user"""
+        if not self.is_deleted:
+            return True
+        return self.deleted_by_id == user_id
+    
+    def get_display_content(self, user_id):
+        """Get display content based on deletion status"""
+        if self.is_deleted:
+            if self.deleted_by_id == user_id:
+                return "[You deleted this message]"
+            else:
+                return "[Message deleted]"
+        return self.content
+    
+    def __repr__(self):
+        return f'<Message {self.id} in Chat {self.chat_id}>'

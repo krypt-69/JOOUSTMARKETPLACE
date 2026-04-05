@@ -1,0 +1,60 @@
+{% extends "announcements/base.html" %}
+
+{% block announcements_content %}
+<div class="form-container">
+    <h2>Create New Announcement</h2>
+    
+    <form method="POST" action="{{ url_for('announcements.admin_create') }}" class="announcement-form">
+        <div class="form-group">
+            <label for="title">Title *</label>
+            <input type="text" id="title" name="title" required class="form-control" maxlength="200">
+        </div>
+        
+        <div class="form-group">
+            <label for="content_preview">Preview Text (2-3 lines) *</label>
+            <textarea id="content_preview" name="content_preview" required class="form-control" rows="2" maxlength="500"></textarea>
+            <small>This appears in collapsed view</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="content_full">Full Content *</label>
+            <textarea id="content_full" name="content_full" required class="form-control" rows="8"></textarea>
+            <small>This appears when expanded</small>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="message_type">Message Type</label>
+                <select id="message_type" name="message_type" class="form-control">
+                    <option value="update">📢 Update</option>
+                    <option value="important">⚠️ Important</option>
+                    <option value="idea">💡 Idea</option>
+                    <option value="issue">🐛 Issue</option>
+                    <option value="improvement">✨ Improvement</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="normal">Normal</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_pinned"> Pin this as Important Message
+            </label>
+            <small>Only one message can be pinned at a time</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Announcement</button>
+            <a href="{{ url_for('announcements.admin') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

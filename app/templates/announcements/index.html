@@ -1,0 +1,79 @@
+{% extends "announcements/base.html" %}
+
+{% block announcements_content %}
+<div class="timeline-container">
+    {% if announcements %}
+        {% for announcement in announcements %}
+        <div class="message-thread" data-message-id="{{ announcement.id }}">
+            <!-- Thread connection line -->
+            <div class="thread-line"></div>
+            
+            <!-- Avatar column -->
+            <div class="avatar-column">
+                <div class="avatar-circle">
+                    {% if announcement.author and announcement.author.profile_picture %}
+                    <img src="{{ announcement.author.profile_picture }}" alt="{{ announcement.author_name }}" class="avatar-img">
+                    {% else %}
+                    <span class="avatar-initial">{{ announcement.author_name[0]|upper if announcement.author_name else 'A' }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Message content -->
+            <div class="message-card {% if announcement.is_pinned %}pinned-message{% endif %}">
+                <!-- Title & Status Row -->
+                <div class="message-title-row">
+                    <h3 class="message-title">{{ announcement.title }}</h3>
+                    {% if announcement.status == 'in_progress' %}
+                    <span class="status-badge in-progress">
+                        <span class="pulse-dot"></span> In progress
+                    </span>
+                    {% elif announcement.status == 'completed' %}
+                    <span class="status-badge completed">✓ Completed</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Preview content (always visible) -->
+                <div class="message-preview">
+                    {{ announcement.content_preview }}
+                </div>
+                
+                <!-- Full content (hidden initially) -->
+                <div class="message-full" style="display: none;">
+                    {{ announcement.content_full|safe }}
+                </div>
+                
+                <!-- Expand/Collapse Link -->
+                <button class="expand-btn">Read more</button>
+                
+                <!-- Footer with time and reactions -->
+                <div class="message-footer">
+                    <span class="message-time" data-timestamp="{{ announcement.created_at.isoformat() }}">
+                        {{ announcement.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </span>
+                    
+                    <div class="reactions-bar">
+                        <button class="reaction-btn" data-type="like" data-id="{{ announcement.id }}">
+                            👍 <span class="reaction-count">{{ announcement.reaction_counts.like }}</span>
+                        </button>
+                        <button class="reaction-btn" data-type="dislike" data-id="{{ announcement.id }}">
+                            👎 <span class="reaction-count">{{ announcement.reaction_counts.dislike }}</span>
+                        </button>
+                        <button class="reaction-btn" data-type="useful" data-id="{{ announcement.id }}">
+                            💡 <span class="reaction-count">{{ announcement.reaction_counts.useful }}</span>
+                        </button>
+                        <button class="reaction-btn" data-type="watching" data-id="{{ announcement.id }}">
+                            👀 <span class="reaction-count">{{ announcement.reaction_counts.watching }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>No announcements yet. Check back soon!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

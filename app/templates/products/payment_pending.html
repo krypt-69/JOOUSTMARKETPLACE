@@ -1,0 +1,600 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="payment-pending-container">
+    <!-- Important Edit Message - White Background at Top -->
+    <div class="edit-reminder-card">
+        <div class="edit-reminder-content">
+            <h3>Important: Add Your Contact Details</h3>
+            <p>After payment confirmation, you need to add your contact information for buyers to reach you.</p>
+            
+            <div class="edit-steps">
+                <div class="edit-step">
+                    <span class="step-marker">1</span>
+                    <span class="step-description">Go to <strong>All Products</strong> page</span>
+                </div>
+                <div class="edit-step">
+                    <span class="step-marker">2</span>
+                    <span class="step-description">Find the product you just listed</span>
+                </div>
+                <div class="edit-step">
+                    <span class="step-marker">3</span>
+                    <span class="step-description">Click the <strong>Edit</strong> button</span>
+                </div>
+                <div class="edit-step">
+                    <span class="step-marker">4</span>
+                    <span class="step-description">Add your phone number, WhatsApp, and location</span>
+                </div>
+            </div>
+            
+            <div class="edit-note">
+                <i class="fas fa-exclamation-circle"></i>
+                Without contact details, buyers won't be able to reach you!
+            </div>
+            
+            <a href="{{ url_for('products.all_products') }}" class="btn-edit-primary" id="allProductsLink">
+                Go to All Products Now
+            </a>
+        </div>
+    </div>
+
+    <!-- Payment Status Card - Original Content at Bottom -->
+    <div class="payment-status-card">
+        <div class="status-header">
+            <div class="status-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h1>Complete Your Payment</h1>
+            <p>Check your phone to complete the M-Pesa payment</p>
+        </div>
+        
+        <div class="payment-details">
+            <div class="detail-item">
+                <span class="label">Product:</span>
+                <span class="value">{{ product_title }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Reference:</span>
+                <span class="value" id="checkoutRequestID">{{ checkout_request_id }}</span>
+            </div>
+        </div>
+        
+        <div class="payment-instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Check your phone for M-Pesa prompt</li>
+                <li>Enter your M-Pesa PIN when prompted</li>
+                <li>Wait for payment confirmation</li>
+                <li>You'll be redirected to add your contact details</li>
+            </ol>
+        </div>
+        
+        <div class="payment-status">
+            <div class="spinner" id="statusSpinner"></div>
+            <p id="statusMessage">Waiting for payment confirmation...</p>
+        </div>
+
+        <div id="paymentError" class="error-message" style="display: none;"></div>
+        <div id="paymentStatusText" class="status-text"></div>
+        
+        <div class="action-buttons">
+            <button onclick="cancelPayment()" class="btn btn-secondary">Cancel</button>
+            <button onclick="checkStatus()" class="btn btn-primary">Check Status</button>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #f59e0b;
+    --accent: #06d6a0;
+    --dark-bg: #0f172a;
+    --card-bg: #1e293b;
+    --darker-bg: #0a0f1c;
+    --text-light: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-dark: #334155;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --radius: 10px;
+    --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+    --gradient-secondary: linear-gradient(135deg, #f59e0b, #eab308);
+    --gradient-accent: linear-gradient(135deg, #06d6a0, #10b981);
+    --gradient-premium: linear-gradient(135deg, #f97316, #dc2626);
+    --gradient-dark: linear-gradient(135deg, #1e293b, #0f172a);
+}
+
+.payment-pending-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Edit Reminder Card - White Background at Top */
+.edit-reminder-card {
+    background: #ffffff;
+    border-radius: var(--radius);
+    border: 2px solid var(--primary);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.edit-reminder-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+}
+
+.edit-reminder-content h3 {
+    color: var(--primary);
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.edit-reminder-content p {
+    color: var(--darker-bg);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.edit-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid #e2e8f0;
+}
+
+.edit-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.step-marker {
+    width: 28px;
+    height: 28px;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.step-description {
+    color: var(--darker-bg);
+    font-size: 0.95rem;
+}
+
+.step-description strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.edit-note {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    color: var(--error);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.edit-note i {
+    color: var(--error);
+    font-size: 1rem;
+}
+
+.btn-edit-primary {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.btn-edit-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    opacity: 0.9;
+}
+
+/* Payment Status Card - Original Dark Background */
+.payment-status-card {
+    background: var(--darker-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-dark);
+    padding: 2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.status-header {
+    margin-bottom: 2rem;
+}
+
+.status-icon {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.status-header h1 {
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.status-header p {
+    color: var(--text-muted);
+}
+
+.payment-details {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.label {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.value {
+    color: var(--text-muted);
+}
+
+.payment-instructions {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.payment-instructions h3 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.payment-instructions ol {
+    color: var(--text-light);
+    padding-left: 1.5rem;
+}
+
+.payment-instructions li {
+    margin-bottom: 0.5rem;
+}
+
+.payment-status {
+    margin-bottom: 2rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-dark);
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#statusMessage {
+    color: var(--text-light);
+    margin: 0;
+}
+
+.error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: var(--error);
+    text-align: center;
+}
+
+.status-text {
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-light);
+}
+
+.btn-secondary:hover {
+    background: var(--border-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 768px) {
+    .payment-status-card {
+        padding: 1.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .edit-step {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .step-marker {
+        margin: 0 auto;
+    }
+}
+</style>
+
+<script>
+// Get the CheckoutRequestID from the HTML element
+const checkoutRequestID = document.getElementById('checkoutRequestID').textContent;
+const statusMessage = document.getElementById('statusMessage');
+const spinner = document.getElementById('statusSpinner');
+let checkCount = 0;
+const MAX_CHECKS = 30; // Maximum number of checks (about 60 seconds if checking every 2 seconds)
+let stopChecking = false;
+
+console.log('Starting payment status check for:', checkoutRequestID);
+
+// Determine which endpoint to use based on the checkout ID format
+function getCheckEndpoint(checkoutID) {
+    // If it's a simulated ID from product creation
+    if (checkoutID.startsWith('SIMULATED_')) {
+        return `/check-payment-status/${checkoutID}`;
+    }
+    // For unlock payments
+    else if (checkoutID.includes('UNLOCK')) {
+        return `/unlock/check-status/${checkoutID}`;
+    }
+    // Default to product listing endpoint
+    else {
+        return `/check-payment-status/${checkoutID}`;
+    }
+}
+
+// Start checking payment status immediately
+checkPaymentStatus(checkoutRequestID);
+
+async function checkPaymentStatus(checkoutID) {
+    // Stop checking if we've reached max attempts or if stopped manually
+    if (stopChecking || checkCount >= MAX_CHECKS) {
+        if (checkCount >= MAX_CHECKS) {
+            statusMessage.innerHTML = "⏰ <strong>Payment check timed out.</strong> Please check status manually or cancel.";
+            statusMessage.style.color = "#f59e0b";
+            if (spinner) spinner.style.display = 'none';
+        }
+        return;
+    }
+    
+    checkCount++;
+    console.log(`Checking payment status (${checkCount}/${MAX_CHECKS})...`);
+    
+    const endpoint = getCheckEndpoint(checkoutID);
+    console.log('Checking status at:', endpoint);
+
+    try {
+        const res = await fetch(endpoint);
+
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log('Payment status response:', data);
+
+        if (data.status === "completed") {
+            statusMessage.innerHTML = " <strong>Payment confirmed!</strong> Now add your contact details...";
+            statusMessage.style.color = "#10b981";
+            
+            // Hide spinner when payment is confirmed
+            if (spinner) spinner.style.display = 'none';
+            
+            // Stop further checks
+            stopChecking = true;
+            
+            // Get product_id from the response
+            const productId = data.product_id;
+            
+            if (productId) {
+                // Show contact reminder before redirect
+                setTimeout(() => {
+                    window.location.href = `/product/${productId}/contact-details`;
+                }, 3000);
+            } else {
+                // Redirect to all products page
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('products.all_products') }}";
+                }, 3000);
+            }
+        } 
+        else if (data.status === "pending") {
+            statusMessage.innerHTML = "⏳ <strong>Still waiting for confirmation...</strong> Please check your phone.";
+            statusMessage.style.color = "#f59e0b";
+            
+            // Continue checking after delay
+            setTimeout(() => checkPaymentStatus(checkoutID), 2000);
+        } 
+        else {
+            // Payment failed or cancelled
+            statusMessage.innerHTML = "❌ <strong>Payment failed or cancelled.</strong> Please try again.";
+            statusMessage.style.color = "#ef4444";
+            
+            // Hide spinner
+            if (spinner) spinner.style.display = 'none';
+            
+            // Stop further checks
+            stopChecking = true;
+        }
+    } catch (err) {
+        console.error("Payment check error:", err);
+        
+        // Only show error if we haven't exceeded max attempts
+        if (checkCount < MAX_CHECKS) {
+            statusMessage.innerHTML = "⚠️ <strong>Checking payment status...</strong> (Attempt " + checkCount + ")";
+            statusMessage.style.color = "#f59e0b";
+            
+            // Continue checking after delay
+            setTimeout(() => checkPaymentStatus(checkoutID), 2000);
+        } else {
+            statusMessage.innerHTML = "🚫 <strong>Network issue</strong> while checking payment. Please check manually.";
+            statusMessage.style.color = "#ef4444";
+            if (spinner) spinner.style.display = 'none';
+        }
+    }
+}
+
+function checkStatus() {
+    // Reset check count and stop flag for manual check
+    checkCount = 0;
+    stopChecking = false;
+    
+    // Show spinner again
+    if (spinner) spinner.style.display = 'block';
+    
+    // Manual status check
+    checkPaymentStatus(checkoutRequestID);
+}
+
+function cancelPayment() {
+    if (confirm('Are you sure you want to cancel this payment?')) {
+        window.location.href = "/create";
+    }
+}
+
+// Auto-check when page becomes visible
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && !stopChecking) {
+        checkStatus();
+    }
+});
+
+// Auto-redirect to all products page after 7 seconds with message
+setTimeout(function() {
+    const editReminder = document.querySelector('.edit-reminder-card');
+    if (editReminder) {
+        const reminderContent = editReminder.querySelector('.edit-reminder-content');
+        
+        // Change message to show redirect
+        reminderContent.innerHTML = `
+            <h3> Redirecting to All Products</h3>
+            <p>You'll be redirected in 7 seconds to add your contact details.</p>
+            <div class="edit-steps" style="text-align: center;">
+                <div class="edit-step">
+                    <span class="step-marker">→</span>
+                    <span class="step-description">Find your product in the list</span>
+                </div>
+                <div class="edit-step">
+                    <span class="step-marker">→</span>
+                    <span class="step-description">Click the Edit button</span>
+                </div>
+                <div class="edit-step">
+                    <span class="step-marker">→</span>
+                    <span class="step-description">Add your contact details</span>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; text-align: center;">
+                <div style="width: 30px; height: 30px; border: 3px solid #e2e8f0; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            </div>
+        `;
+    }
+}, 1000); // Show after 1 second
+
+// Redirect to all products page after 7 seconds
+setTimeout(function() {
+    window.location.href = "{{ url_for('products.all_products') }}";
+}, 10000);
+
+// Add click handler for the "Go to All Products Now" button
+document.getElementById('allProductsLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.location.href = this.href;
+});
+</script>
+{% endblock %}

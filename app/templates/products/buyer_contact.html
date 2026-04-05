@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="contact-page">
+    <!-- Header -->
+    <div class="contact-header">
+        <a href="{{ url_for('products.view_product', product_id=product.id) }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="header-content">
+            <h1>Contact Seller</h1>
+            <p class="product-title">{{ product.title|truncate(35) }}</p>
+        </div>
+    </div>
+
+    <!-- Product Summary -->
+    <div class="product-summary">
+        <span class="product-price">KES {{ "{:,.0f}".format(product.price) }}</span>
+        <span class="product-condition">{{ product.condition|replace('_',' ')|title|truncate(10) }}</span>
+    </div>
+
+    <!-- Contact Details -->
+    <div class="contact-section">
+        <h2 class="section-title">Contact Information</h2>
+        
+        <div class="contact-list">
+            {% if seller.phone_number %}
+            <div class="contact-item">
+                <div class="contact-icon phone">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="contact-details">
+                    <span class="contact-label">Phone</span>
+                    <span class="contact-value">{{ seller.phone_number }}</span>
+                </div>
+                <a href="tel:{{ seller.phone_number }}" class="contact-action">
+                    <i class="fas fa-phone"></i>
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if seller.whatsapp_number %}
+            <div class="contact-item">
+                <div class="contact-icon whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="contact-details">
+                    <span class="contact-label">WhatsApp</span>
+                    <span class="contact-value">{{ seller.whatsapp_number }}</span>
+                </div>
+                <a href="https://wa.me/{{ seller.whatsapp_number }}" target="_blank" class="contact-action whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if seller.email %}
+            <div class="contact-item">
+                <div class="contact-icon email">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="contact-details">
+                    <span class="contact-label">Email</span>
+                    <span class="contact-value">{{ seller.email }}</span>
+                </div>
+                <a href="mailto:{{ seller.email }}" class="contact-action">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if seller.campus_location %}
+            <div class="contact-item">
+                <div class="contact-icon location">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="contact-details">
+                    <span class="contact-label">Campus</span>
+                    <span class="contact-value">{{ seller.campus_location }}</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if seller.hostel_name %}
+            <div class="contact-item">
+                <div class="contact-icon hostel">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="contact-details">
+                    <span class="contact-label">Hostel</span>
+                    <span class="contact-value">
+                        {{ seller.hostel_name }}{% if seller.hostel_room %} • Rm {{ seller.hostel_room }}{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if seller.contact_preference %}
+            <div class="contact-item">
+                <div class="contact-icon preference">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <div class="contact-details">
+                    <span class="contact-label">Preferred Contact</span>
+                    <span class="contact-value">{{ seller.contact_preference|title }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-bar">
+        <form action="{{ url_for('chat.start_chat', product_id=product.id) }}" method="POST" class="chat-form">
+            <button type="submit" class="btn-chat">
+                <i class="fas fa-comment"></i>
+                <span>Message Seller</span>
+            </button>
+        </form>
+        <a href="{{ url_for('products.all_products') }}" class="btn-browse">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Browse More</span>
+        </a>
+    </div>
+
+    <!-- Access Note -->
+    <div class="access-note">
+        <i class="fas fa-check-circle"></i>
+        <span>You have permanent access to these contact details</span>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,314 @@
+{# templates/includes/chat_button.html #}
+{# Add this to view_product.html by including: {% include 'includes/chat_button.html' %} #}
+
+{% if current_user.is_authenticated %}
+    <div class="chat-section">
+        <h3 class="chat-section-title">
+            <i class="fas fa-comments"></i> Chat with {{ 'Buyers' if current_user.id == product.seller_id else 'Seller' }}
+        </h3>
+        
+        {% if product.is_unlocked_by(current_user) or current_user.id == product.seller_id %}
+            {# User can chat (has unlocked or is seller) #}
+            <button onclick="startChatWithSeller({{ product.id }})" class="chat-action-btn" id="startChatBtn">
+                <i class="fas fa-comments"></i> 
+                {% if current_user.id == product.seller_id %}
+                    View Chat with Buyers
+                {% else %}
+                    Chat with {{ product.seller.username }}
+                {% endif %}
+            </button>
+            
+            <div id="chatActionStatus" class="chat-status-message"></div>
+            
+            <script>
+            function startChatWithSeller(productId) {
+                const btn = document.getElementById('startChatBtn');
+                const originalText = btn.innerHTML;
+                const statusDiv = document.getElementById('chatActionStatus');
+                
+                // Show loading
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting chat...';
+                btn.disabled = true;
+                statusDiv.style.display = 'none';
+                statusDiv.className = 'chat-status-message';
+                
+                fetch(`/chat/start/${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Redirect to chat
+                        window.location.href = `/chat/${data.chat_id}`;
+                    } else {
+                        // Show error
+                        statusDiv.textContent = data.error || 'Failed to start chat';
+                        statusDiv.classList.add('error');
+                        statusDiv.style.display = 'block';
+                        
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusDiv.textContent = 'Network error. Please try again.';
+                    statusDiv.classList.add('error');
+                    statusDiv.style.display = 'block';
+                    
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }
+            </script>
+            
+        {% elif current_user.id != product.seller_id %}
+            {# User needs to unlock first #}
+            <div class="unlock-prompt">
+                <p class="unlock-message">
+                    <i class="fas fa-lock"></i> Unlock this product to chat with {{ product.seller.username }}
+                </p>
+                
+                {# Check if unlock page exists #}
+                {% if url_for('products.unlock_product', product_id=product.id) %}
+                    <a href="{{ url_for('products.unlock_product', product_id=product.id) }}" 
+                       class="unlock-btn">
+                        <i class="fas fa-unlock-alt"></i> Unlock Product (KES {{ product.get_unlock_fee() }})
+                    </a>
+                {% else %}
+                    <p class="warning-message">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Unlock functionality not available on this page
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% else %}
+    {# User not logged in #}
+    <div class="chat-login-prompt">
+        <h3 class="chat-section-title">
+            <i class="fas fa-comments"></i> Chat with Seller
+        </h3>
+        <p class="login-message">
+            Login or register to start a conversation with {{ product.seller.username }}
+        </p>
+        <div class="login-actions">
+            <a href="{{ url_for('auth.login') }}" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="register-btn">
+                <i class="fas fa-user-plus"></i> Register
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+/* Chat Button Styles - Using your calm color palette */
+.chat-section,
+.chat-login-prompt {
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: var(--calm-card-bg, #252b33);
+    border-radius: 16px;
+    border: 1px solid var(--calm-border, #3a424e);
+    transition: all 0.3s ease;
+}
+
+.chat-section:hover,
+.chat-login-prompt:hover {
+    border-color: var(--calm-primary, #6c8c9c);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.chat-section-title {
+    margin-bottom: 1.25rem;
+    color: var(--calm-text, #e9edf2);
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-section-title i {
+    color: var(--calm-primary, #6c8c9c);
+}
+
+.chat-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.75rem;
+    background: var(--calm-primary, #6c8c9c);
+    color: var(--calm-text, #e9edf2);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    width: 100%;
+    justify-content: center;
+    border: 1px solid var(--calm-border, #3a424e);
+}
+
+.chat-action-btn:hover {
+    background: var(--calm-primary-light, #8aa9bc);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(108, 140, 156, 0.3);
+}
+
+.chat-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none;
+}
+
+.chat-status-message {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.chat-status-message.error {
+    display: block;
+    color: var(--calm-error, #b58c8c);
+    background: rgba(181, 140, 140, 0.1);
+    border: 1px solid var(--calm-error, #b58c8c);
+}
+
+/* Unlock Prompt Styles */
+.unlock-prompt {
+    text-align: center;
+}
+
+.unlock-message {
+    color: var(--calm-text-secondary, #b4bcc8);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.unlock-message i {
+    color: var(--calm-warning, #c9a78b);
+    margin-right: 0.5rem;
+}
+
+.unlock-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--calm-secondary, #7c9a8e);
+    color: var(--calm-text, #e9edf2);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid var(--calm-border, #3a424e);
+}
+
+.unlock-btn:hover {
+    background: var(--calm-soft-green, #8fb0a2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(124, 154, 142, 0.3);
+}
+
+.warning-message {
+    color: var(--calm-warning, #c9a78b);
+    background: rgba(201, 167, 139, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    border: 1px solid var(--calm-warning, #c9a78b);
+}
+
+/* Login Prompt Styles */
+.login-message {
+    color: var(--calm-text-secondary, #b4bcc8);
+    margin-bottom: 1.25rem;
+    font-size: 0.95rem;
+}
+
+.login-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.login-btn,
+.register-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    flex: 1;
+    justify-content: center;
+    border: 1px solid var(--calm-border, #3a424e);
+}
+
+.login-btn {
+    background: var(--calm-primary, #6c8c9c);
+    color: var(--calm-text, #e9edf2);
+}
+
+.login-btn:hover {
+    background: var(--calm-primary-light, #8aa9bc);
+    transform: translateY(-2px);
+}
+
+.register-btn {
+    background: var(--calm-surface, #2f3640);
+    color: var(--calm-text, #e9edf2);
+}
+
+.register-btn:hover {
+    background: var(--calm-card-bg, #252b33);
+    transform: translateY(-2px);
+    border-color: var(--calm-primary, #6c8c9c);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .chat-section,
+    .chat-login-prompt {
+        padding: 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .login-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .chat-action-btn,
+    .unlock-btn,
+    .login-btn,
+    .register-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-section-title {
+        font-size: 1rem;
+    }
+
+    .chat-section-title i {
+        font-size: 1.1rem;
+    }
+}
+</style>

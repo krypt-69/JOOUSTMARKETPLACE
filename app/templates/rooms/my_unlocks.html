@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Rooms I've Unlocked - Marketplace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Rooms I've Unlocked</h2>
+
+            {% if rooms %}
+            <div class="row">
+                {% for room in rooms %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <!-- Status Badge -->
+                        <div class="position-absolute top-0 end-0 m-2">
+                            {% if room.status == 'available' %}
+                            <span class="badge bg-success">Available</span>
+                            {% elif room.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif room.status == 'booked' %}
+                            <span class="badge bg-secondary">Booked</span>
+                            {% endif %}
+                        </div>
+
+                        {% if room.image %}
+                        <img src="{{ url_for('static', filename='uploads/' + room.image) }}" class="card-img-top" alt="{{ room.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <i class="fas fa-home fa-3x text-secondary"></i>
+                        </div>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <h5 class="card-title">{{ room.title }}</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-map-marker-alt"></i> {{ room.hostel_name }}, {{ room.location }}
+                            </p>
+                            <p class="mb-1">
+                                <strong>Rent:</strong> KES {{ "%.0f"|format(room.price) }}
+                            </p>
+                            <p class="mb-1">
+                                <strong>Deposit:</strong> {{ room.get_deposit_display() }}
+                            </p>
+                            <p class="mb-0">
+                                <small class="text-muted">
+                                    Leave: {{ room.leave_date.strftime('%b %d, %Y') }}
+                                </small>
+                            </p>
+                        </div>
+
+                        <div class="card-footer bg-white">
+                            <div class="btn-group w-100">
+                                <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                <a href="{{ url_for('chat.chat_with_user', user_id=room.seller_id, product_id=room.id) }}" class="btn btn-outline-success">
+                                    <i class="fas fa-comment"></i> Chat
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center py-5">
+                <i class="fas fa-lock-open fa-4x mb-3"></i>
+                <h4>No unlocked rooms yet</h4>
+                <p>Browse available rooms and unlock their contact details!</p>
+                <a href="{{ url_for('rooms.index') }}" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-search"></i> Browse Rooms
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

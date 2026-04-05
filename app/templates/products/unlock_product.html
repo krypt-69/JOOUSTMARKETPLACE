@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="unlock-container">
+    <!-- Calm gradient header - without icons -->
+    <div class="unlock-header">
+        <div class="calm-gradient-circle">
+            <!-- No icon here -->
+        </div>
+        <h1>Unlock Seller Details</h1>
+        <p>Pay a small fee to get the seller's contact information</p>
+    </div>
+    
+    <!-- Product card with calm styling -->
+    <div class="product-card">
+        <div class="product-image">
+            {% if product.image %}
+                <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" alt="{{ product.title }}">
+            {% else %}
+                <div class="product-image-placeholder">
+                    <!-- No icon here -->
+                    <span>No Image</span>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="product-info">
+            <div class="product-header">
+                <h3>{{ product.title }}</h3>
+                <div class="calm-badge">Campus Market</div>
+            </div>
+            <div class="product-price">KES {{ "{:,.2f}".format(product.price) }}</div>
+            <div class="product-condition">{{ product.condition|title }}</div>
+            <p class="product-description">{{ product.description }}</p>
+            
+            <div class="seller-info">
+                <div class="seller-avatar">
+                    <!-- No icon here -->
+                </div>
+                <span>@{{ product.seller.username }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unlock details section -->
+    <div class="unlock-details">
+        <div class="unlock-fee">
+            <div class="fee-badge">
+                <h3>KES {{ "%.2f"|format(unlock_fee) }}</h3>
+                <span>Unlock Fee</span>
+            </div>
+            <p>One-time payment for permanent access to seller's contact details</p>
+        </div>
+        
+        <div class="free-message">
+            <p>Unlocking is currently <strong>FREE</strong> during this testing phase. The payment feature will be 5 KSH per unlock when fully launched.</p>
+        </div>
+        
+        <form id="unlockForm" method="POST" class="unlock-form">
+            <!-- Hidden input with the fixed phone number -->
+            <input type="hidden" id="mpesa_phone" name="mpesa_phone" value="0700112233">
+            
+            <button type="submit" class="btn-unlock calm-gradient">
+                Unlock Now (Free)
+            </button>
+        </form>
+        
+        <div class="unlock-benefits">
+            <h4>What you get:</h4>
+            <div class="benefits-grid">
+                <div class="benefit-item">
+                    <span>Phone Number</span>
+                </div>
+                <div class="benefit-item">
+                    <span>WhatsApp</span>
+                </div>
+                <div class="benefit-item">
+                    <span>Email</span>
+                </div>
+                <div class="benefit-item">
+                    <span>Campus Location</span>
+                </div>
+                <div class="benefit-item">
+                    <span>Hostel Info</span>
+                </div>
+                <div class="benefit-item">
+                    <span>Permanent Access</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security notice - without icon -->
+    <div class="security-notice">
+        <span>Secure payment powered by M-Pesa</span>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+/* ===== MAIN.CSS - GLOBAL VARIABLES & BASE STYLES ===== */
+:root {
+    /* Primary Colors - Teal Theme (from base) */
+    --primary: #5f9ea0;
+    --primary-dark: #4a7c7e;
+    --primary-light: #7bb2b4;
+    --secondary: #b39b8e;
+    --secondary-dark: #8e7a6f;
+    --accent: #8aa9b5;
+    --accent-purple: #9b8aa9;
+    
+    /* Background Colors */
+    --bg-deep: #0a0f16;
+    --bg-dark: #141b24;
+    --bg-card: #1e2833;
+    --bg-surface: #2a3542;
+    --bg-hover: #334153;
+    
+    /* Auth Specific Backgrounds */
+    --dark-bg: #0a0f1c;
+    --card-bg: #111827;
+    --darker-bg: #070b14;
+    
+    /* Border Colors */
+    --border-light: #3e4a5a;
+    --border-medium: #4d5b6b;
+    --border-dark: #1e293b;
+    --border-light-auth: #334155;
+    
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #d3dce6;
+    --text-muted: #9aa9b9;
+    --text-accent: #c1d0da;
+    --text-light: #f1f5f9;
+    --text-muted-auth: #94a3b8;
+    
+    /* Accent Variations */
+    --soft-teal: #6fa8aa;
+    --soft-coral: #c9a99b;
+    --soft-gold: #c9b59b;
+    --soft-lavender: #aa9fc2;
+    --soft-mint: #9fc2b5;
+    --soft-berry: #b59fa8;
+    
+    /* Status Colors */
+    --success: #6b9e7a;
+    --success-light: #7fb18e;
+    --warning: #c9a06b;
+    --warning-light: #d9b58a;
+    --error: #c97b6b;
+    --error-light: #d99484;
+    --info: #7b9ec9;
+    --info-light: #94b2d9;
+    
+    /* Auth Specific Colors */
+    --auth-primary: #8b5cf6;
+    --auth-primary-dark: #7c3aed;
+    --auth-secondary: #f59e0b;
+    --auth-accent: #06d6a0;
+    
+    /* Calm Theme Colors (Index Page) */
+    --calm-bg: #1a1e24;
+    --calm-card-bg: #252b33;
+    --calm-surface: #2f3640;
+    --calm-border: #3a424e;
+    --calm-text: #e9edf2;
+    --calm-text-secondary: #b4bcc8;
+    --calm-text-muted: #8f9aaa;
+    --calm-primary: #6c8c9c;
+    --calm-primary-light: #8aa9bc;
+    --calm-secondary: #7c9a8e;
+    --calm-tertiary: #a58d7f;
+    --calm-soft-blue: #7c9eb2;
+    --calm-soft-green: #8fb0a2;
+    --calm-soft-taupe: #b89e8e;
+    --calm-soft-lavender: #9c94a8;
+    --calm-success: #7c9a8e;
+    --calm-warning: #c9a78b;
+    --calm-error: #b58c8c;
+    --calm-info: #8aa5b5;
+    
+    /* Grey Scale */
+    --grey-50: #f8f9fa;
+    --grey-100: #e9ecef;
+    --grey-200: #dee2e6;
+    --grey-300: #ced4da;
+    --grey-400: #adb5bd;
+    --grey-500: #6c757d;
+    --grey-600: #495057;
+    --grey-700: #343a40;
+    --grey-800: #212529;
+    --grey-900: #1a1e24;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #5f9ea0, #8aa9b5);
+    --gradient-secondary: linear-gradient(135deg, #b39b8e, #9b8aa9);
+    --gradient-accent: linear-gradient(135deg, #6fa8aa, #aa9fc2);
+    --gradient-dark: linear-gradient(135deg, #1e2833, #0a0f16);
+    --gradient-gold: linear-gradient(135deg, #c9b59b, #b39b8e);
+    --gradient-teal: linear-gradient(135deg, #5f9ea0, #6fa8aa);
+    --gradient-auth: linear-gradient(135deg, #8b5cf6, #06d6a0);
+    --gradient-calm: linear-gradient(135deg, #6c8c9c, #7c9a8e, #a58d7f);
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.7);
+    --shadow-auth: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+    
+    /* Border Radius */
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 20px;
+    --radius-auth: 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Main Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    min-height: calc(100vh - 120px);
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.mt-4 { margin-top: 1.5rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{% if title %}{{ title }} - {% endif %}Announcements{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/announcements.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="announcements-container">
+    <div class="announcements-header">
+        <h1>Announcements & Updates</h1>
+        {% if current_user.is_admin %}
+        <div class="admin-actions">
+            <a href="{{ url_for('announcements.admin') }}" class="btn btn-primary">Manage Announcements</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% block announcements_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/announcements.js') }}"></script>
+{% endblock %}
