@@ -411,13 +411,18 @@ def my_products_list():
 
 @products_bp.route('/all')
 def all_products():
-    # Filter out rooms - rooms have hostel_name not empty
-    products = Product.query.filter(
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    products_pagination = Product.query.filter(
         Product.is_sold == False,
         Product.is_active == True,
-        Product.hostel_name == ''  # Regular products have no hostel_name
-    ).order_by(Product.created_at.desc()).all()
-    return render_template('products/all.html', products=products)
+        Product.hostel_name == ''
+    ).order_by(Product.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template('products/all.html', 
+                         products=products_pagination.items,
+                         pagination=products_pagination)
 @products_bp.route('/product/<int:product_id>')
 def view_product(product_id):
     """View product details - now accessible to everyone"""
