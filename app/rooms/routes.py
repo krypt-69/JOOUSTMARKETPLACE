@@ -319,13 +319,23 @@ def make_offer(room_id):
     db.session.add(offer)
     db.session.flush()
     
-    notification = Notification(
+    # Notify seller
+    notification_seller = Notification(
         user_id=room.seller_id,
         product_id=room.id,
         unlock_id=offer.id,
-        message=f"New offer from {current_user.username} on {room.title}"
+        message=f"📝 New offer from {current_user.username} on '{room.title}'"
     )
-    db.session.add(notification)
+    db.session.add(notification_seller)
+    
+    # Notify buyer (the person who made the offer)
+    notification_buyer = Notification(
+        user_id=current_user.id,
+        product_id=room.id,
+        unlock_id=offer.id,
+        message=f"✅ Your offer on '{room.title}' has been sent to the seller. You'll be notified if they respond."
+    )
+    db.session.add(notification_buyer)
     
     db.session.commit()
     
@@ -345,6 +355,16 @@ def accept_offer(offer_id):
         return redirect(url_for('rooms.detail', room_id=room.id))
     
     offer.accept()
+    
+    # Notify buyer that their offer was accepted
+    notification_buyer = Notification(
+        user_id=offer.buyer_id,
+        product_id=room.id,
+        unlock_id=offer.id,
+        message=f"🎉 Congratulations! Your offer on '{room.title}' has been ACCEPTED! The room is now pending for 48 hours. Contact the seller to finalize."
+    )
+    db.session.add(notification_buyer)
+    
     db.session.commit()
     
     flash('Offer accepted! The room is now pending for 48 hours.', 'success')
@@ -361,7 +381,21 @@ def cancel_agreement(room_id):
         flash('You are not authorized to cancel this agreement', 'danger')
         return redirect(url_for('rooms.detail', room_id=room.id))
     
+    # Get the user who had the agreement (if any)
+    agreed_user_id = room.agreement_user_id
+    
     room.cancel_agreement()
+    
+    # Notify the user whose agreement was cancelled
+    if agreed_user_id:
+        notification = Notification(
+            user_id=agreed_user_id,
+            product_id=room.id,
+            unlock_id=None,
+            message=f"⚠️ The agreement on '{room.title}' has been CANCELLED by the seller. The room is now available again."
+        )
+        db.session.add(notification)
+    
     db.session.commit()
     
     flash('Agreement cancelled. Room is now available.', 'success')
