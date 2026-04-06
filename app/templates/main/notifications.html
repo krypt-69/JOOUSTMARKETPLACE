@@ -68,20 +68,20 @@
         {% if notifications.pages > 1 %}
         <div class="pagination">
             {% if notifications.has_prev %}
-            <a class="page-link" href="{{ url_for('main.notifications', page=notifications.prev_num) }}">Previous</a>
+            <a class="page-link" href="{{ url_for('main.notification', page=notifications.prev_num) }}">Previous</a>
             {% endif %}
 
             {% for page_num in notifications.iter_pages() %}
             {% if page_num %}
                 <a class="page-link {% if page_num == notifications.page %}active{% endif %}" 
-                   href="{{ url_for('main.notifications', page=page_num) }}">{{ page_num }}</a>
+                   href="{{ url_for('main.notification', page=page_num) }}">{{ page_num }}</a>
             {% else %}
                 <span class="page-link">...</span>
             {% endif %}
             {% endfor %}
 
             {% if notifications.has_next %}
-            <a class="page-link" href="{{ url_for('main.notifications', page=notifications.next_num) }}">Next</a>
+            <a class="page-link" href="{{ url_for('main.notification', page=notifications.next_num) }}">Next</a>
             {% endif %}
         </div>
         {% endif %}

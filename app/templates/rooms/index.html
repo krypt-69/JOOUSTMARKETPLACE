@@ -76,6 +76,28 @@
         text-decoration: none;
     }
     
+    /* Desktop Filter Toggle Button */
+    .desktop-filter-toggle {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 40px;
+        padding: 0.65rem 1.4rem;
+        font-weight: 500;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+    .desktop-filter-toggle:hover {
+        background: #e2e8f0;
+    }
+    .desktop-filter-toggle i {
+        color: #2c7da0;
+    }
+    
     /* Filter Toggle Button - Mobile Only */
     .filter-toggle-btn {
         width: 100%;
@@ -504,6 +526,9 @@
         .filter-toggle-btn {
             display: flex;
         }
+        .desktop-filter-toggle {
+            display: none !important;
+        }
         .filters-sidebar {
             display: none;
         }
@@ -521,10 +546,19 @@
         }
     }
     
-    /* Desktop always show filters */
+    /* Desktop styles */
     @media (min-width: 768px) {
+        .desktop-filter-toggle {
+            display: inline-flex;
+        }
+        .filter-toggle-btn {
+            display: none;
+        }
         .filters-sidebar {
             display: block !important;
+        }
+        .filters-sidebar.collapsed {
+            display: none !important;
         }
         .rooms-container {
             padding: 1.5rem;
@@ -551,9 +585,14 @@
     <!-- Page Header -->
     <div class="rooms-header">
         <h1><i class="fas fa-door-open" style="background: none; -webkit-text-fill-color: #2c7da0;"></i> Room Takeover</h1>
-        <a href="{{ url_for('rooms.create') }}" class="btn-list-room">
-            <i class="fas fa-plus-circle"></i> List your room
-        </a>
+        <div style="display: flex; gap: 10px;">
+            <button class="desktop-filter-toggle" id="desktopFilterToggle">
+                <i class="fas fa-sliders-h"></i> Show filters
+            </button>
+            <a href="{{ url_for('rooms.create') }}" class="btn-list-room">
+                <i class="fas fa-plus-circle"></i> List your room
+            </a>
+        </div>
     </div>
     
     <!-- CAUTION MESSAGE - Always visible for all users, small text, bright color -->
@@ -565,6 +604,7 @@ If you're leaving your hostel or apartment, you can list your room along with yo
 Interested tenants can unlock contact details and submit offers with their proposed deposit or commission (typically below 10% of monthly rent, set by the person leaving). 
 Room owners see all offers instantly on their listing page and can accept the best one. 
 Both parties should clearly agree on terms and fulfill them honestly. These precautions protect everyone and ensure a trustworthy experience.
+        </p>
     </div>
     
     <!-- Mobile Filter Toggle Button -->
@@ -574,7 +614,7 @@ Both parties should clearly agree on terms and fulfill them honestly. These prec
     </button>
     
     <!-- Filters Sidebar -->
-    <div class="filters-sidebar" id="filtersSidebar">
+    <div class="filters-sidebar collapsed" id="filtersSidebar">
         <div class="filters-header">
             <h5><i class="fas fa-filter"></i> Refine results</h5>
         </div>
@@ -780,43 +820,42 @@ Both parties should clearly agree on terms and fulfill them honestly. These prec
 </div>
 
 <script>
-    // Mobile filter toggle functionality
-    const filterToggle = document.getElementById('mobileFilterToggle');
+    // Simple filter toggle for desktop
+    const desktopFilterToggle = document.getElementById('desktopFilterToggle');
     const filtersSidebar = document.getElementById('filtersSidebar');
+    const mobileFilterToggle = document.getElementById('mobileFilterToggle');
     
-    if (filterToggle) {
-        filterToggle.addEventListener('click', function() {
-            filtersSidebar.classList.toggle('show-mobile');
-            const icon = filterToggle.querySelector('.fa-chevron-down');
-            if (filtersSidebar.classList.contains('show-mobile')) {
-                filterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Hide filters <i class="fas fa-chevron-up"></i>';
+    // Desktop filter toggle (hidden by default, show when clicked)
+    if (desktopFilterToggle) {
+        desktopFilterToggle.addEventListener('click', function() {
+            if (filtersSidebar.classList.contains('collapsed')) {
+                filtersSidebar.classList.remove('collapsed');
+                desktopFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Hide filters';
             } else {
-                filterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Filter listings <i class="fas fa-chevron-down"></i>';
+                filtersSidebar.classList.add('collapsed');
+                desktopFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Show filters';
             }
         });
     }
     
-    // Ensure filters are visible on desktop, hidden on mobile by default
-    function handleResponsiveFilters() {
-        if (window.innerWidth >= 768) {
-            filtersSidebar.classList.remove('show-mobile');
-            if (filterToggle) filterToggle.style.display = 'none';
-        } else {
-            if (filterToggle) filterToggle.style.display = 'flex';
-            filtersSidebar.classList.remove('show-mobile');
-        }
+    // Mobile filter toggle
+    if (mobileFilterToggle) {
+        mobileFilterToggle.addEventListener('click', function() {
+            filtersSidebar.classList.toggle('show-mobile');
+            if (filtersSidebar.classList.contains('show-mobile')) {
+                mobileFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Hide filters <i class="fas fa-chevron-up"></i>';
+            } else {
+                mobileFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Filter listings <i class="fas fa-chevron-down"></i>';
+            }
+        });
     }
     
-    window.addEventListener('load', handleResponsiveFilters);
-    window.addEventListener('resize', handleResponsiveFilters);
-    
-    // Make entire card clickable for better UX (optional)
+    // Make entire card clickable for better UX
     document.querySelectorAll('.room-card').forEach(card => {
         const detailLink = card.querySelector('.btn-details');
         if (detailLink) {
             card.style.cursor = 'pointer';
             card.addEventListener('click', (e) => {
-                // Don't trigger if clicking on the button itself (prevents double navigation)
                 if (e.target.closest('.btn-details')) return;
                 window.location.href = detailLink.href;
             });

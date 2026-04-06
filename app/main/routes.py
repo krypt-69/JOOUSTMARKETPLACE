@@ -92,7 +92,7 @@ def mark_all_notifications_read():
         return jsonify({'success': True})
     
     flash('All notifications marked as read.', 'success')
-    return redirect(url_for('main.notifications'))
+    return redirect(url_for('main.notification'))
 
 @main_bp.route('/api/notifications/unread-count')
 @login_required

@@ -239,11 +239,21 @@ class Product(db.Model):
     payments = db.relationship('Payment', back_populates='product', lazy=True, cascade="all, delete-orphan")
     chats = db.relationship('Chat', back_populates='product', lazy=True, cascade='all, delete-orphan')
     offers = db.relationship('Offer', back_populates='product', lazy=True, cascade='all, delete-orphan')
-    
+    unlocks = db.relationship(
+    'ProductUnlock',
+    back_populates='product',
+    cascade='all, delete-orphan'
+)
+    notifications = db.relationship(
+    'Notification',
+    back_populates='product',
+    cascade='all, delete-orphan'
+)
     agreement_user = db.relationship('User', foreign_keys=[agreement_user_id])
     category = db.relationship('Category', back_populates='products')
     seller = db.relationship('User', foreign_keys=[seller_id], back_populates='products')
     image_group = db.relationship('ProductImageGroup', back_populates='product')
+
 
     @property
     def image(self):
@@ -510,7 +520,7 @@ class ProductUnlock(db.Model):
     
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='unlocked_products')
-    product = db.relationship('Product', backref='unlocks')
+    product = db.relationship('Product', back_populates='unlocks')
     seller = db.relationship('User', foreign_keys=[seller_id], backref='buyer_unlocks')
     chat = db.relationship('Chat', back_populates='unlock', lazy=True, uselist=False)
 
@@ -523,13 +533,13 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    unlock_id = db.Column(db.Integer, db.ForeignKey('product_unlocks.id'), nullable=False)
+    unlock_id = db.Column(db.Integer, db.ForeignKey('product_unlocks.id'), nullable=True)
     message = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', backref='notifications')
-    product = db.relationship('Product', backref='notifications')
+    product = db.relationship('Product', back_populates='notifications')
     unlock = db.relationship('ProductUnlock', backref='notification')
 
     def __repr__(self):
