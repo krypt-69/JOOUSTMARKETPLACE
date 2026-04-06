@@ -8,21 +8,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- CSS files -->
-    <!-- CSS files -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/create.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/my_products.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/buyer_contact.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/edit_contact.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/unlock.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/announcements.css') }}">  <!-- ADD THIS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/my_products.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/buyer_contact.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_contact.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unlock.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/announcements.css') }}">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -44,7 +43,6 @@
                 <a href="{{ url_for('products.all_products') }}">
                     <i class="fas fa-shopping-bag"></i>Products
                 </a>
-                <!-- NEW: Room Takeover Link -->
                 <a href="{{ url_for('rooms.index') }}">
                     <i class="fas fa-door-open"></i>Rooms
                 </a>
@@ -58,6 +56,12 @@
                     </a>
                     <a href="{{ url_for('products.my_products_list') }}">
                         <i class="fas fa-box"></i>My Items
+                    </a>
+                    <a href="{{ url_for('rooms.my_listings') }}">
+                        <i class="fas fa-door-open"></i>My Rooms
+                    </a>
+                    <a href="{{ url_for('rooms.my_unlocks') }}">
+                        <i class="fas fa-eye"></i>My Unlocks
                     </a>
                     <a href="{{ url_for('main.notification') }}">
                         <i class="fas fa-bell"></i>Notifications
@@ -83,7 +87,7 @@
         </div>
     </nav>
 
-    <!-- ENHANCED Mobile Bottom Navigation -->
+    <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav">
         <div class="mobile-nav-container" id="mobileNavContainer">
             <a href="{{ url_for('main.index') }}" class="mobile-nav-item">
@@ -94,7 +98,6 @@
                 <i class="fas fa-shopping-bag"></i>
                 <span>Products</span>
             </a>
-            <!-- NEW: Room Takeover Mobile Link -->
             <a href="{{ url_for('rooms.index') }}" class="mobile-nav-item">
                 <i class="fas fa-door-open"></i>
                 <span>Rooms</span>
@@ -113,19 +116,26 @@
                     <i class="fas fa-box"></i>
                     <span>My Items</span>
                 </a>
+                <a href="{{ url_for('rooms.my_listings') }}" class="mobile-nav-item">
+                    <i class="fas fa-door-open"></i>
+                    <span>My Rooms</span>
+                </a>
+                <a href="{{ url_for('rooms.my_unlocks') }}" class="mobile-nav-item">
+                    <i class="fas fa-eye"></i>
+                    <span>My Unlocks</span>
+                </a>
                 <a href="{{ url_for('main.notification') }}" class="mobile-nav-item notification-item">
                     <i class="fas fa-bell"></i>
                     <span>Alerts</span>
-                    <span class="notification-badge">3</span>
                 </a>
-               <a href="{{ url_for('announcements.index') }}" class="mobile-nav-item">
+                <a href="{{ url_for('announcements.index') }}" class="mobile-nav-item">
                     <i class="fas fa-bullhorn"></i>
                     <span>Announcements</span>
                     {% if announcement_count %}
                     <span class="notification-badge">{{ announcement_count }}</span>
                     {% endif %}
                 </a>
-                                <a href="{{ url_for('auth.logout') }}" class="mobile-nav-item">
+                <a href="{{ url_for('auth.logout') }}" class="mobile-nav-item">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -181,13 +191,13 @@
                 <ul class="footer-links">
                     <li><a href="{{ url_for('main.index') }}">Home</a></li>
                     <li><a href="{{ url_for('products.all_products') }}">All Products</a></li>
-                    <!-- NEW: Room Takeover Footer Link -->
                     <li><a href="{{ url_for('rooms.index') }}">Room Takeover</a></li>
                     {% if current_user.is_authenticated %}
                         <li><a href="{{ url_for('products.create_product') }}">Sell Item</a></li>
                         <li><a href="{{ url_for('products.my_products_list') }}">My Products</a></li>
+                        <li><a href="{{ url_for('rooms.my_listings') }}">My Rooms</a></li>
+                        <li><a href="{{ url_for('rooms.my_unlocks') }}">My Unlocks</a></li>
                         <li><a href="{{ url_for('main.notification') }}">Notifications</a></li>
-                        <li><a href="{{ url_for('products.my_products_list') }}">Buy Tokens</a></li>
                     {% else %}
                         <li><a href="{{ url_for('auth.register') }}">Register</a></li>
                         <li><a href="{{ url_for('auth.login') }}">Login</a></li>
@@ -208,7 +218,7 @@
         </div>
     </footer>
 
-        <!-- Core JavaScript (loads first) -->
+    <!-- Core JavaScript (loads first) -->
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     
     <!-- Page-specific JavaScript (deferred) -->
@@ -221,4 +231,5 @@
     <script src="{{ url_for('static', filename='js/unlock.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/announcements.js') }}" defer></script>
+</body>
 </html>

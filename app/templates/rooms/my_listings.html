@@ -36,7 +36,6 @@
         padding: 0.75rem;
     }
 
-    /* Header Section - Smaller */
     .page-header {
         display: flex;
         flex-direction: column;
@@ -80,7 +79,6 @@
         color: white;
     }
 
-    /* Listings Grid */
     .listings-grid {
         display: flex;
         flex-direction: column;
@@ -88,7 +86,6 @@
         margin-bottom: 1.5rem;
     }
 
-    /* Room Card - Smaller */
     .room-card {
         background: var(--card-white);
         border: 1px solid var(--border-light);
@@ -104,7 +101,6 @@
         border-color: var(--border-medium);
     }
 
-    /* Image Section - Square Smaller */
     .card-image-wrapper {
         position: relative;
         width: 100%;
@@ -143,7 +139,6 @@
         font-size: 2rem;
     }
 
-    /* Status Badge - Smaller */
     .status-badge {
         position: absolute;
         top: 10px;
@@ -178,7 +173,6 @@
         color: white;
     }
 
-    /* Card Content - Smaller */
     .card-content {
         padding: 0.75rem;
     }
@@ -205,7 +199,6 @@
         font-size: 0.65rem;
     }
 
-    /* Details Grid - Smaller */
     .room-details {
         background: var(--gray-bg);
         border-radius: var(--radius-sm);
@@ -261,7 +254,6 @@
         font-size: 0.65rem;
     }
 
-    /* Card Footer - Action Buttons Smaller */
     .card-footer {
         border-top: 1px solid var(--border-light);
         background: var(--card-white);
@@ -297,7 +289,6 @@
         text-decoration: none;
     }
 
-    /* OFFERS BUTTON - Very Visible & Well Arranged */
     .btn-offers {
         flex: 1;
         background: linear-gradient(135deg, var(--success), #1e6b2f);
@@ -356,7 +347,6 @@
         font-size: 0.7rem;
     }
 
-    /* Offers Panel - New Section for Better Visibility */
     .offers-preview {
         background: var(--success-light);
         border-top: 2px solid var(--success);
@@ -422,7 +412,6 @@
         text-decoration: underline;
     }
 
-    /* Empty State - Smaller */
     .empty-state {
         background: var(--card-white);
         border: 1px solid var(--border-light);
@@ -475,7 +464,6 @@
         color: white;
     }
 
-    /* Tablet and Desktop */
     @media (min-width: 640px) {
         .listings-grid {
             display: grid;
@@ -520,7 +508,6 @@
         }
     }
 
-    /* Animation */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -536,7 +523,6 @@
         animation: fadeInUp 0.3s ease-out;
     }
 
-    /* Touch-friendly */
     .btn-primary-action,
     .btn-view,
     .btn-offers,
@@ -544,7 +530,6 @@
         min-height: 38px;
     }
 
-    /* Focus states */
     *:focus-visible {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
@@ -552,7 +537,6 @@
 </style>
 
 <div class="my-rooms-container">
-    <!-- Header Section -->
     <div class="page-header">
         <h1><i class="fas fa-door-open" style="background: none; -webkit-text-fill-color: var(--primary);"></i> My Room Listings</h1>
         <a href="{{ url_for('rooms.create') }}" class="btn-primary-action">
@@ -562,11 +546,9 @@
     </div>
 
     {% if listings and listings|length > 0 %}
-    <!-- Listings Grid -->
     <div class="listings-grid">
         {% for room in listings %}
         <div class="room-card">
-            <!-- Square Image Section -->
             <div class="card-image-wrapper">
                 <div class="image-container">
                     {% set images_list = room.images|list if room.images else [] %}
@@ -579,7 +561,6 @@
                     {% endif %}
                 </div>
 
-                <!-- Status Badge -->
                 {% if room.status == 'available' %}
                 <span class="status-badge badge-available"><i class="fas fa-circle" style="font-size: 0.45rem; margin-right: 3px;"></i> Available</span>
                 {% elif room.status == 'pending' %}
@@ -591,7 +572,6 @@
                 {% endif %}
             </div>
 
-            <!-- Card Content -->
             <div class="card-content">
                 <h3 class="room-title">{{ room.title|truncate(35) }}</h3>
                 
@@ -600,7 +580,6 @@
                     <span>{{ room.hostel_name }}, {{ room.location|truncate(20) }}</span>
                 </div>
 
-                <!-- Details Grid -->
                 <div class="room-details">
                     <div class="detail-item">
                         <span class="detail-label">Monthly Rent</span>
@@ -628,7 +607,7 @@
                 </div>
             </div>
 
-            <!-- OFFERS SECTION - Very Visible & Well Arranged -->
+            <!-- OFFERS SECTION - Fixed to use correct Offer model fields -->
             {% set active_offers = room.offers|selectattr('status', 'equalto', 'active')|list if room.offers else [] %}
             {% if active_offers|length > 0 %}
             <div class="offers-preview">
@@ -641,13 +620,17 @@
                     <div class="offer-item">
                         <div>
                             <strong class="offer-amount">
-                                {% if offer.offer_type == 'commission' %}
-                                {{ offer.commission_percentage }}% Commission
+                                {% if offer.commission_offer and offer.commission_offer > 0 %}
+                                {{ "%.1f"|format(offer.commission_offer) }}% Commission
+                                {% elif offer.deposit_offer and offer.deposit_offer > 0 %}
+                                KES {{ "%.0f"|format(offer.deposit_offer) }} Deposit
                                 {% else %}
-                                KES {{ "%.0f"|format(offer.deposit_amount) }} Deposit
+                                Custom Offer
                                 {% endif %}
                             </strong>
-                            <span class="offer-type">{{ offer.offer_type|capitalize }}</span>
+                            <span class="offer-type">
+                                {% if offer.commission_offer and offer.commission_offer > 0 %}Commission{% else %}Deposit{% endif %}
+                            </span>
                         </div>
                         <small style="color: #64748b;">{{ offer.created_at.strftime('%b %d') }}</small>
                     </div>
@@ -661,7 +644,6 @@
             </div>
             {% endif %}
 
-            <!-- Card Footer - Action Buttons -->
             <div class="card-footer">
                 <div class="action-buttons">
                     <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn-view">
@@ -686,7 +668,6 @@
         {% endfor %}
     </div>
     {% else %}
-    <!-- Empty State -->
     <div class="empty-state">
         <i class="fas fa-door-open"></i>
         <h3>No Listings Yet</h3>
