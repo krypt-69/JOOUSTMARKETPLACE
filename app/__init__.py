@@ -44,9 +44,10 @@ def create_app(config_class=Config):
     from app.main.routes import main_bp
     from app.auth.routes import auth_bp
     from app.products.routes import products_bp
-    from app.admin.routes import admin_bp
-    from app.admin.auth import admin_auth_bp 
-    from app.admin.dashboard import dashboard_bp 
+    from app.admin import admin_bp
+#     from app.admin.routes import admin_bp
+#     from app.admin.auth import admin_auth_bp 
+#     from app.admin.dashboard import dashboard_bp 
     from app.chat import chat_bp
     from app.rooms.routes import rooms_bp  # Import rooms blueprint
     from app.announcements import announcements_bp
@@ -55,8 +56,9 @@ def create_app(config_class=Config):
     app.register_blueprint(auth_bp)
     app.register_blueprint(products_bp)
     app.register_blueprint(admin_bp)
-    app.register_blueprint(admin_auth_bp, url_prefix='/adminauth')
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+#     app.register_blueprint(admin_bp)
+#     app.register_blueprint(admin_auth_bp, url_prefix='/adminauth')
+#     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(chat_bp)
     app.register_blueprint(rooms_bp)  # Register rooms blueprint
     

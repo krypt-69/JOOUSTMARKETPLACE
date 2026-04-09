@@ -1,0 +1,131 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Room Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .room-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    .status-available { background: #27ae60; color: white; }
+    .status-pending { background: #f39c12; color: white; }
+    .status-booked { background: #e74c3c; color: white; }
+    .status-expired { background: #95a5a6; color: white; }
+    .status-inactive { background: #7f8c8d; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>Room Management</h2>
+<p style="color: #666; margin-bottom: 1rem;">Hostel room listings and vacancies</p>
+
+<!-- Filters -->
+<div style="margin-bottom: 1rem;">
+    <form method="GET" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <input type="text" name="search" placeholder="Search by title, hostel, location..." value="{{ search }}" style="flex: 2; padding: 0.5rem;">
+        <select name="location" style="padding: 0.5rem;">
+            <option value="">All Locations</option>
+            {% for loc in locations %}
+            <option value="{{ loc }}" {% if location == loc %}selected{% endif %}>{{ loc }}</option>
+            {% endfor %}
+        </select>
+        <select name="status" style="padding: 0.5rem;">
+            <option value="all" {% if status == 'all' %}selected{% endif %}>All Status</option>
+            <option value="available" {% if status == 'available' %}selected{% endif %}>Available</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="booked" {% if status == 'booked' %}selected{% endif %}>Booked</option>
+            <option value="expired" {% if status == 'expired' %}selected{% endif %}>Expired</option>
+            <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        {% if search or location or status != 'all' %}
+        <a href="{{ url_for('admin.rooms') }}" class="btn">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>ID</th>
+            <th>Title / Hostel</th>
+            <th>Location</th>
+            <th>Rent</th>
+            <th>Deposit</th>
+            <th>Status</th>
+            <th>Leave Date</th>
+            <th>Seller</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for room in rooms.items %}
+        <tr>
+            <td>
+                {% if room.image_group and room.image_group.images %}
+                    <img src="{{ url_for('static', filename='uploads/product_images/' + room.image_group.images[0].filename) }}" 
+                         class="room-image" 
+                         alt="{{ room.title }}"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=No+Image'">
+                {% else %}
+                    <div style="width: 60px; height: 60px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 5px;">🏠</div>
+                {% endif %}
+            </td>
+            <td>{{ room.id }}</td>
+            <td>
+                <strong>{{ room.title[:35] }}</strong><br>
+                <small style="color: #666;">{{ room.hostel_name }}</small>
+            </td>
+            <td>{{ room.location }}</td>
+            <td>KES {{ "{:,.0f}".format(room.price) }}</td>
+            <td>{% if room.deposit > 0 %}KES {{ "{:,.0f}".format(room.deposit) }}{% else %}-{% endif %}</td>
+            <td>
+                <span class="status-badge status-{{ room.status }}">
+                    {% if room.status == 'available' %}✓ Available
+                    {% elif room.status == 'pending' %}⏳ Pending
+                    {% elif room.status == 'booked' %}📅 Booked
+                    {% elif room.status == 'expired' %}⌛ Expired
+                    {% else %}❌ Inactive{% endif %}
+                </span>
+            </td>
+            <td>{{ room.leave_date.strftime('%Y-%m-%d') if room.leave_date else '-' }}</td>
+            <td>{{ room.seller.username if room.seller else 'N/A' }}</td>
+            <td>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <a href="{{ url_for('admin.room_detail', room_id=room.id) }}" class="btn btn-sm btn-primary">View</a>
+                    <form method="POST" action="{{ url_for('admin.delete_room', room_id=room.id) }}" 
+                          onsubmit="return confirm('Delete this room listing? This cannot be undone.');"
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+{% if rooms.pages > 1 %}
+<div class="pagination">
+    {% for page in range(1, rooms.pages + 1) %}
+        {% if page == rooms.page %}
+            <span class="active">{{ page }}</span>
+        {% else %}
+            <a href="{{ url_for('admin.rooms', page=page, search=search, status=status, location=location) }}">{{ page }}</a>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

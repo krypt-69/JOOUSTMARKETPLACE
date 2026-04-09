@@ -423,7 +423,11 @@ def mark_booked(room_id):
 @login_required
 def my_listings():
     """Show current user's room listings"""
-    listings = Product.query.filter_by(seller_id=current_user.id).order_by(Product.created_at.desc()).all()
+    # Only show rooms (products with hostel_name not empty)
+    listings = Product.query.filter(
+        Product.seller_id == current_user.id,
+        Product.hostel_name != ""  # Only rooms, not regular products
+    ).order_by(Product.created_at.desc()).all()
     return render_template('rooms/my_listings.html', listings=listings)
 
 

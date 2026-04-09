@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Categories Management{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Product Categories</h2>
+    <a href="{{ url_for('admin.create_category') }}" class="btn btn-primary">+ Add New Category</a>
+</div>
+
+{% if categories %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Category Name</th>
+            <th>Description</th>
+            <th>Products Count</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category in categories %}
+        <tr>
+            <td>{{ category.id }}</td>
+            <td><strong>{{ category.name }}</strong></td>
+            <td>{{ category.description or '-' }}</td>
+            <td>{{ category.product_count }}</td>
+            <td>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="{{ url_for('admin.edit_category', category_id=category.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                    {% if category.product_count == 0 %}
+                    <form method="POST" action="{{ url_for('admin.delete_category', category_id=category.id) }}" 
+                          onsubmit="return confirm('Delete category "{{ category.name }}"? This cannot be undone.');"
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-sm" disabled style="background: #ccc; cursor: not-allowed;" 
+                            title="Cannot delete - has {{ category.product_count }} products">Has Products</button>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div style="background: white; padding: 3rem; text-align: center; border-radius: 10px;">
+    <p style="color: #666;">No categories found.</p>
+    <a href="{{ url_for('admin.create_category') }}" class="btn btn-primary" style="margin-top: 1rem;">Create First Category</a>
+</div>
+{% endif %}
+{% endblock %}

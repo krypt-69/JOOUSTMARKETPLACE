@@ -1,0 +1,169 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Room: {{ room.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .room-gallery {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+    .gallery-image {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 2px solid #e0e0e0;
+    }
+    .info-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    .info-label {
+        font-weight: bold;
+        color: #666;
+        width: 150px;
+        display: inline-block;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Room Details: {{ room.title }}</h2>
+    <a href="{{ url_for('admin.rooms') }}" class="btn">← Back to Rooms</a>
+</div>
+
+<!-- Room Images Gallery -->
+{% if room.image_group and room.image_group.images %}
+<div class="info-section">
+    <h3>Room Images</h3>
+    <div class="room-gallery">
+        {% for img in room.image_group.images %}
+        <img src="{{ url_for('static', filename='uploads/product_images/' + img.filename) }}" 
+             class="gallery-image" 
+             alt="Room image {{ loop.index }}">
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Room Information -->
+<div class="info-section">
+    <h3>Room Information</h3>
+    <table style="width: 100%;">
+        <tr><td class="info-label">Title:</td><td><strong>{{ room.title }}</strong></td></tr>
+        <tr><td class="info-label">Hostel Name:</td><td>{{ room.hostel_name }}</td></tr>
+        <tr><td class="info-label">Location:</td><td>{{ room.location }}</td></tr>
+        <tr><td class="info-label">Room Type:</td><td>{{ room.room_type|capitalize }}</td></tr>
+        <tr><td class="info-label">Monthly Rent:</td><td>KES {{ "{:,.0f}".format(room.price) }}</td></tr>
+        <tr><td class="info-label">Deposit:</td><td>{% if room.deposit > 0 %}KES {{ "{:,.0f}".format(room.deposit) }}{% else %}No deposit{% endif %}</td></tr>
+        <tr><td class="info-label">Commission:</td><td>{% if room.is_commission_listing %}{{ room.commission_percentage }}%{% else %}No commission{% endif %}</td></tr>
+        <tr><td class="info-label">Leave Date:</td><td>{{ room.leave_date.strftime('%Y-%m-%d') if room.leave_date else 'Not set' }}</td></tr>
+        <tr><td class="info-label">Days until leave:</td><td>{{ room.days_until_leave() }} days</td></tr>
+        <tr><td class="info-label">Status:</td>
+            <td>
+                <span class="status-badge" style="background: 
+                    {% if room.status == 'available' %}#27ae60
+                    {% elif room.status == 'pending' %}#f39c12
+                    {% elif room.status == 'booked' %}#e74c3c
+                    {% else %}#95a5a6{% endif %}; color: white;">
+                    {{ room.status|upper }}
+                </span>
+            </td>
+        </tr>
+        <tr><td class="info-label">Total Unlocks:</td><td>{{ room.total_unlocks }}</td></tr>
+        <tr><td class="info-label">Seller:</td><td><a href="{{ url_for('admin.user_detail', user_id=room.seller_id) }}">{{ room.seller.username }}</a></td></tr>
+        <tr><td class="info-label">Created:</td><td>{{ room.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+    </table>
+    
+    <div style="margin-top: 1.5rem;">
+        <h4>Description</h4>
+        <p style="background: #f9f9f9; padding: 1rem; border-radius: 5px;">{{ room.description or 'No description provided.' }}</p>
+    </div>
+</div>
+
+<!-- Update Status -->
+<div class="info-section">
+    <h3>Update Status</h3>
+    <form method="POST" action="{{ url_for('admin.update_room_status', room_id=room.id) }}" style="display: flex; gap: 1rem; align-items: center;">
+        <select name="status" style="padding: 0.5rem;">
+            <option value="available" {% if room.status == 'available' %}selected{% endif %}>Available</option>
+            <option value="pending" {% if room.status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="booked" {% if room.status == 'booked' %}selected{% endif %}>Booked</option>
+            <option value="expired" {% if room.status == 'expired' %}selected{% endif %}>Expired</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Update Status</button>
+    </form>
+</div>
+
+<!-- Unlocks History -->
+<div class="info-section">
+    <h3>Unlock History ({{ unlocks|length }} unlocks)</h3>
+    {% if unlocks %}
+    <table class="data-table">
+        <thead>
+            <tr><th>Buyer</th><th>Amount</th><th>Date</th><th>Phone</th><th>Receipt</th></tr>
+        </thead>
+        <tbody>
+            {% for unlock in unlocks %}
+            <tr>
+                <td><a href="{{ url_for('admin.user_detail', user_id=unlock.user_id) }}">{{ unlock.user.username }}</a></td>
+                <td>KES {{ "{:,.0f}".format(unlock.amount) }}</td>
+                <td>{{ unlock.completed_at.strftime('%Y-%m-%d %H:%M') if unlock.completed_at else '-' }}</td>
+                <td>{{ unlock.phone_number or '-' }}</td>
+                <td>{{ unlock.mpesa_receipt_number or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No unlocks yet.</p>
+    {% endif %}
+</div>
+
+<!-- Offers -->
+<div class="info-section">
+    <h3>Offers ({{ offers|length }})</h3>
+    {% if offers %}
+    <table class="data-table">
+        <thead>
+            <tr><th>Buyer</th><th>Deposit Offer</th><th>Commission Offer</th><th>Value</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for offer in offers %}
+            <tr>
+                <td><a href="{{ url_for('admin.user_detail', user_id=offer.buyer_id) }}">{{ offer.offer_buyer.username }}</a></td>
+                <td>{% if offer.deposit_offer %}KES {{ "{:,.0f}".format(offer.deposit_offer) }}{% else %}-{% endif %}</td>
+                <td>{% if offer.commission_offer %}{{ offer.commission_offer }}%{% else %}-{% endif %}</td>
+                <td>KES {{ "{:,.0f}".format(offer.offer_value or 0) }}</td>
+                <td>{{ offer.status }}</td>
+                <td>{{ offer.created_at.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No offers yet.</p>
+    {% endif %}
+</div>
+
+<!-- Danger Zone -->
+<div class="info-section" style="border: 2px solid #e74c3c;">
+    <h3 style="color: #e74c3c;">Danger Zone</h3>
+    <form method="POST" action="{{ url_for('admin.delete_room', room_id=room.id) }}" 
+          onsubmit="return confirm('PERMANENTLY DELETE this room? This cannot be undone!');">
+        <button type="submit" class="btn btn-danger">Delete Room Permanently</button>
+    </form>
+</div>
+{% endblock %}

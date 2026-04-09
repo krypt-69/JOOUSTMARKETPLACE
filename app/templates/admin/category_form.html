@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>{{ title }}</h2>
+        <a href="{{ url_for('admin.categories') }}" class="btn">← Back to Categories</a>
+    </div>
+    
+    <div style="background: white; padding: 2rem; border-radius: 10px;">
+        <form method="POST">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Category Name *</label>
+                <input type="text" name="name" value="{{ category.name if category else '' }}" 
+                       style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;"
+                       required>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Description</label>
+                <textarea name="description" rows="4" 
+                          style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px; font-family: inherit;">{{ category.description if category else '' }}</textarea>
+                <small style="color: #666; display: block; margin-top: 0.25rem;">Optional. Brief description of the category.</small>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="{{ url_for('admin.categories') }}" class="btn">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

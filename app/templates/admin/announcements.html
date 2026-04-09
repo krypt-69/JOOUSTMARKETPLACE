@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Announcements{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Site Announcements</h2>
+    <a href="{{ url_for('admin.create_announcement') }}" class="btn btn-primary">+ New Announcement</a>
+</div>
+
+{% if announcements %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Author</th>
+            <th>Pinned</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ann in announcements %}
+        <tr>
+            <td>{{ ann.id }}</td>
+            <td><strong>{{ ann.title[:50] }}</strong></td>
+            <td>
+                {% if ann.message_type == 'important' %}
+                <span style="background: #e74c3c; color: white; padding: 0.25rem 0.5rem; border-radius: 3px;">⚠️ Important</span>
+                {% elif ann.message_type == 'update' %}
+                <span style="background: #3498db; color: white; padding: 0.25rem 0.5rem; border-radius: 3px;">📢 Update</span>
+                {% elif ann.message_type == 'idea' %}
+                <span style="background: #27ae60; color: white; padding: 0.25rem 0.5rem; border-radius: 3px;">💡 Idea</span>
+                {% elif ann.message_type == 'issue' %}
+                <span style="background: #e67e22; color: white; padding: 0.25rem 0.5rem; border-radius: 3px;">🐛 Issue</span>
+                {% else %}
+                <span style="background: #95a5a6; color: white; padding: 0.25rem 0.5rem; border-radius: 3px;">🔧 Improvement</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if ann.status == 'completed' %}
+                <span style="color: green;">✓ Completed</span>
+                {% elif ann.status == 'in_progress' %}
+                <span style="color: orange;">⏳ In Progress</span>
+                {% else %}
+                <span style="color: blue;">ℹ️ Normal</span>
+                {% endif %}
+            </td>
+            <td>{{ ann.author_name }}</td>
+            <td>{% if ann.is_pinned %}📌 Yes{% else %}No{% endif %}</td>
+            <td>{{ ann.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <form method="POST" action="{{ url_for('admin.toggle_pin_announcement', announcement_id=ann.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm {% if ann.is_pinned %}btn-warning{% else %}btn-primary{% endif %}">
+                            {% if ann.is_pinned %}Unpin{% else %}Pin{% endif %}
+                        </button>
+                    </form>
+                    <a href="{{ url_for('admin.edit_announcement', announcement_id=ann.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                    <form method="POST" action="{{ url_for('admin.delete_announcement', announcement_id=ann.id) }}" 
+                          onsubmit="return confirm('Delete this announcement?');" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div style="background: white; padding: 3rem; text-align: center; border-radius: 10px;">
+    <p style="color: #666;">No announcements yet.</p>
+    <a href="{{ url_for('admin.create_announcement') }}" class="btn btn-primary" style="margin-top: 1rem;">Create First Announcement</a>
+</div>
+{% endif %}
+{% endblock %}
