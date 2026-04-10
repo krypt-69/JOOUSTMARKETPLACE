@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy import or_
 import os
 import uuid
+from app.utils.image_compressor import compress_image  # ← ADD THIS LINE
 
 rooms_bp = Blueprint('rooms', __name__, url_prefix='/rooms')
 
@@ -174,6 +175,13 @@ def create():
                     unique_filename = f"{uuid.uuid4().hex}.{ext}"
                     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
                     file.save(filepath)
+                    
+                    # ✨ NEW: Compress the image
+                    compression_result = compress_image(filepath, is_chat_image=False)
+                    if compression_result['success']:
+                        current_app.logger.info(f"Room image compressed: {compression_result['message']}")
+                    else:
+                        current_app.logger.warning(f"Room image compression failed: {compression_result['message']}")
                     
                     product_image = ProductImage(
                         filename=unique_filename,

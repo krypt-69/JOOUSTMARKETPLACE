@@ -10,7 +10,8 @@ from app.models import Product, Category, Payment, ProductUnlock, User, Notifica
 from app import db
 from app.mpesa import MpesaGateway
 import uuid
-from app import cache  # We'll create this
+from app import cache 
+from app.utils.image_compressor import compress_image # We'll create this
 
 products_bp = Blueprint('products', __name__)
 
@@ -77,7 +78,7 @@ def create_product():
                 db.session.add(image_group)
                 db.session.flush()  # Get the ID without committing
                 
-                # Save each image
+                # Save each image with compression
                 for file in image_files:
                     if file and file.filename != '' and allowed_file(file.filename):
                         # Generate unique filename
@@ -85,6 +86,14 @@ def create_product():
                         unique_filename = f"{uuid.uuid4().hex}.{ext}"
                         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
                         file.save(filepath)
+                        
+                        # ✨ NEW: Compress the image
+                        from app.utils.image_compressor import compress_image
+                        compression_result = compress_image(filepath, is_chat_image=False)
+                        if compression_result['success']:
+                            current_app.logger.info(f"Image compressed: {compression_result['message']}")
+                        else:
+                            current_app.logger.warning(f"Compression failed: {compression_result['message']}")
                         
                         # Create ProductImage record
                         product_image = ProductImage(
@@ -94,7 +103,7 @@ def create_product():
                         )
                         db.session.add(product_image)
                 
-                # Create product with image_group_id (NOT image=filename)
+                # Create product with image_group_id
                 discount = token_discount
                 if token_discount == discount:
                     new_product = Product(
@@ -103,13 +112,12 @@ def create_product():
                         price=price,
                         condition=condition,
                         contact_info=contact_info,
-                        # REMOVED: image=image_filename,
                         category_id=category_id,
                         is_fast_moving=is_fast_moving,
                         seller_id=current_user.id,
                         is_active=True,  # Set to True immediately
                         Token=0,
-                        image_group_id=image_group.id  # ADDED: Link to image group
+                        image_group_id=image_group.id  # Link to image group
                     )
                 
                 db.session.add(new_product)

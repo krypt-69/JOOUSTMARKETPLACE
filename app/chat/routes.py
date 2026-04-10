@@ -7,6 +7,7 @@ from app.chat import chat_bp
 from app import db
 from app.models import User, Product, ProductUnlock, Chat, Message, Notification
 import uuid
+from app.utils.image_compressor import compress_image  # ← ADD THIS LINE
 
 # Allowed image extensions for chat
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -203,7 +204,7 @@ def send_message(chat_id):
         receiver_id=receiver_id
     )
     
-    # Handle image upload
+    # Handle image upload with compression
     if image_file and image_file.filename:
         if not allowed_file(image_file.filename):
             return jsonify({'error': 'File type not allowed. Only images are permitted.'}), 400
@@ -217,6 +218,13 @@ def send_message(chat_id):
         filepath = os.path.join(upload_dir, unique_filename)
         image_file.save(filepath)
         
+        # ✨ NEW: Compress the image (chat images use different settings)
+        compression_result = compress_image(filepath, is_chat_image=True)
+        if compression_result['success']:
+            current_app.logger.info(f"Chat image compressed: {compression_result['message']}")
+        else:
+            current_app.logger.warning(f"Chat image compression failed: {compression_result['message']}")
+        
         message.is_image = True
         message.image_filename = unique_filename
         # Optional: you can add image caption
@@ -229,9 +237,6 @@ def send_message(chat_id):
     
     # Update chat's updated_at timestamp
     chat.updated_at = datetime.utcnow()
-    
-    # ⚠️ NOTIFICATION REMOVED - No longer creating notifications for individual messages
-    # This prevents spam/space-taking notifications
     
     db.session.commit()
     
