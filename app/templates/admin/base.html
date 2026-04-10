@@ -314,6 +314,13 @@
             <a href="{{ url_for('announcements.admin') }}" class="{% if request.endpoint == 'announcements.admin' %}active{% endif %}">
     📢 Announcements
 </a>
+
+<a href="{{ url_for('admin.system_health') }}" class="{% if request.endpoint == 'admin.system_health' %}active{% endif %}">
+    🏥 System Health
+</a>
+<a href="{{ url_for('admin.admin_logs') }}" class="{% if request.endpoint == 'admin.admin_logs' %}active{% endif %}">
+    📋 Activity Logs
+</a>
         </nav>
         
         <main class="admin-content">

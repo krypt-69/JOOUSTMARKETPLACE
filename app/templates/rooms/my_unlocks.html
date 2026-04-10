@@ -2,82 +2,96 @@
 
 {% block title %}Rooms I've Unlocked - Marketplace{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rooms_my_unlocks.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h2 class="mb-4">Rooms I've Unlocked</h2>
+<div class="my-unlocks-container">
+    <div class="page-header">
+        <h2><i class="fas fa-eye" style="color: var(--primary); margin-right: 10px;"></i>Rooms I've Unlocked</h2>
+    </div>
 
-            {% if rooms %}
-            <div class="row">
-                {% for room in rooms %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <!-- Status Badge -->
-                        <div class="position-absolute top-0 end-0 m-2">
-                            {% if room.status == 'available' %}
-                            <span class="badge bg-success">Available</span>
-                            {% elif room.status == 'pending' %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                            {% elif room.status == 'booked' %}
-                            <span class="badge bg-secondary">Booked</span>
-                            {% endif %}
-                        </div>
+    {% if rooms %}
+    <div class="unlocks-grid">
+        {% for room in rooms %}
+        <div class="unlock-card">
+            <!-- Image Section -->
+            <div class="card-image-wrapper">
+                {% if room.image %}
+                <img src="{{ url_for('static', filename='uploads/product_images/' + room.image) }}" alt="{{ room.title }}">
+                {% else %}
+                <div class="image-placeholder">
+                    <i class="fas fa-home"></i>
+                </div>
+                {% endif %}
+                
+                <!-- Status Badge -->
+                {% if room.status == 'available' %}
+                <span class="status-badge badge-available">Available</span>
+                {% elif room.status == 'pending' %}
+                <span class="status-badge badge-pending">Pending</span>
+                {% elif room.status == 'booked' %}
+                <span class="status-badge badge-booked">Booked</span>
+                {% endif %}
+            </div>
 
-                        {% if room.image %}
-                        <img src="{{ url_for('static', filename='uploads/product_images/' + room.image) }}" class="card-img-top" alt="{{ room.title }}" style="height: 180px; object-fit: cover;">
-                        {% else %}
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                            <i class="fas fa-home fa-3x text-secondary"></i>
-                        </div>
-                        {% endif %}
+            <!-- Card Body -->
+            <div class="card-body">
+                <h3 class="card-title">{{ room.title|truncate(35) }}</h3>
+                <div class="card-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ room.hostel_name }}, {{ room.location }}</span>
+                </div>
 
-                        <div class="card-body">
-                            <h5 class="card-title">{{ room.title }}</h5>
-                            <p class="card-text text-muted">
-                                <i class="fas fa-map-marker-alt"></i> {{ room.hostel_name }}, {{ room.location }}
-                            </p>
-                            <p class="mb-1">
-                                <strong>Rent:</strong> KES {{ "%.0f"|format(room.price) }}
-                            </p>
-                            <p class="mb-1">
-                                <strong>Deposit:</strong> {{ room.get_deposit_display() }}
-                            </p>
-                            <p class="mb-0">
-                                <small class="text-muted">
-                                    Leave: {{ room.leave_date.strftime('%b %d, %Y') }}
-                                </small>
-                            </p>
-                        </div>
-
-                        <div class="card-footer bg-white">
-                            <div class="btn-group w-100">
-                                <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-eye"></i> View Details
-                                </a>
-                                <!-- FIXED: Use form to start chat instead of broken URL -->
-                                <form method="POST" action="{{ url_for('chat.start_chat', product_id=room.id) }}" style="display: inline; width: 50%;">
-                                    <button type="submit" class="btn btn-outline-success" style="width: 100%;">
-                                        <i class="fas fa-comment"></i> Chat
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                <div class="room-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Monthly Rent</span>
+                        <span class="stat-value" style="color: var(--primary);">KES {{ "%.0f"|format(room.price) }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Deposit</span>
+                        <span class="stat-value">{{ room.get_deposit_display() }}</span>
                     </div>
                 </div>
-                {% endfor %}
+
+                <div class="leave-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>Leave: {{ room.leave_date.strftime('%b %d, %Y') }}</span>
+                    {% if room.days_until_leave() > 0 %}
+                    <span class="days-badge">{{ room.days_until_leave() }} days left</span>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <div class="alert alert-info text-center py-5">
-                <i class="fas fa-lock-open fa-4x mb-3"></i>
-                <h4>No unlocked rooms yet</h4>
-                <p>Browse available rooms and unlock their contact details!</p>
-                <a href="{{ url_for('rooms.index') }}" class="btn btn-primary btn-lg mt-3">
-                    <i class="fas fa-search"></i> Browse Rooms
+
+            <!-- Card Footer -->
+            <div class="card-footer">
+                <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn-view">
+                    <i class="fas fa-eye"></i> View Details
                 </a>
+                <form method="POST" action="{{ url_for('chat.start_chat', product_id=room.id) }}" style="flex: 1; margin: 0;">
+                    <button type="submit" class="btn-chat">
+                        <i class="fas fa-comment"></i> Chat
+                    </button>
+                </form>
             </div>
-            {% endif %}
         </div>
+        {% endfor %}
     </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-lock-open"></i>
+        <h4>No Unlocked Rooms Yet</h4>
+        <p>Browse available rooms and unlock their contact details to start chatting!</p>
+        <a href="{{ url_for('rooms.index') }}" class="btn-browse">
+            <i class="fas fa-search"></i> Browse Rooms
+        </a>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/rooms_my_unlocks.js') }}"></script>
 {% endblock %}

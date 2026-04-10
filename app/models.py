@@ -852,6 +852,28 @@ class Reaction(db.Model):
     
     def __repr__(self):
         return f'<Reaction {self.id}: {self.reaction_type}>'
+# Add this to app/models.py at the end of the file, before the last __repr__
+
+class AdminLog(db.Model):
+    """Track all admin actions for security audit"""
+    __tablename__ = 'admin_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    admin_username = db.Column(db.String(80), nullable=False)
+    action = db.Column(db.String(100), nullable=False)  # e.g., 'delete_user', 'toggle_admin', 'delete_product'
+    target_type = db.Column(db.String(50))  # 'user', 'product', 'room', 'transaction', 'category'
+    target_id = db.Column(db.Integer)
+    target_name = db.Column(db.String(200))  # Store name/title for reference
+    details = db.Column(db.Text)  # Additional JSON data or description
+    ip_address = db.Column(db.String(45))  # IPv4 or IPv6
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    admin = db.relationship('User', foreign_keys=[admin_id], backref='admin_logs')
+    
+    def __repr__(self):
+        return f'<AdminLog {self.id}: {self.admin_username} - {self.action}>'
     
     def __repr__(self):
         return f'<Message {self.id}>'

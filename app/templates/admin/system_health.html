@@ -1,0 +1,245 @@
+{% extends "admin/base.html" %}
+
+{% block title %}System Health{% endblock %}
+
+{% block extra_css %}
+<style>
+    .progress-bar {
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 20px;
+        margin-top: 5px;
+    }
+    .progress-fill {
+        background: #27ae60;
+        height: 100%;
+        transition: width 0.3s;
+    }
+    .progress-fill.warning {
+        background: #f39c12;
+    }
+    .progress-fill.danger {
+        background: #e74c3c;
+    }
+    .cleanup-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .cleanup-btn:hover {
+        background: #c0392b;
+    }
+    .storage-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>System Health Dashboard</h2>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Database Size</h3>
+        <div class="value">{{ (db_size / 1024)|round(2) }} KB</div>
+        <small>instance/marketplace.db</small>
+    </div>
+    <div class="stat-card">
+        <h3>Uploads Storage</h3>
+        <div class="value">{{ (uploads_size / 1024 / 1024)|round(2) }} MB</div>
+        <small>Total: {{ uploads_size|filesizeformat }}</small>
+    </div>
+    <div class="stat-card">
+        <h3>Disk Space</h3>
+        <div class="value">{{ (disk_usage.free / 1024 / 1024 / 1024)|round(1) }} GB free</div>
+        <small>Used: {{ (disk_usage.used / 1024 / 1024 / 1024)|round(1) }} GB / {{ (disk_usage.total / 1024 / 1024 / 1024)|round(1) }} GB</small>
+    </div>
+    <div class="stat-card">
+        <h3>Admin Logs</h3>
+        <div class="value">{{ total_logs }}</div>
+        <small>Tracked actions</small>
+    </div>
+</div>
+
+<!-- Storage Analysis Section -->
+<div style="margin-bottom: 2rem;">
+    <h3>📊 Storage Analysis</h3>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+        <div class="storage-card">
+            <h4>Product Images</h4>
+            <p><strong>Total:</strong> <span id="product_total_count">-</span> files (<span id="product_total_size">-</span> MB)</p>
+            <p><strong>Orphaned:</strong> <span id="product_orphaned_count" style="color: #e74c3c;">-</span> files (<span id="product_orphaned_size">-</span> MB)</p>
+            <div class="progress-bar">
+                <div id="product_orphaned_percent" class="progress-fill danger" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="storage-card">
+            <h4>Chat Images</h4>
+            <p><strong>Total:</strong> <span id="chat_total_count">-</span> files (<span id="chat_total_size">-</span> MB)</p>
+            <p><strong>Orphaned:</strong> <span id="chat_orphaned_count" style="color: #e74c3c;">-</span> files (<span id="chat_orphaned_size">-</span> MB)</p>
+            <div class="progress-bar">
+                <div id="chat_orphaned_percent" class="progress-fill danger" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1rem; text-align: center;">
+        <form method="POST" action="{{ url_for('admin.cleanup_orphaned_images') }}" 
+              onsubmit="return confirm('⚠️ WARNING: This will permanently delete orphaned image files. Continue?');">
+            <button type="submit" class="cleanup-btn">🧹 Delete Orphaned Images</button>
+        </form>
+        <small style="color: #666;">This will remove images not linked to any product or message</small>
+    </div>
+</div>
+
+<!-- Largest Files -->
+<div style="margin-bottom: 2rem;">
+    <h3>📁 Largest Files (Top 20)</h3>
+    <div id="largest-files-list" style="max-height: 400px; overflow-y: auto;">
+        <p>Loading...</p>
+    </div>
+</div>
+
+<!-- Database Records -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+    <div style="background: white; padding: 1rem; border-radius: 10px;">
+        <h3>📊 Database Records</h3>
+        <table style="width: 100%; margin-top: 1rem;">
+            <tr><td style="padding: 5px;">Users:</td><td><strong>{{ total_users }}</strong></td></tr>
+            <tr><td style="padding: 5px;">Products:</td><td><strong>{{ total_products }}</strong></td></tr>
+            <tr><td style="padding: 5px;">Rooms:</td><td><strong>{{ total_rooms }}</strong></td></tr>
+            <tr><td style="padding: 5px;">Transactions:</td><td><strong>{{ total_transactions }}</strong></td></tr>
+            <tr><td style="padding: 5px;">Admins:</td><td><strong>{{ total_admins }}</strong></td></tr>
+        </table>
+    </div>
+    
+    <div style="background: white; padding: 1rem; border-radius: 10px;">
+        <h3>⚠️ System Alerts</h3>
+        <table style="width: 100%; margin-top: 1rem;">
+            <tr>
+                <td>Disk Usage:</td>
+                <td>
+                    {% set disk_percent = (disk_usage.used / disk_usage.total * 100)|round(1) %}
+                    {% if disk_percent > 80 %}
+                        <span style="color: orange;">⚠️ {{ disk_percent }}%</span>
+                    {% elif disk_percent > 90 %}
+                        <span style="color: red;">🔴 {{ disk_percent }}%</span>
+                    {% else %}
+                        <span style="color: green;">✓ {{ disk_percent }}%</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>Error Logs:</td>
+                <td>
+                    {% if error_count > 0 %}
+                        <span style="color: orange;">⚠️ {{ error_count }} errors found</span>
+                    {% else %}
+                        <span style="color: green;">✓ No errors</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div style="background: white; padding: 1rem; border-radius: 10px;">
+        <h3>💡 Quick Actions</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+            <a href="{{ url_for('admin.admin_logs') }}" class="btn btn-primary">View Admin Logs</a>
+            <button onclick="refreshAnalysis()" class="btn">Refresh Analysis</button>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Admin Activity -->
+<div>
+    <h3>Recent Admin Activity</h3>
+    <table class="data-table">
+        <thead>
+            <tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>IP Address</th></tr>
+        </thead>
+        <tbody>
+            {% set recent_logs = admin_logs %}
+            {% if recent_logs %}
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ log.admin_username }}</td>
+                    <td><span style="background: #e0e0e0; padding: 0.25rem 0.5rem; border-radius: 3px;">{{ log.action }}</span></td>
+                    <td>{% if log.target_type %}{{ log.target_type }}: {{ log.target_name or log.target_id }}{% else %}-{% endif %}</td>
+                    <td><small>{{ log.ip_address }}</small></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5" style="text-align: center;">No admin actions logged yet</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <div style="margin-top: 1rem;">
+        <a href="{{ url_for('admin.admin_logs') }}" class="btn btn-primary">View All Logs →</a>
+    </div>
+</div>
+
+<script>
+// Load storage analysis data
+async function loadAnalysis() {
+    try {
+        const response = await fetch('{{ url_for("admin.analyze_storage") }}');
+        const data = await response.json();
+        
+        // Update product images stats
+        document.getElementById('product_total_count').textContent = data.product_images.count;
+        document.getElementById('product_total_size').textContent = (data.product_images.size / 1024 / 1024).toFixed(2);
+        document.getElementById('product_orphaned_count').textContent = data.product_images.orphaned;
+        document.getElementById('product_orphaned_size').textContent = (data.product_images.orphaned_size / 1024 / 1024).toFixed(2);
+        
+        const productPercent = data.product_images.count > 0 ? (data.product_images.orphaned / data.product_images.count * 100) : 0;
+        document.getElementById('product_orphaned_percent').style.width = productPercent + '%';
+        
+        // Update chat images stats
+        document.getElementById('chat_total_count').textContent = data.chat_images.count;
+        document.getElementById('chat_total_size').textContent = (data.chat_images.size / 1024 / 1024).toFixed(2);
+        document.getElementById('chat_orphaned_count').textContent = data.chat_images.orphaned;
+        document.getElementById('chat_orphaned_size').textContent = (data.chat_images.orphaned_size / 1024 / 1024).toFixed(2);
+        
+        const chatPercent = data.chat_images.count > 0 ? (data.chat_images.orphaned / data.chat_images.count * 100) : 0;
+        document.getElementById('chat_orphaned_percent').style.width = chatPercent + '%';
+        
+        // Display largest files
+        const filesHtml = data.largest_files.map(file => `
+            <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                <span>📄 ${file.name.substring(0, 50)}${file.name.length > 50 ? '...' : ''}</span>
+                <span>
+                    <strong>${(file.size / 1024 / 1024).toFixed(2)} MB</strong>
+                    ${file.orphaned ? '<span style="color: #e74c3c; margin-left: 10px;">🗑️ Orphaned</span>' : ''}
+                    <span style="color: #666; margin-left: 10px; font-size: 12px;">${file.type}</span>
+                </span>
+            </div>
+        `).join('');
+        
+        document.getElementById('largest-files-list').innerHTML = filesHtml || '<p>No files found</p>';
+        
+    } catch (error) {
+        console.error('Error loading analysis:', error);
+        document.getElementById('largest-files-list').innerHTML = '<p style="color: red;">Error loading data</p>';
+    }
+}
+
+function refreshAnalysis() {
+    loadAnalysis();
+}
+
+// Load on page load
+loadAnalysis();
+</script>
+{% endblock %}
