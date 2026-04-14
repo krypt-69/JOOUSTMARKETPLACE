@@ -28,126 +28,116 @@ def mark_all_notifications_read():
     pass
 
 @products_bp.route('/create', methods=['GET', 'POST'])
-@cache.cached(timeout=60)
 @login_required
 def create_product():
     if request.method == 'POST':
-        # Check if this is a payment confirmation
-        payment_method = request.form.get('payment_method')
+        # ========== FREE MODE: COMPLETE PAYMENT BYPASS ==========
+        # No payment calls, no M-Pesa, no token checks. Direct product creation.
         
-        if payment_method == 'mpesa':
-            # Handle M-Pesa payment first
-            # TEMPORARILY COMMENTED OUT - Using direct creation instead
-            # return handle_mpesa_payment(request)
+        try:
+            # Get form data
+            title = request.form.get('title')
+            description = request.form.get('description')
+            price = float(request.form.get('price'))
+            condition = request.form.get('condition')
+            category_id = request.form.get('category_id')
+            is_fast_moving = bool(request.form.get('is_fast_moving'))
+            token_discount = request.form.get('token_discount')
             
-            # TEMPORARY: Direct product creation (copy code from handle_mpesa_payment)
-            try:
-                # Get form data
-                title = request.form.get('title')
-                description = request.form.get('description')
-                price = float(request.form.get('price'))
-                condition = request.form.get('condition')
-                category_id = request.form.get('category_id')
-                is_fast_moving = bool(request.form.get('is_fast_moving'))
-                phone_number = request.form.get('mpesa_phone')
-                token_discount = request.form.get('token_discount')
-                
-                # Get delivery information
-                delivery_option = request.form.get('delivery_option')
-                contact_info = ""
-                
-                if delivery_option == 'free':
-                    contact_info = request.form.get('delivery_address', '')
-                elif delivery_option == 'paid':
-                    delivery_fee = request.form.get('delivery_fee', '0')
-                    contact_info = f"Paid delivery: KES {delivery_fee}"
-                else:  # meetup
-                    contact_info = "Campus meetup - contact seller for location"
-                
-                # ========== UPDATED: Handle MULTIPLE image uploads ==========
-                # Get all uploaded images
-                image_files = request.files.getlist('images')  # Changed from 'image' to 'images'
-                
-                # Validate at least one image was uploaded
-                if not image_files or image_files[0].filename == '':
-                    flash('Please upload at least one product image', 'error')
-                    return redirect(url_for('products.create_product'))
-                
-                # Create ProductImageGroup first
-                image_group = ProductImageGroup()
-                db.session.add(image_group)
-                db.session.flush()  # Get the ID without committing
-                
-                # Save each image with compression
-                for file in image_files:
-                    if file and file.filename != '' and allowed_file(file.filename):
-                        # Generate unique filename
-                        ext = file.filename.rsplit('.', 1)[1].lower()
-                        unique_filename = f"{uuid.uuid4().hex}.{ext}"
-                        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                        file.save(filepath)
-                        
-                        # ✨ NEW: Compress the image
-                        from app.utils.image_compressor import compress_image
-                        compression_result = compress_image(filepath, is_chat_image=False)
-                        if compression_result['success']:
-                            current_app.logger.info(f"Image compressed: {compression_result['message']}")
-                        else:
-                            current_app.logger.warning(f"Compression failed: {compression_result['message']}")
-                        
-                        # Create ProductImage record
-                        product_image = ProductImage(
-                            filename=unique_filename,
-                            filepath=filepath,
-                            group_id=image_group.id
-                        )
-                        db.session.add(product_image)
-                
-                # Create product with image_group_id
-                discount = token_discount
-                if token_discount == discount:
-                    new_product = Product(
-                        title=title,
-                        description=description,
-                        price=price,
-                        condition=condition,
-                        contact_info=contact_info,
-                        category_id=category_id,
-                        is_fast_moving=is_fast_moving,
-                        seller_id=current_user.id,
-                        is_active=True,  # Set to True immediately
-                        Token=0,
-                        image_group_id=image_group.id  # Link to image group
-                    )
-                
-                db.session.add(new_product)
-                db.session.commit()
-                
-                # Create a simulated checkout ID to keep frontend happy
-                checkout_request_id = f"SIMULATED_{new_product.id}_{int(datetime.now().timestamp())}"
-                
-                flash(f'Product "{title}" created successfully with {len(image_files)} images! (Development mode - payment bypassed)', 'success')
-                flash('add your contact_info if you have not it is required', 'error')
-                # Return JSON similar to what handle_mpesa_payment would return
-                return jsonify({
-                    "status": "payment_started",
-                    "checkout_request_id": checkout_request_id,
-                    "simulated": True
-                })
-                
-            except Exception as e:
-                db.session.rollback()
-                current_app.logger.error(f"Direct creation error: {str(e)}")
-                flash(f'Error creating product: {str(e)}', 'error')
+            # Get delivery information
+            delivery_option = request.form.get('delivery_option')
+            contact_info = ""
+            
+            if delivery_option == 'free':
+                contact_info = request.form.get('delivery_address', '')
+            elif delivery_option == 'paid':
+                delivery_fee = request.form.get('delivery_fee', '0')
+                contact_info = f"Paid delivery: KES {delivery_fee}"
+            else:  # meetup
+                contact_info = "Campus meetup - contact seller for location"
+            
+            # Handle MULTIPLE image uploads
+            image_files = request.files.getlist('images')
+            
+            # Validate at least one image
+            if not image_files or image_files[0].filename == '':
+                flash('Please upload at least one product image', 'error')
                 return redirect(url_for('products.create_product'))
             
-        elif payment_method == 'token':
-            # Free listing during beta - ALSO NEEDS UPDATE
-            return handle_free_listing(request)
-        else:
-            # Regular form submission - show payment step
-            categories = Category.query.all()
-            return render_template('products/create.html', categories=categories)
+            # Create ProductImageGroup first
+            image_group = ProductImageGroup()
+            db.session.add(image_group)
+            db.session.flush()
+            
+            # Save each image with compression
+            saved_count = 0
+            for file in image_files:
+                if file and file.filename != '' and allowed_file(file.filename):
+                    ext = file.filename.rsplit('.', 1)[1].lower()
+                    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+                    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+                    file.save(filepath)
+                    
+                    # Compress the image
+                    from app.utils.image_compressor import compress_image
+                    compression_result = compress_image(filepath, is_chat_image=False)
+                    
+                    # Create ProductImage record
+                    product_image = ProductImage(
+                        filename=unique_filename,
+                        filepath=filepath,
+                        group_id=image_group.id
+                    )
+                    db.session.add(product_image)
+                    saved_count += 1
+            
+            if saved_count == 0:
+                flash('No valid images were uploaded. Please upload at least one image.', 'error')
+                db.session.rollback()
+                return redirect(url_for('products.create_product'))
+            
+            # Create product - FREE MODE: is_active = True immediately
+            new_product = Product(
+                title=title,
+                description=description,
+                price=price,
+                condition=condition,
+                contact_info=contact_info,
+                category_id=category_id,
+                is_fast_moving=is_fast_moving,
+                seller_id=current_user.id,
+                is_active=True,  # ✅ FREE MODE: Immediately active
+                Token=0,  # Required field
+                image_group_id=image_group.id
+            )
+            
+            db.session.add(new_product)
+            db.session.commit()
+            
+            # Success message
+            flash(f'✅ Product "{title}" listed successfully for FREE!', 'success')
+            flash('⚠️ Please add your contact details if you haven\'t - buyers need to reach you!', 'warning')
+            
+            # Return JSON for AJAX requests (for M-Pesa flow compatibility)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                return jsonify({
+                    "status": "success",
+                    "product_id": new_product.id,
+                    "message": "Product created successfully"
+                })
+            
+            # Normal form submission - redirect to my products
+            return redirect(url_for('products.my_products_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Product creation error: {str(e)}")
+            flash(f'Error creating product: {str(e)}', 'error')
+            return redirect(url_for('products.create_product'))
+    
+    # GET request - show the form
+    categories = Category.query.all()
+    return render_template('products/create.html', categories=categories)
     
     categories = Category.query.all()
     return render_template('products/create.html', categories=categories)
@@ -425,12 +415,16 @@ def all_products():
     products_pagination = Product.query.filter(
         Product.is_sold == False,
         Product.is_active == True,
-        Product.hostel_name == ''
+        (Product.hostel_name == '') | (Product.hostel_name == None)
     ).order_by(Product.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Get all categories for the filter dropdown
+    all_categories = Category.query.all()
     
     return render_template('products/all.html', 
                          products=products_pagination.items,
-                         pagination=products_pagination)
+                         pagination=products_pagination,
+                         all_categories=all_categories)
 @products_bp.route('/product/<int:product_id>')
 def view_product(product_id):
     """View product details - now accessible to everyone"""

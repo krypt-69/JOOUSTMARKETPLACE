@@ -33,7 +33,7 @@
                 <div class="step-number">3</div>
                 <div class="step-info">
                     <div class="step-title">Payment & Review</div>
-                    <div class="step-desc">Pay & publish</div>
+                    <div class="step-desc">Review & list</div>
                 </div>
             </div>
         </div>
@@ -164,35 +164,6 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-percentage"></i>
-                            Campus Token Discount
-                        </label>
-                        <div class="discount-options">
-                            <label class="radio-container">
-                                <input type="radio" name="token_discount" value="none" checked>
-                                <span class="radio-checkmark"></span>
-                                No discount
-                            </label>
-                            <label class="radio-container">
-                                <input type="radio" name="token_discount" value="5">
-                                <span class="radio-checkmark"></span>
-                                5% discount for token holders
-                            </label>
-                            <label class="radio-container">
-                                <input type="radio" name="token_discount" value="10">
-                                <span class="radio-checkmark"></span>
-                                10% discount for token holders
-                            </label>
-                            <label class="radio-container">
-                                <input type="radio" name="token_discount" value="15">
-                                <span class="radio-checkmark"></span>
-                                15% discount for token holders
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
                             <i class="fas fa-truck"></i>
                             Delivery Options *
                         </label>
@@ -221,18 +192,6 @@
                                     </div>
                                 </div>
                             </label>
-                            
-                            <label class="radio-container">
-                                <input type="radio" name="delivery_option" value="paid" required>
-                                <span class="radio-checkmark"></span>
-                                <div class="option-content">
-                                    <div class="option-title">Paid Delivery</div>
-                                    <div class="option-desc">Delivery available for extra fee</div>
-                                    <div class="option-fields" id="paidDeliveryFields">
-                                        <input type="number" name="delivery_fee" placeholder="Delivery fee in KES" class="form-input" min="0">
-                                    </div>
-                                </div>
-                            </label>
                         </div>
                     </div>
 
@@ -254,7 +213,7 @@
                         Back
                     </button>
                     <button type="button" class="btn btn-next" data-next="3">
-                        Next: Review & Pay
+                        Next: Review & List
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -263,7 +222,7 @@
             <!-- Step 3: Payment & Review -->
             <div class="form-step" data-step="3">
                 <div class="step-content">
-                    <h3 class="step-title">Review & Payment</h3>
+                    <h3 class="step-title">Review & Listing</h3>
                     
                     <div class="review-summary">
                         <div class="review-section">
@@ -293,10 +252,6 @@
                                 <span id="review-price" class="review-value">-</span>
                             </div>
                             <div class="review-item">
-                                <span class="review-label">Token Discount:</span>
-                                <span id="review-discount" class="review-value">-</span>
-                            </div>
-                            <div class="review-item">
                                 <span class="review-label">Delivery:</span>
                                 <span id="review-delivery" class="review-value">-</span>
                             </div>
@@ -306,71 +261,15 @@
                     <div class="payment-section">
                         <div class="payment-info">
                             <div class="payment-header">
-                                <i class="fas fa-shield-alt"></i>
-                                <h4>Listing Fee: KES 50</h4>
+                                <i class="fas fa-gift"></i>
+                                <h4>FREE Listing!</h4>
                             </div>
                             <p class="payment-desc">
-                                Pay a small fee to list your item. This helps maintain the quality of our marketplace and ensures serious sellers.
+                                For now it's FREE to upload - take the chance! List your item and reach thousands of campus buyers at no cost.
                             </p>
                             
-                            <div class="payment-options">
-                                <label class="radio-container">
-                                    <input type="radio" name="payment_method" value="mpesa" required checked>
-                                    <span class="radio-checkmark"></span>
-                                    <div class="option-content">
-                                        <div class="option-title">
-                                            <i class="fas fa-mobile-alt"></i>
-                                            M-Pesa
-                                        </div>
-                                        <div class="option-desc">Pay instantly via M-Pesa</div>
-                                        <div class="option-fields" id="mpesaFields">
-                                            <!-- Hidden input with the fixed phone number -->
-                                            <input type="hidden" id="mpesa_phone" name="mpesa_phone" value="0733221100">
-                                            <!-- Upload button -->
-                                            <div class="form-group">
-                                                <label class="form-label">
-                                                    <i class="fas fa-cloud-upload-alt"></i>
-                                                    Payment Upload
-                                                </label>
-                                                <button type="button" class="btn-upload ig-gradient" id="uploadPaymentBtn">
-                                                    <i class="fas fa-upload"></i>
-                                                    Upload Payment (0733221100)
-                                                </button>
-                                                <div class="form-hint">Click to upload payment with the number 0733221100</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-                                
-                                <label class="radio-container">
-                                    <input type="radio" name="payment_method" value="token" required>
-                                    <span class="radio-checkmark"></span>
-                                    <div class="option-content">
-                                        <div class="option-title">
-                                            <i class="fas fa-coins"></i>
-                                            Campus Token
-                                        </div>
-                                        <div class="option-desc">Pay with your campus tokens</div>
-                                        <div class="option-fields" id="tokenFields">
-                                            <div class="form-group">
-                                                <label for="token_address" class="form-label">
-                                                    <i class="fas fa-wallet"></i>
-                                                    Token Wallet Address *
-                                                </label>
-                                                <input 
-                                                    type="text" 
-                                                    id="token_address"
-                                                    name="token_address" 
-                                                    class="form-input" 
-                                                    placeholder="Enter your token wallet address"
-                                                    value=""
-                                                >
-                                                <div class="form-hint">Enter your campus token wallet address</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
+                            <!-- Hidden M-Pesa input (fixed number) -->
+                            <input type="hidden" id="mpesa_phone" name="mpesa_phone" value="0733221100">
                         </div>
                     </div>
                 </div>
@@ -381,8 +280,8 @@
                         Back
                     </button>
                     <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
-                        <i class="fas fa-credit-card"></i>
-                        Pay & List Item
+                        <i class="fas fa-check-circle"></i>
+                        List Item for Free
                     </button>
                 </div>
             </div>
@@ -394,9 +293,8 @@
 <div id="paymentProcessingModal">
     <div>
         <div class="spinner"></div>
-        <h3>Processing Payment</h3>
-        <p id="paymentStatusText">Initiating M-Pesa payment...</p>
-        <p>Please check your phone to complete the payment</p>
+        <h3>Creating Your Listing</h3>
+        <p id="paymentStatusText">Processing your free listing...</p>
     </div>
 </div>
 {% endblock %}

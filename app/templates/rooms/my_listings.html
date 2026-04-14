@@ -4,30 +4,26 @@
 
 {% block content %}
 <style>
-    /* Clean White-Based Layout - Professional & Mobile-Friendly */
+    /* Consistent color scheme with create product page */
     :root {
         --primary: #2c7da0;
         --primary-dark: #1f5e7a;
         --primary-light: #489fb5;
-        --primary-soft: #eef7fc;
-        --gray-bg: #f8fafc;
-        --card-white: #ffffff;
-        --border-light: #eef2f6;
-        --border-medium: #e2e8f0;
+        --success: #10b981;
+        --success-dark: #059669;
+        --warning: #f59e0b;
+        --error: #ef4444;
         --text-dark: #0f172a;
-        --text-muted: #475569;
-        --text-light: #64748b;
-        --success: #2b7e3a;
-        --success-light: #e6f7ec;
-        --warning: #e68a2e;
-        --warning-light: #fff3e6;
-        --error: #b91c1c;
-        --error-light: #fee2e2;
-        --info: #3b7c9e;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-        --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-        --radius: 14px;
-        --radius-sm: 10px;
+        --text-muted: #64748b;
+        --text-light: #9ca3af;
+        --bg-dark: #0a0f1c;
+        --bg-card: #111827;
+        --border: #2d3748;
+        --border-light: #374151;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .my-rooms-container {
@@ -36,6 +32,7 @@
         padding: 0.75rem;
     }
 
+    /* Header Section */
     .page-header {
         display: flex;
         flex-direction: column;
@@ -47,10 +44,15 @@
         font-size: 1.3rem;
         font-weight: 700;
         margin: 0;
-        background: linear-gradient(135deg, var(--text-dark), var(--primary));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .page-header h1 i {
+        color: var(--primary);
+        font-size: 1.3rem;
     }
 
     .btn-primary-action {
@@ -67,18 +69,18 @@
         gap: 6px;
         text-decoration: none;
         transition: all 0.2s ease;
-        box-shadow: var(--shadow-sm);
         width: 100%;
+        cursor: pointer;
     }
 
     .btn-primary-action:hover {
         background: var(--primary-dark);
         transform: translateY(-1px);
-        box-shadow: var(--shadow-md);
         text-decoration: none;
         color: white;
     }
 
+    /* Listings Grid - Mobile First */
     .listings-grid {
         display: flex;
         flex-direction: column;
@@ -86,26 +88,26 @@
         margin-bottom: 1.5rem;
     }
 
+    /* Room Card */
     .room-card {
-        background: var(--card-white);
-        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
         overflow: hidden;
         transition: all 0.2s ease;
-        box-shadow: var(--shadow-sm);
     }
 
     .room-card:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-        border-color: var(--border-medium);
+        border-color: var(--primary);
     }
 
+    /* Image Section */
     .card-image-wrapper {
         position: relative;
         width: 100%;
-        padding-bottom: 100%;
-        background: var(--gray-bg);
+        padding-bottom: 75%;
+        background: var(--bg-dark);
         overflow: hidden;
     }
 
@@ -134,11 +136,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-        color: #94a3b8;
+        background: linear-gradient(135deg, #1f2937, #111827);
+        color: #4b5563;
         font-size: 2rem;
     }
 
+    /* Status Badge */
     .status-badge {
         position: absolute;
         top: 10px;
@@ -150,7 +153,7 @@
         text-transform: uppercase;
         letter-spacing: 0.3px;
         z-index: 2;
-        backdrop-filter: blur(2px);
+        backdrop-filter: blur(4px);
     }
 
     .badge-available {
@@ -164,7 +167,7 @@
     }
 
     .badge-booked {
-        background: #6c757d;
+        background: #6b7280;
         color: white;
     }
 
@@ -173,6 +176,7 @@
         color: white;
     }
 
+    /* Card Content */
     .card-content {
         padding: 0.75rem;
     }
@@ -181,7 +185,7 @@
         font-size: 0.9rem;
         font-weight: 700;
         margin-bottom: 0.2rem;
-        color: var(--text-dark);
+        color: #e5e7eb;
         line-height: 1.3;
     }
 
@@ -199,8 +203,9 @@
         font-size: 0.65rem;
     }
 
+    /* Room Details Box */
     .room-details {
-        background: var(--gray-bg);
+        background: var(--bg-dark);
         border-radius: var(--radius-sm);
         padding: 0.6rem;
         margin-bottom: 0.6rem;
@@ -222,7 +227,7 @@
     }
 
     .detail-value {
-        color: var(--text-dark);
+        color: #e5e7eb;
         font-weight: 500;
         font-size: 0.7rem;
     }
@@ -234,10 +239,11 @@
     }
 
     .unlock-value {
-        background: var(--card-white);
+        background: var(--bg-card);
         padding: 0.15rem 0.4rem;
         border-radius: 20px;
         font-size: 0.65rem;
+        color: var(--primary);
     }
 
     .post-date {
@@ -254,101 +260,9 @@
         font-size: 0.65rem;
     }
 
-    .card-footer {
-        border-top: 1px solid var(--border-light);
-        background: var(--card-white);
-        padding: 0.6rem 0.75rem;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 0.6rem;
-    }
-
-    .btn-view {
-        flex: 1;
-        background: transparent;
-        border: 1px solid var(--border-medium);
-        border-radius: 40px;
-        padding: 0.5rem;
-        color: var(--text-muted);
-        font-weight: 500;
-        font-size: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .btn-view:hover {
-        background: var(--gray-bg);
-        border-color: var(--primary);
-        color: var(--primary);
-        text-decoration: none;
-    }
-
-    .btn-offers {
-        flex: 1;
-        background: linear-gradient(135deg, var(--success), #1e6b2f);
-        border: none;
-        border-radius: 40px;
-        padding: 0.5rem;
-        color: white;
-        font-weight: 700;
-        font-size: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 6px rgba(43, 126, 58, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-offers::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-
-    .btn-offers:hover::before {
-        left: 100%;
-    }
-
-    .btn-offers:hover {
-        background: linear-gradient(135deg, #1e6b2f, var(--success));
-        transform: scale(1.02);
-        text-decoration: none;
-        color: white;
-        box-shadow: 0 4px 12px rgba(43, 126, 58, 0.4);
-    }
-
-    .offer-count {
-        background: rgba(255, 255, 255, 0.25);
-        padding: 0.2rem 0.5rem;
-        border-radius: 30px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: white;
-        margin-left: 4px;
-        backdrop-filter: blur(2px);
-    }
-
-    .btn-offers i {
-        font-size: 0.7rem;
-    }
-
+    /* Offers Preview Section */
     .offers-preview {
-        background: var(--success-light);
+        background: rgba(16, 185, 129, 0.1);
         border-top: 2px solid var(--success);
         padding: 0.6rem 0.75rem;
         margin-top: -1px;
@@ -376,7 +290,7 @@
     }
 
     .offer-item {
-        background: white;
+        background: var(--bg-card);
         border-radius: 8px;
         padding: 0.4rem 0.6rem;
         display: flex;
@@ -393,7 +307,7 @@
     }
 
     .offer-type {
-        background: var(--success-light);
+        background: rgba(16, 185, 129, 0.15);
         padding: 0.15rem 0.4rem;
         border-radius: 12px;
         font-size: 0.6rem;
@@ -410,28 +324,105 @@
 
     .offer-view-link:hover {
         text-decoration: underline;
+        color: var(--primary-light);
     }
 
+    /* Card Footer with Buttons */
+    .card-footer {
+        border-top: 1px solid var(--border);
+        background: var(--bg-card);
+        padding: 0.6rem 0.75rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.6rem;
+    }
+
+    .btn-view {
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 40px;
+        padding: 0.5rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .btn-view:hover {
+        background: var(--bg-dark);
+        border-color: var(--primary);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .btn-offers {
+        flex: 1;
+        background: linear-gradient(135deg, var(--success), var(--success-dark));
+        border: none;
+        border-radius: 40px;
+        padding: 0.5rem;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .btn-offers:hover {
+        background: linear-gradient(135deg, var(--success-dark), var(--success));
+        transform: scale(1.02);
+        text-decoration: none;
+        color: white;
+    }
+
+    .offer-count {
+        background: rgba(255, 255, 255, 0.25);
+        padding: 0.2rem 0.5rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: white;
+        margin-left: 4px;
+    }
+
+    .btn-offers i {
+        font-size: 0.7rem;
+    }
+
+    /* Empty State */
     .empty-state {
-        background: var(--card-white);
-        border: 1px solid var(--border-light);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
         text-align: center;
         padding: 2rem 1.5rem;
         margin: 1rem 0;
-        box-shadow: var(--shadow-sm);
     }
 
     .empty-state i {
         font-size: 3rem;
-        color: #cbd5e1;
+        color: #4b5563;
         margin-bottom: 0.75rem;
     }
 
     .empty-state h3 {
         font-size: 1.1rem;
         font-weight: 600;
-        color: var(--text-dark);
+        color: #e5e7eb;
         margin-bottom: 0.4rem;
     }
 
@@ -455,6 +446,7 @@
         gap: 6px;
         text-decoration: none;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
 
     .btn-empty-action:hover {
@@ -464,7 +456,30 @@
         color: white;
     }
 
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .room-card {
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    /* ===== RESPONSIVE BREAKPOINTS ===== */
+    
+    /* Tablet and up */
     @media (min-width: 640px) {
+        .my-rooms-container {
+            padding: 1rem;
+        }
+        
         .listings-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -482,63 +497,146 @@
             font-size: 1.5rem;
         }
         
+        .page-header h1 i {
+            font-size: 1.5rem;
+        }
+        
         .btn-primary-action {
             width: auto;
         }
-        
-        .my-rooms-container {
-            padding: 1rem;
-        }
     }
 
+    /* Desktop */
     @media (min-width: 1024px) {
+        .my-rooms-container {
+            padding: 1.25rem;
+        }
+        
         .listings-grid {
             grid-template-columns: repeat(3, 1fr);
             gap: 1.25rem;
         }
-        
-        .my-rooms-container {
-            padding: 1.25rem;
-        }
     }
 
+    /* Large Desktop */
     @media (min-width: 1280px) {
         .listings-grid {
             grid-template-columns: repeat(4, 1fr);
         }
     }
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
+    /* Extra Small Mobile - Even More Compact */
+    @media (max-width: 480px) {
+        .my-rooms-container {
+            padding: 0.5rem;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        
+        .page-header h1 {
+            font-size: 1.1rem;
         }
-    }
-    
-    .room-card {
-        animation: fadeInUp 0.3s ease-out;
+        
+        .page-header h1 i {
+            font-size: 1rem;
+        }
+        
+        .btn-primary-action {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        .listings-grid {
+            gap: 0.75rem;
+        }
+        
+        .card-content {
+            padding: 0.6rem;
+        }
+        
+        .room-title {
+            font-size: 0.85rem;
+        }
+        
+        .room-location {
+            font-size: 0.65rem;
+        }
+        
+        .room-details {
+            padding: 0.5rem;
+        }
+        
+        .detail-item {
+            font-size: 0.65rem;
+        }
+        
+        .detail-label {
+            font-size: 0.6rem;
+        }
+        
+        .detail-value {
+            font-size: 0.65rem;
+        }
+        
+        .rent-value {
+            font-size: 0.75rem;
+        }
+        
+        .post-date {
+            font-size: 0.6rem;
+        }
+        
+        .offers-preview {
+            padding: 0.5rem;
+        }
+        
+        .offer-item {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.65rem;
+        }
+        
+        .offer-amount {
+            font-size: 0.7rem;
+        }
+        
+        .card-footer {
+            padding: 0.5rem;
+        }
+        
+        .btn-view, .btn-offers {
+            padding: 0.4rem;
+            font-size: 0.7rem;
+        }
+        
+        .empty-state {
+            padding: 1.5rem 1rem;
+        }
+        
+        .empty-state i {
+            font-size: 2.5rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.75rem;
+        }
     }
 
-    .btn-primary-action,
-    .btn-view,
-    .btn-offers,
-    .btn-empty-action {
-        min-height: 38px;
-    }
-
+    /* Focus states for accessibility */
     *:focus-visible {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
+        border-radius: 4px;
     }
 </style>
 
 <div class="my-rooms-container">
     <div class="page-header">
-        <h1><i class="fas fa-door-open" style="background: none; -webkit-text-fill-color: var(--primary);"></i> My Room Listings</h1>
+        <h1>
+            <i class="fas fa-door-open"></i>
+            My Room Listings
+        </h1>
         <a href="{{ url_for('rooms.create') }}" class="btn-primary-action">
             <i class="fas fa-plus-circle"></i>
             Post New Room
@@ -607,7 +705,7 @@
                 </div>
             </div>
 
-            <!-- OFFERS SECTION - Fixed to use correct Offer model fields -->
+            <!-- OFFERS SECTION -->
             {% set active_offers = room.offers|selectattr('status', 'equalto', 'active')|list if room.offers else [] %}
             {% if active_offers|length > 0 %}
             <div class="offers-preview">
@@ -632,7 +730,7 @@
                                 {% if offer.commission_offer and offer.commission_offer > 0 %}Commission{% else %}Deposit{% endif %}
                             </span>
                         </div>
-                        <small style="color: #64748b;">{{ offer.created_at.strftime('%b %d') }}</small>
+                        <small style="color: var(--text-light);">{{ offer.created_at.strftime('%b %d') }}</small>
                     </div>
                     {% endfor %}
                     {% if active_offers|length > 2 %}
@@ -657,7 +755,7 @@
                         <span class="offer-count">{{ active_offers|length }}</span>
                     </a>
                     {% else %}
-                    <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn-view" style="background: var(--gray-bg);">
+                    <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn-view" style="background: var(--bg-dark);">
                         <i class="fas fa-chart-line"></i>
                         Manage
                     </a>

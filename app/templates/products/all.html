@@ -83,11 +83,9 @@
                 <label>Category</label>
                 <select id="categoryFilter" class="filter-select">
                     <option value="">All Categories</option>
-                    <option value="electronics">Electronics</option>
-                    <option value="books">Books & Notes</option>
-                    <option value="furniture">Furniture</option>
-                    <option value="clothing">Clothing</option>
-                    <option value="other">Other</option>
+                    {% for category in all_categories %}
+                    <option value="{{ category.name.lower() }}">{{ category.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
             
@@ -151,7 +149,7 @@
         {% if products %}
         <div class="products-grid" id="productsView">
             {% for product in products %}
-            <div class="product-card" data-category="{{ product.category.name if product.category else 'Other' }}" 
+            <div class="product-card" data-category="{{ product.category.name.lower() if product.category else 'other' }}"
                  data-name="{{ product.title.lower() }}" data-price="{{ product.price }}" 
                  data-condition="{{ product.condition|lower }}" data-date="{{ product.created_at.timestamp() }}">
                 

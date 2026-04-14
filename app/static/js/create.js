@@ -342,55 +342,6 @@ document.addEventListener('DOMContentLoaded', function() {
         charCount.textContent = descriptionTextarea.value.length;
     }
     
-    // Payment options toggle
-    const paymentOptions = document.querySelectorAll('input[name="payment_method"]');
-    paymentOptions.forEach(option => {
-        option.addEventListener('change', function() {
-            console.log('Payment option changed:', this.value);
-            
-            // Hide all payment fields by default
-            const mpesaFields = document.getElementById('mpesaFields');
-            const tokenFields = document.getElementById('tokenFields');
-            
-            if (mpesaFields) {
-                mpesaFields.style.display = 'none';
-                // Clear required attribute when hidden
-                const mpesaPhone = document.getElementById('mpesa_phone');
-                if (mpesaPhone) {
-                    mpesaPhone.removeAttribute('required');
-                }
-            }
-            
-            if (tokenFields) {
-                tokenFields.style.display = 'none';
-                // Clear required attribute when hidden
-                const tokenAddress = document.getElementById('token_address');
-                if (tokenAddress) {
-                    tokenAddress.removeAttribute('required');
-                }
-            }
-            
-            // Show appropriate fields based on selection
-            if (this.value === 'mpesa') {
-                if (mpesaFields) {
-                    mpesaFields.style.display = 'block';
-                    const mpesaPhone = document.getElementById('mpesa_phone');
-                    if (mpesaPhone) {
-                        mpesaPhone.setAttribute('required', 'required');
-                    }
-                }
-            } else if (this.value === 'token') {
-                if (tokenFields) {
-                    tokenFields.style.display = 'block';
-                    const tokenAddress = document.getElementById('token_address');
-                    if (tokenAddress) {
-                        tokenAddress.setAttribute('required', 'required');
-                    }
-                }
-            }
-        });
-    });
-    
     // Form validation
     function validateStep(step) {
         console.log('Validating step:', step);
@@ -510,41 +461,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (deliveryAddress) deliveryAddress.focus();
                         return false;
                     }
-                } else if (deliveryOption.value === 'paid') {
-                    const deliveryFee = document.querySelector('input[name="delivery_fee"]');
-                    if (!deliveryFee || !deliveryFee.value || parseFloat(deliveryFee.value) < 0) {
-                        alert('Please enter a valid delivery fee');
-                        if (deliveryFee) deliveryFee.focus();
-                        return false;
-                    }
                 }
                 
                 console.log('Step 2 validation passed');
                 return true;
                 
             case '3':
-                const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-                if (!paymentMethod) {
-                    alert('Please select a payment method');
-                    return false;
-                }
-                
-                // If M-Pesa selected, just proceed (hidden input has the value)
-                if (paymentMethod.value === 'mpesa') {
-                    console.log('M-Pesa selected, using fixed number 0733221100');
-                    // No validation needed since it's a hidden input with fixed value
-                }
-                
-                // If Token selected, validate token address
-                if (paymentMethod.value === 'token') {
-                    const tokenAddress = document.getElementById('token_address');
-                    if (!tokenAddress || !tokenAddress.value.trim()) {
-                        alert('Please enter your token wallet address');
-                        if (tokenAddress) tokenAddress.focus();
-                        return false;
-                    }
-                }
-                
+                // No payment validation needed - free listing
                 console.log('Step 3 validation passed');
                 return true;
                 
@@ -594,13 +517,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        const tokenDiscount = document.querySelector('input[name="token_discount"]:checked');
-        const reviewDiscount = document.getElementById('review-discount');
-        if (reviewDiscount) {
-            reviewDiscount.textContent = 
-                tokenDiscount ? (tokenDiscount.value === 'none' ? 'No discount' : tokenDiscount.value + '% discount') : '-';
-        }
-        
         const deliveryOption = document.querySelector('input[name="delivery_option"]:checked');
         const reviewDelivery = document.getElementById('review-delivery');
         if (reviewDelivery) {
@@ -613,9 +529,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     case 'meetup':
                         deliveryText = 'Campus Meetup';
                         break;
-                    case 'paid':
-                        deliveryText = 'Paid Delivery';
-                        break;
                 }
             }
             reviewDelivery.textContent = deliveryText;
@@ -624,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Review summary updated');
     }
     
-    // Form submission for payment
+    // Form submission - FREE LISTING (no payment required)
     const productForm = document.getElementById('productForm');
     const submitBtn = document.getElementById('submitBtn');
     const paymentModal = document.getElementById('paymentProcessingModal');
@@ -633,24 +546,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (productForm) {
         productForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            console.log('Form submission intercepted for payment');
+            console.log('Form submission for free listing');
             
-            // Validate all steps first
+            // Validate all steps
             if (!validateStep('1') || !validateStep('2') || !validateStep('3')) {
                 alert('Please complete all required fields correctly.');
                 return;
             }
             
-            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-            
-            if (!paymentMethod) {
-                alert('Please select a payment method.');
-                return;
+            // Show processing modal
+            if (paymentModal) {
+                paymentModal.style.display = 'flex';
             }
             
-            // Show payment processing modal for M-Pesa
-            if (paymentMethod.value === 'mpesa' && paymentModal) {
-                paymentModal.style.display = 'flex';
+            if (paymentStatusText) {
+                paymentStatusText.textContent = 'Creating your free listing...';
             }
             
             // Disable submit button to prevent multiple submissions
@@ -659,78 +569,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             }
             
+            const formData = new FormData(productForm);
+            
             try {
-                if (paymentMethod.value === 'mpesa') {
-                    await handleMpesaPayment();
-                } else if (paymentMethod.value === 'token') {
-                    // For token payment, submit the form normally
-                    productForm.submit();
+                const response = await fetch('/create', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const responseText = await response.text();
+                let json = null;
+                try { json = JSON.parse(responseText); } catch(e) {}
+                
+                if (json && json.status === "success") {
+                    // Product created successfully
+                    hidePaymentModal();
+                    window.location.href = '/my-products';
+                    return;
                 }
-            } catch (error) {
-                console.error('Payment error:', error);
+                
+                // If response is HTML (redirect), follow it
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                
                 hidePaymentModal();
-                alert('Payment failed: ' + error.message);
                 enableSubmitButton();
+                alert("Failed to create product. Please try again.");
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hidePaymentModal();
+                enableSubmitButton();
+                alert('Network error: ' + error.message);
             }
         });
-    }
-    
-    async function handleMpesaPayment() {
-        console.log('Handling M-Pesa payment');
-        
-        if (paymentStatusText) {
-            paymentStatusText.textContent = 'Initiating M-Pesa payment...';
-        }
-        
-        const formData = new FormData(productForm);
-        
-        try {
-            const response = await fetch('/create', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const responseText = await response.text();
-            console.log("STK Push Response:", responseText);
-            
-            // Check if backend returned JSON with checkout_request_id
-            let json = null;
-            try { json = JSON.parse(responseText); } catch(e) {}
-            
-            if (json && json.status === "payment_started" && json.checkout_request_id) {
-                const checkoutID = json.checkout_request_id;
-                console.log("✅ Payment started, redirecting to pending page:", checkoutID);
-                
-                // Update modal text to show confirmation phase
-                if (paymentStatusText) {
-                    paymentStatusText.textContent = "Waiting for M-Pesa confirmation...";
-                }
-                
-                // Wait 3 seconds before redirecting to the pending tracking page
-                setTimeout(() => {
-                    window.location.href = `/payment-pending/${checkoutID}`;
-                }, 3000);
-                
-                return;
-            }
-            
-            // If Flask returns a redirect (rare), follow it
-            if (response.redirected) {
-                window.location.href = response.url;
-                return;
-            }
-            
-            // If none of the above worked
-            hidePaymentModal();
-            enableSubmitButton();
-            alert("Failed to initiate payment. Try again.");
-            
-        } catch (error) {
-            console.error('M-Pesa payment error:', error);
-            hidePaymentModal();
-            enableSubmitButton();
-            alert('Network error: ' + error.message);
-        }
     }
     
     function hidePaymentModal() {
@@ -742,72 +619,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function enableSubmitButton() {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-credit-card"></i> Pay & List Item';
+            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> List Item for Free';
         }
-    }
-    
-    // Upload button functionality
-    const uploadBtn = document.getElementById('uploadPaymentBtn');
-    if (uploadBtn) {
-        uploadBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Upload button clicked - sending value 0733221100');
-            
-            // Show processing state
-            const originalText = uploadBtn.innerHTML;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            uploadBtn.disabled = true;
-            
-            // Simulate upload processing
-            setTimeout(() => {
-                // Reset button state
-                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Payment (0733221100)';
-                uploadBtn.disabled = false;
-                
-                // Show success notification
-                showUploadNotification('Payment uploaded successfully with number 0733221100', 'success');
-            }, 2000);
-        });
-    }
-    
-    // Show upload notification
-    function showUploadNotification(message, type) {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-            <span>${message}</span>
-        `;
-        
-        // Add styles for notification
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: ${type === 'success' ? '#10b981' : '#e1306c'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 10001;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            animation: slideDown 0.3s ease;
-            font-weight: 500;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Remove notification after 3 seconds
-        setTimeout(() => {
-            notification.style.animation = 'slideUp 0.3s ease';
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, 3000);
     }
     
     // Initialize delivery options
@@ -818,16 +631,6 @@ document.addEventListener('DOMContentLoaded', function() {
         initialDeliveryOption.dispatchEvent(new Event('change'));
     } else {
         console.log('No initial delivery option found');
-    }
-    
-    // Initialize payment options
-    console.log('Initializing payment options...');
-    const initialPaymentOption = document.querySelector('input[name="payment_method"]:checked');
-    if (initialPaymentOption) {
-        console.log('Found initial payment option:', initialPaymentOption.value);
-        initialPaymentOption.dispatchEvent(new Event('change'));
-    } else {
-        console.log('No initial payment option found');
     }
     
     console.log('Product creation page initialization complete');
