@@ -1,6 +1,6 @@
-// ===== CREATE.JS - CREATE PRODUCT PAGE FUNCTIONALITY =====
+// ===== CREATE.JS - CREATE PRODUCT PAGE FUNCTIONALITY (FREE MODE) =====
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Product creation page loaded');
+    console.log('Product creation page loaded - FREE MODE');
     
     // Only run if we're on create product page
     if (!document.querySelector('.create-product-container')) return;
@@ -467,8 +467,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return true;
                 
             case '3':
-                // No payment validation needed - free listing
-                console.log('Step 3 validation passed');
+                // FREE MODE: No payment validation needed
+                console.log('Step 3 validation passed (free mode)');
                 return true;
                 
             default:
@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Review summary updated');
     }
     
-    // Form submission - FREE LISTING (no payment required)
+    // ========== FORM SUBMISSION - FREE MODE ==========
     const productForm = document.getElementById('productForm');
     const submitBtn = document.getElementById('submitBtn');
     const paymentModal = document.getElementById('paymentProcessingModal');
@@ -546,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (productForm) {
         productForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            console.log('Form submission for free listing');
+            console.log('Form submission for FREE listing');
             
             // Validate all steps
             if (!validateStep('1') || !validateStep('2') || !validateStep('3')) {
@@ -581,25 +581,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 const responseText = await response.text();
-                let json = null;
-                try { json = JSON.parse(responseText); } catch(e) {}
+                console.log('Server response:', responseText);
                 
-                if (json && json.status === "success") {
-                    // Product created successfully
+                let json = null;
+                try { 
+                    json = JSON.parse(responseText); 
+                } catch(e) {
+                    console.log('Response is not JSON, might be HTML redirect');
+                }
+                
+                // FIXED: Check for 'payment_started' (what backend returns) OR 'success'
+                if (json && (json.status === "payment_started" || json.status === "success")) {
+                    console.log('✅ Product created successfully!');
                     hidePaymentModal();
                     window.location.href = '/my-products';
                     return;
                 }
                 
-                // If response is HTML (redirect), follow it
+                // If response is a redirect, follow it
                 if (response.redirected) {
+                    console.log('Response is a redirect to:', response.url);
                     window.location.href = response.url;
                     return;
                 }
                 
+                // If we get HTML back (fallback), try to see if product was created
+                if (responseText.includes('my-products') || responseText.includes('success')) {
+                    console.log('Likely success, redirecting to my products');
+                    window.location.href = '/my-products';
+                    return;
+                }
+                
+                // Something went wrong
                 hidePaymentModal();
                 enableSubmitButton();
-                alert("Failed to create product. Please try again.");
+                alert('Failed to create product. Please try again. Check console for details.');
                 
             } catch (error) {
                 console.error('Error:', error);
@@ -611,15 +627,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function hidePaymentModal() {
-        if (paymentModal) {
-            paymentModal.style.display = 'none';
+        const modal = document.getElementById('paymentProcessingModal');
+        if (modal) {
+            modal.style.display = 'none';
         }
     }
     
     function enableSubmitButton() {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> List Item for Free';
+        const btn = document.getElementById('submitBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> List Item for Free';
         }
     }
     
@@ -633,5 +651,5 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('No initial delivery option found');
     }
     
-    console.log('Product creation page initialization complete');
+    console.log('Product creation page initialization complete - FREE MODE ACTIVE');
 });

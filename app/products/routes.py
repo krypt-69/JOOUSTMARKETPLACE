@@ -31,11 +31,11 @@ def mark_all_notifications_read():
 @login_required
 def create_product():
     if request.method == 'POST':
-        # ========== FREE MODE: COMPLETE PAYMENT BYPASS ==========
-        # No payment calls, no M-Pesa, no token checks. Direct product creation.
+        # ========== FREE MODE: IGNORE PAYMENT METHOD COMPLETELY ==========
+        # Direct product creation regardless of what payment_method says
         
         try:
-            # Get form data
+            # Get form data (same as you already have)
             title = request.form.get('title')
             description = request.form.get('description')
             price = float(request.form.get('price'))
@@ -43,6 +43,7 @@ def create_product():
             category_id = request.form.get('category_id')
             is_fast_moving = bool(request.form.get('is_fast_moving'))
             token_discount = request.form.get('token_discount')
+            phone_number = request.form.get('mpesa_phone')
             
             # Get delivery information
             delivery_option = request.form.get('delivery_option')
@@ -81,6 +82,8 @@ def create_product():
                     # Compress the image
                     from app.utils.image_compressor import compress_image
                     compression_result = compress_image(filepath, is_chat_image=False)
+                    if compression_result['success']:
+                        current_app.logger.info(f"Image compressed: {compression_result['message']}")
                     
                     # Create ProductImage record
                     product_image = ProductImage(
@@ -96,7 +99,7 @@ def create_product():
                 db.session.rollback()
                 return redirect(url_for('products.create_product'))
             
-            # Create product - FREE MODE: is_active = True immediately
+            # Create product - is_active = True immediately (FREE MODE)
             new_product = Product(
                 title=title,
                 description=description,
@@ -106,28 +109,22 @@ def create_product():
                 category_id=category_id,
                 is_fast_moving=is_fast_moving,
                 seller_id=current_user.id,
-                is_active=True,  # ✅ FREE MODE: Immediately active
-                Token=0,  # Required field
+                is_active=True,
+                Token=0,
                 image_group_id=image_group.id
             )
             
             db.session.add(new_product)
             db.session.commit()
             
-            # Success message
-            flash(f'✅ Product "{title}" listed successfully for FREE!', 'success')
-            flash('⚠️ Please add your contact details if you haven\'t - buyers need to reach you!', 'warning')
+            flash(f'✅ Product "{title}" listed successfully!', 'success')
             
-            # Return JSON for AJAX requests (for M-Pesa flow compatibility)
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
-                return jsonify({
-                    "status": "success",
-                    "product_id": new_product.id,
-                    "message": "Product created successfully"
-                })
-            
-            # Normal form submission - redirect to my products
-            return redirect(url_for('products.my_products_list'))
+            # Return JSON for AJAX requests (frontend expects this)
+            return jsonify({
+                "status": "payment_started",  # Keep same key for frontend compatibility
+                "checkout_request_id": f"FREE_{new_product.id}_{int(datetime.now().timestamp())}",
+                "free_mode": True
+            })
             
         except Exception as e:
             db.session.rollback()
