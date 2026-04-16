@@ -1,16 +1,19 @@
 {% extends "base.html" %}
 {# Override OG tags for product pages #}
 {% block og_tags %}
-{% set image_url = url_for('static', filename='uploads/product_images/' + product.images[0].filename, _external=True) if product.images else url_for('static', filename='images/no-image.jpg', _external=True) %}
-{% set product_url = url_for('products.my_products_list', product_id=product.id, _external=True) %}
+{% set image_url = url_for('static', filename='uploads/product_images/' + product.images[0].filename, _external=True) if product.images and product.images|length > 0 else url_for('static', filename='images/no-image.jpg', _external=True) %}
+{# ✅ CORRECT route for product detail page #}
+{% set product_url = url_for('products.view_product', product_id=product.id, _external=True) %}
 {% set product_title = product.title|escape %}
 {% set product_description = product.description[:150]|escape %}
 
 <meta property="og:title" content="{{ product_title }} - KES {{ '{:,.0f}'.format(product.price) }}">
 <meta property="og:description" content="{{ product_description }}{% if product_description|length >= 147 %}...{% endif %}">
 <meta property="og:image" content="{{ image_url }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="{{ product_url }}">
-<meta property="og:type" content="product">
+<meta property="og:type" content="website">
 <meta property="og:site_name" content="CampusMarket">
 <meta property="og:price:amount" content="{{ product.price }}">
 <meta property="og:price:currency" content="KES">
@@ -20,15 +23,13 @@
 {% endif %}
 {% endblock %}
 
-{# Twitter Card for better social sharing #}
 {% block twitter_card %}
-{% set image_url = url_for('static', filename='uploads/product_images/' + product.images[0].filename, _external=True) if product.images else url_for('static', filename='images/no-image.jpg', _external=True) %}
+{% set image_url = url_for('static', filename='uploads/product_images/' + product.images[0].filename, _external=True) if product.images and product.images|length > 0 else url_for('static', filename='images/no-image.jpg', _external=True) %}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ product.title }} - KES {{ '{:,.0f}'.format(product.price) }}">
 <meta name="twitter:description" content="{{ product.description[:150] }}">
 <meta name="twitter:image" content="{{ image_url }}">
 {% endblock %}
-
 {% block content %}
 <div class="product-page">
     <!-- Header -->
