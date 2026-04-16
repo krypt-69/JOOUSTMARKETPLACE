@@ -3,7 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Marketplace - Buy & Sell on Campus</title>
+    
+   
+    
+    <!-- ===== OPEN GRAPH TAGS ===== -->
+    {% block og_tags %}
+    <!-- Default OG tags for pages without custom ones -->
+    <meta property="og:title" content="CampusMarket - Buy & Sell on Campus">
+    <meta property="og:description" content="Your trusted campus marketplace for buying and selling items within the student community.">
+    <meta property="og:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="CampusMarket">
+    {% endblock %}
+    
+    <!-- ===== TWITTER CARD TAGS ===== -->
+    {% block twitter_card %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CampusMarket - Buy & Sell on Campus">
+    <meta name="twitter:description" content="Your trusted campus marketplace.">
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}">
+    {% endblock %}
+    <!-- ===== END OF SOCIAL TAGS ===== -->
+    <title>{% block title %}Campus Marketplace - Buy & Sell on Campus{% endblock %}</title> 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -231,7 +253,7 @@
     <script src="{{ url_for('static', filename='js/unlock.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/announcements.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/rooms_my_unlocks.js') }}" defer></script>,
+    <script src="{{ url_for('static', filename='js/rooms_my_unlocks.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/products.js') }}" defer></script>
 
 
