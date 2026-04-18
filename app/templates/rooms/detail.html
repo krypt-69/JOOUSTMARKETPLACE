@@ -2,9 +2,42 @@
 
 {% block title %}{{ room.title }} - Room Details{% endblock %}
 
+{# ===== OPEN GRAPH TAGS FOR ROOMS ===== #}
+{% block og_tags %}
+{% set image_url = url_for('static', filename='uploads/product_images/' + room.images[0].filename, _external=True) if room.images and room.images|length > 0 else url_for('static', filename='images/og-default-room.jpg', _external=True) %}
+{% set room_url = url_for('rooms.detail', room_id=room.id, _external=True) %}
+{% set room_title = room.title|escape %}
+{% set room_description = room.description[:150]|escape if room.description else "Room for rent in " + room.hostel_name|escape %}
+
+<meta property="og:title" content="{{ room_title }} - KES {{ '%.0f'|format(room.price) }}/month">
+<meta property="og:description" content="{{ room_description }}{% if room_description|length >= 147 %}...{% endif %}">
+<meta property="og:image" content="{{ image_url }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="{{ room_url }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CampusMarket">
+<meta property="og:locale" content="en_KE">
+
+{# Room-specific properties #}
+<meta property="product:price:amount" content="{{ room.price }}">
+<meta property="product:price:currency" content="KES">
+<meta property="og:availability" content="{{ room.status }}">
+{% endblock %}
+
+{# ===== TWITTER CARD TAGS ===== #}
+{% block twitter_card %}
+{% set image_url = url_for('static', filename='uploads/product_images/' + room.images[0].filename, _external=True) if room.images and room.images|length > 0 else url_for('static', filename='images/og-default-room.jpg', _external=True) %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ room.title }} - KES {{ '%.0f'|format(room.price) }}/month">
+<meta name="twitter:description" content="{{ room.description[:150] if room.description else 'Room for rent in ' + room.hostel_name }}">
+<meta name="twitter:image" content="{{ image_url }}">
+<meta name="twitter:image:alt" content="{{ room.title }} - Room for rent">
+{% endblock %}
+
 {% block content %}
 <style>
-    /* Clean White-Based Layout - Professional & Mobile-Friendly */
+    /* Clean White-Based Layout - Same as original */
     :root {
         --primary: #2c7da0;
         --primary-dark: #1f5e7a;
@@ -18,7 +51,9 @@
         --text-muted: #475569;
         --text-light: #64748b;
         --success: #2b7e3a;
+        --success-light: #e6f7ec;
         --warning: #e68a2e;
+        --warning-light: #fff3e6;
         --error: #b91c1c;
         --info: #3b7c9e;
         --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
@@ -27,26 +62,84 @@
         --radius-sm: 12px;
     }
 
-    .rooms-detail-container {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 1rem;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
 
-    /* Image Gallery - Clean & Responsive */
+    .rooms-detail-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 0.75rem;
+    }
+
+    /* Share Header Bar */
+    .share-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        background: var(--card-white);
+        padding: 0.6rem 0.8rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .share-header h2 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    
+    .share-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .share-icon-btn, .copy-icon-btn {
+        background: var(--gray-bg);
+        border: 1px solid var(--border-medium);
+        padding: 0.4rem 0.7rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: var(--text-dark);
+    }
+    
+    .share-icon-btn:hover, .copy-icon-btn:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .share-icon-btn i, .copy-icon-btn i {
+        font-size: 0.75rem;
+    }
+
+    /* Image Gallery - Large */
     .gallery-section {
         background: var(--card-white);
         border-radius: var(--radius);
-        border: 1px solid var(--border-light);
         overflow: hidden;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-light);
         box-shadow: var(--shadow-sm);
+        position: relative;
     }
 
     .main-image-container {
         position: relative;
-        background: #f1f5f9;
-        aspect-ratio: 4 / 3;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: var(--gray-bg);
         overflow: hidden;
     }
 
@@ -54,7 +147,6 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.3s ease;
     }
 
     .image-placeholder {
@@ -65,7 +157,80 @@
         justify-content: center;
         background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
         color: #94a3b8;
-        font-size: 3rem;
+        font-size: 0.9rem;
+    }
+
+    /* Financial Overlay on Image - Bright colors for visibility */
+    .image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.4), transparent);
+        padding: 1rem 0.8rem 0.6rem 0.8rem;
+    }
+
+    .overlay-financial {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.3rem;
+    }
+
+    .overlay-item {
+        flex: 1;
+        text-align: center;
+    }
+
+    .overlay-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 0.2rem;
+    }
+
+    .overlay-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .overlay-value.rent {
+        color: #ffd166;
+    }
+
+    .overlay-value.deposit {
+        color: #90be6d;
+    }
+
+    .overlay-value.commission {
+        color: #ff9f1c;
+    }
+
+    .overlay-status {
+        display: inline-block;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: 0.2rem;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(4px);
+        color: white;
+    }
+
+    .overlay-status.available {
+        background: var(--success);
+    }
+    .overlay-status.pending {
+        background: var(--warning);
+    }
+    .overlay-status.booked {
+        background: #6c757d;
+    }
+    .overlay-status.expired {
+        background: var(--error);
     }
 
     /* Thumbnail Strip */
@@ -76,19 +241,22 @@
         background: var(--card-white);
         border-top: 1px solid var(--border-light);
         overflow-x: auto;
-        scrollbar-width: thin;
     }
 
     .thumbnail {
-        width: 70px;
-        height: 70px;
+        width: 55px;
+        height: 55px;
         flex-shrink: 0;
         border-radius: 10px;
         overflow: hidden;
         cursor: pointer;
         border: 2px solid transparent;
-        transition: all 0.2s;
-        background: #f1f5f9;
+        background: var(--gray-bg);
+    }
+
+    .thumbnail.active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(44,125,160,0.2);
     }
 
     .thumbnail img {
@@ -97,274 +265,155 @@
         object-fit: cover;
     }
 
-    .thumbnail.active {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 2px rgba(44,125,160,0.2);
-    }
-
-    .thumbnail:hover:not(.active) {
-        border-color: var(--border-medium);
-        transform: scale(0.98);
-    }
-
-    /* Main Content Layout */
-    .details-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    @media (min-width: 768px) {
-        .details-grid {
-            flex-direction: row;
-            align-items: flex-start;
-        }
-        .details-main {
-            flex: 2;
-        }
-        .details-sidebar {
-            flex: 1;
-        }
-        .rooms-detail-container {
-            padding: 1.5rem;
-        }
-    }
-
     /* Cards - Clean White */
     .info-card {
         background: var(--card-white);
         border: 1px solid var(--border-light);
-        border-radius: var(--radius);
-        margin-bottom: 1.25rem;
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.75rem;
         overflow: hidden;
         box-shadow: var(--shadow-sm);
     }
 
     .card-header {
-        padding: 1rem 1.25rem;
+        padding: 0.7rem 0.9rem;
         background: var(--gray-bg);
         border-bottom: 1px solid var(--border-light);
     }
 
-    .card-header h2, .card-header h3, .card-header h4 {
-        font-size: 1rem;
+    .card-header h2, .card-header h3 {
+        font-size: 0.75rem;
         font-weight: 600;
         margin: 0;
         color: var(--text-dark);
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .card-body {
-        padding: 1.25rem;
+        padding: 0.8rem;
     }
 
-    /* Title & Status */
-    .title-status {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 0;
-    }
-
+    /* Room Title */
     .room-title {
-        font-size: 1.4rem;
+        font-size: 1rem;
         font-weight: 700;
         color: var(--text-dark);
-        margin: 0;
+        margin-bottom: 0.5rem;
     }
 
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 0.3rem 1rem;
-        border-radius: 30px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .status-available { background: #e6f7ec; color: var(--success); }
-    .status-pending { background: #fff3e6; color: var(--warning); }
-    .status-booked { background: #f1f5f9; color: var(--text-muted); }
-    .status-expired { background: #fee2e2; color: var(--error); }
-
-    /* Info Grid - Compact */
+    /* Info Grid */
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 0.8rem;
-        margin-bottom: 0;
+        gap: 0.6rem;
     }
 
     .info-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
-    }
-
-    .info-item i {
-        width: 20px;
-        color: var(--primary);
-        font-size: 0.85rem;
     }
 
     .info-item strong {
         color: var(--text-dark);
         font-weight: 600;
-        margin-right: 4px;
     }
 
     .days-badge {
-        background: var(--primary-soft);
-        color: var(--primary);
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 500;
-        margin-left: 6px;
+        background: var(--warning-light);
+        color: var(--warning);
+        padding: 0.15rem 0.45rem;
+        border-radius: 12px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        margin-left: 0.3rem;
         display: inline-block;
     }
 
-    /* Financial Cards - Compact */
-    .financial-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.8rem;
-        margin: 0;
-    }
-
-    .finance-chip {
-        flex: 1;
-        background: var(--gray-bg);
-        border-radius: var(--radius-sm);
-        padding: 0.8rem;
-        text-align: center;
-        border: 1px solid var(--border-light);
-    }
-
-    .finance-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        color: var(--text-light);
-        letter-spacing: 0.5px;
-        margin-bottom: 0.3rem;
-    }
-
-    .finance-value {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--text-dark);
-    }
-
-    .finance-value.rent { color: var(--primary); }
-    .finance-value.deposit { color: var(--success); }
-    .finance-value.commission { color: var(--info); }
-
     /* Description */
     .description-text {
+        font-size: 0.8rem;
+        line-height: 1.5;
         color: var(--text-muted);
-        line-height: 1.6;
-        font-size: 0.9rem;
-        white-space: pre-line;
-    }
-
-    /* Divider */
-    .divider {
-        border: none;
-        border-top: 1px solid var(--border-light);
-        margin: 1rem 0;
     }
 
     /* Stats */
     .stats-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: var(--text-light);
-        padding-top: 0;
     }
 
-    /* Buttons */
-    .btn-primary, .btn-success, .btn-warning {
-        border: none;
-        border-radius: 40px;
-        padding: 0.7rem 1.2rem;
-        font-weight: 600;
-        font-size: 0.85rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none;
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn-primary, .btn-success, .btn-secondary {
+        display: block;
         width: 100%;
+        padding: 0.7rem;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
     }
 
     .btn-primary {
         background: var(--primary);
         color: white;
     }
+
     .btn-primary:hover {
         background: var(--primary-dark);
         transform: translateY(-1px);
     }
+
     .btn-success {
         background: var(--success);
         color: white;
     }
-    .btn-warning {
-        background: var(--warning);
-        color: white;
+
+    .btn-success:hover {
+        background: #236b31;
+        transform: translateY(-1px);
     }
 
-    .button-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-top: 0.5rem;
+    .btn-secondary {
+        background: var(--gray-bg);
+        color: var(--text-dark);
+        border: 1px solid var(--border-medium);
     }
 
-    @media (min-width: 480px) {
-        .button-group {
-            flex-direction: row;
-        }
-        .btn-primary, .btn-success, .btn-warning {
-            width: auto;
-            flex: 1;
-        }
+    .btn-secondary:hover {
+        background: var(--border-light);
     }
 
-    /* Contact Card */
+    /* Contact Section */
     .contact-info {
         display: flex;
         flex-direction: column;
-        gap: 0.8rem;
+        gap: 0.5rem;
     }
 
     .contact-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        padding: 0.5rem;
-        background: var(--gray-bg);
-        border-radius: 10px;
+        padding: 0.3rem 0;
+        border-bottom: 1px dashed var(--border-light);
     }
 
-    .contact-item i {
-        width: 24px;
-        color: var(--primary);
+    .contact-item strong {
+        color: var(--text-dark);
+        font-weight: 600;
     }
 
     .lock-section {
@@ -372,49 +421,86 @@
         padding: 0.5rem;
     }
 
-    .lock-icon {
-        font-size: 2.5rem;
-        color: var(--text-light);
-        margin-bottom: 0.8rem;
-    }
-
     .unlock-fee {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 700;
         color: var(--primary);
-        margin: 0.5rem 0;
+        margin: 0.3rem 0;
     }
 
-    /* Offers Section */
+    /* Offers */
     .offer-item {
         background: var(--gray-bg);
-        border: 1px solid var(--border-light);
         border-radius: var(--radius-sm);
-        padding: 0.8rem;
-        margin-bottom: 0.8rem;
+        padding: 0.6rem;
+        margin-bottom: 0.6rem;
+        border: 1px solid var(--border-light);
     }
 
     .offer-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
         font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.3rem;
+    }
+
+    .offer-details {
+        font-size: 0.7rem;
+        color: var(--success);
+        font-weight: 500;
     }
 
     .offer-message {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: var(--text-muted);
         font-style: italic;
-        margin: 0.5rem 0;
-        padding: 0.5rem;
-        background: white;
+        margin-top: 0.3rem;
+        padding: 0.3rem;
+        background: var(--card-white);
         border-radius: 8px;
     }
 
     .btn-sm {
-        padding: 0.4rem 1rem !important;
-        font-size: 0.75rem !important;
-        width: auto !important;
+        padding: 0.35rem 0.8rem;
+        font-size: 0.7rem;
+        display: inline-block;
+        width: auto;
+        margin-top: 0.4rem;
+    }
+
+    /* Form */
+    .form-group {
+        margin-bottom: 0.7rem;
+    }
+
+    .form-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-light);
+        margin-bottom: 0.3rem;
+        display: block;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.6rem;
+        background: var(--card-white);
+        border: 1px solid var(--border-medium);
+        border-radius: 10px;
+        font-size: 0.75rem;
+        color: var(--text-dark);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid var(--border-light);
+        margin: 0.7rem 0;
     }
 
     /* Similar Rooms */
@@ -422,380 +508,322 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.6rem 0;
+        padding: 0.5rem 0;
         border-bottom: 1px solid var(--border-light);
     }
     .similar-item:last-child {
         border-bottom: none;
     }
+
     .similar-link {
+        font-size: 0.75rem;
+        color: var(--text-dark);
         text-decoration: none;
         font-weight: 500;
-        color: var(--text-dark);
-        font-size: 0.85rem;
     }
+
     .similar-link:hover {
         color: var(--primary);
     }
+
     .similar-price {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--primary);
         font-weight: 600;
     }
-
-    /* Form Elements */
-    .form-group {
-        margin-bottom: 1rem;
+    
+    /* Toast notification */
+    .toast-notification {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #10b981;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        z-index: 1000;
+        animation: fadeInUp 0.3s ease;
+        box-shadow: var(--shadow-md);
     }
-    .form-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-light);
-        margin-bottom: 0.3rem;
-        display: block;
-    }
-    .form-control {
-        width: 100%;
-        padding: 0.7rem;
-        border: 1px solid var(--border-medium);
-        border-radius: 10px;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
-    }
-    .form-text {
-        font-size: 0.7rem;
-        color: var(--text-light);
-        margin-top: 0.2rem;
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     }
 
-    /* Mobile Optimization */
-    @media (max-width: 640px) {
+    /* Responsive */
+    @media (max-width: 480px) {
+        .rooms-detail-container {
+            padding: 0.5rem;
+        }
+        
+        .overlay-value {
+            font-size: 0.85rem;
+        }
+        
+        .thumbnail {
+            width: 45px;
+            height: 45px;
+        }
+        
         .info-grid {
             grid-template-columns: 1fr;
-            gap: 0.6rem;
+            gap: 0.4rem;
         }
-        .financial-row {
-            flex-direction: column;
-        }
+        
         .room-title {
-            font-size: 1.2rem;
+            font-size: 0.9rem;
         }
-        .card-body {
-            padding: 1rem;
+        
+        .info-item {
+            font-size: 0.7rem;
         }
-        .thumbnail {
-            width: 55px;
-            height: 55px;
+        
+        .share-header h2 {
+            font-size: 0.75rem;
         }
-    }
-
-    /* Animation */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .info-card {
-        animation: fadeIn 0.3s ease-out;
+        
+        .share-icon-btn, .copy-icon-btn {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.65rem;
+        }
     }
 </style>
 
 <div class="rooms-detail-container">
-    <!-- Image Gallery Section -->
+    <!-- ===== NEW SHARE HEADER WITH ICONS ===== -->
+    <div class="share-header">
+        <h2><i class="fas fa-door-open"></i> {{ room.hostel_name }}</h2>
+        <div class="share-buttons">
+            <button class="copy-icon-btn" onclick="copyRoomLink()">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+            <button class="share-icon-btn" onclick="shareRoom()">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+        </div>
+    </div>
+
+    <!-- Image Gallery - Large with financial overlay -->
     <div class="gallery-section">
-        <div class="main-image-container" id="mainImageContainer">
-            {# Get images as list - room.images is already a list/collection #}
+        <div class="main-image-container">
             {% set images_list = room.images|list if room.images else [] %}
             {% if images_list and images_list|length > 0 %}
                 <img id="mainImage" src="{{ url_for('static', filename='uploads/product_images/' + images_list[0].filename) }}" class="main-image" alt="{{ room.title }}">
             {% else %}
-                <div class="image-placeholder">
-                    <i class="fas fa-building"></i>
-                </div>
+                <div class="image-placeholder">No Image</div>
             {% endif %}
+            
+            <!-- Financial Details Overlay on Image - Bright colors -->
+            <div class="image-overlay">
+                <div class="overlay-financial">
+                    <div class="overlay-item">
+                        <div class="overlay-label">Monthly Rent</div>
+                        <div class="overlay-value rent">KES {{ "%.0f"|format(room.price) }}</div>
+                    </div>
+                    <div class="overlay-item">
+                        <div class="overlay-label">Deposit</div>
+                        <div class="overlay-value deposit">{{ room.get_deposit_display() }}</div>
+                    </div>
+                    <div class="overlay-item">
+                        <div class="overlay-label">Commission</div>
+                        <div class="overlay-value commission">{{ room.get_commission_display() }}</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="overlay-status 
+                        {% if room.status == 'available' %}available
+                        {% elif room.status == 'pending' %}pending
+                        {% elif room.status == 'booked' %}booked
+                        {% else %}expired{% endif %}">
+                        {{ room.status|upper }}
+                    </span>
+                </div>
+            </div>
         </div>
         
         {% if images_list and images_list|length > 1 %}
         <div class="thumbnail-strip">
             {% for img in images_list %}
             <div class="thumbnail {% if loop.first %}active{% endif %}" data-image="{{ url_for('static', filename='uploads/product_images/' + img.filename) }}">
-                <img src="{{ url_for('static', filename='uploads/product_images/' + img.filename) }}" alt="Thumbnail {{ loop.index }}">
+                <img src="{{ url_for('static', filename='uploads/product_images/' + img.filename) }}" alt="Thumbnail">
             </div>
             {% endfor %}
         </div>
         {% endif %}
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="details-grid">
-        <!-- Left Column: Main Details -->
-        <div class="details-main">
-            <!-- Title & Status -->
-            <div class="info-card">
-                <div class="card-body">
-                    <div class="title-status">
-                        <h1 class="room-title">{{ room.title }}</h1>
-                        <span class="status-badge 
-                            {% if room.status == 'available' %}status-available
-                            {% elif room.status == 'pending' %}status-pending
-                            {% elif room.status == 'booked' %}status-booked
-                            {% else %}status-expired{% endif %}">
-                            <i class="fas {% if room.status == 'available' %}fa-circle{% elif room.status == 'pending' %}fa-clock{% elif room.status == 'booked' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
-                            {{ room.status|upper }}
-                        </span>
-                    </div>
+    <!-- Room Information -->
+    <div class="info-card">
+        <div class="card-body">
+            <div class="room-title">{{ room.title }}</div>
+            <div class="info-grid">
+                <div class="info-item"><strong>Hostel:</strong> {{ room.hostel_name }}</div>
+                <div class="info-item"><strong>Location:</strong> {{ room.location }}</div>
+                <div class="info-item"><strong>Room Type:</strong> {{ room.room_type|replace('_', ' ')|title }}</div>
+                <div class="info-item">
+                    <strong>Leave Date:</strong> {{ room.leave_date.strftime('%b %d, %Y') }}
+                    {% if room.days_until_leave() > 0 %}
+                    <span class="days-badge">{{ room.days_until_leave() }} days left</span>
+                    {% endif %}
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Key Information -->
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-info-circle"></i> Room Information</h3>
-                </div>
-                <div class="card-body">
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <i class="fas fa-building"></i>
-                            <span><strong>Hostel:</strong> {{ room.hostel_name }}</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span><strong>Location:</strong> {{ room.location }}</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-door-open"></i>
-                            <span><strong>Room Type:</strong> {{ room.room_type|replace('_', ' ')|title }}</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span><strong>Leave Date:</strong> {{ room.leave_date.strftime('%b %d, %Y') }}
-                            {% if room.days_until_leave() > 0 %}
-                            <span class="days-badge">{{ room.days_until_leave() }} days left</span>
-                            {% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+    <!-- Description -->
+    {% if room.description %}
+    <div class="info-card">
+        <div class="card-header"><h3>Description</h3></div>
+        <div class="card-body">
+            <div class="description-text">{{ room.description }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="info-card">
+        <div class="card-body">
+            <div class="stats-row">
+                <span><i class="fas fa-eye"></i> {{ room.total_unlocks }} views</span>
+                <span><i class="fas fa-calendar-alt"></i> Posted {{ room.created_at.strftime('%b %d, %Y') }}</span>
             </div>
+        </div>
+    </div>
 
-            <!-- Financial Details -->
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-coins"></i> Financial Details</h3>
+    <!-- Contact Section -->
+    <div class="info-card">
+        <div class="card-header"><h3>Contact</h3></div>
+        <div class="card-body">
+            {% if is_unlocked %}
+                <div class="contact-info">
+                    <div class="contact-item"><strong>Seller:</strong> {{ room.seller.username }}</div>
+                    {% if room.seller.phone_number %}
+                    <div class="contact-item"><strong>Phone:</strong> {{ room.seller.phone_number }}</div>
+                    {% endif %}
+                    {% if room.seller.whatsapp_number %}
+                    <div class="contact-item"><strong>WhatsApp:</strong> {{ room.seller.whatsapp_number }}</div>
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    <div class="financial-row">
-                        <div class="finance-chip">
-                            <div class="finance-label">Monthly Rent</div>
-                            <div class="finance-value rent">KES {{ "%.0f"|format(room.price) }}</div>
-                        </div>
-                        <div class="finance-chip">
-                            <div class="finance-label">Deposit</div>
-                            <div class="finance-value deposit">{{ room.get_deposit_display() }}</div>
-                        </div>
-                        <div class="finance-chip">
-                            <div class="finance-label">Commission</div>
-                            <div class="finance-value commission">{{ room.get_commission_display() }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Description -->
-            {% if room.description %}
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-align-left"></i> Description</h3>
-                </div>
-                <div class="card-body">
-                    <div class="description-text">{{ room.description }}</div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Stats -->
-            <div class="info-card">
-                <div class="card-body">
-                    <div class="stats-row">
-                        <span><i class="fas fa-eye"></i> {{ room.total_unlocks }} views</span>
-                        <span><i class="far fa-calendar-alt"></i> Posted {{ room.created_at.strftime('%b %d, %Y') }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Offers Section (for unlocked users) -->
-            {% if is_unlocked and current_user.is_authenticated and current_user.id != room.seller_id %}
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-handshake"></i> Make an Offer</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('rooms.make_offer', room_id=room.id) }}">
-                        <div class="form-group">
-                            <label class="form-label">Deposit Offer (KES)</label>
-                            <input type="number" name="deposit_offer" class="form-control" placeholder="Enter deposit amount">
-                            <span class="form-text">Leave empty if no deposit</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Commission Offer (%)</label>
-                            <input type="number" step="0.1" name="commission_offer" class="form-control" placeholder="Enter commission percentage">
-                            <span class="form-text">Leave empty if no commission</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Message (Optional)</label>
-                            <textarea name="message" class="form-control" rows="2" placeholder="Add a message to your offer..."></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary">Submit Offer</button>
+                <div class="action-buttons">
+                    <form method="POST" action="{{ url_for('chat.start_chat', product_id=room.id) }}">
+                        <button type="submit" class="btn-success"><i class="fas fa-comment"></i> Message Host</button>
                     </form>
                 </div>
-            </div>
-            {% endif %}
-
-            <!-- Seller Controls -->
-            {% if current_user.is_authenticated and current_user.id == room.seller_id %}
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-tools"></i> Manage Listing</h3>
-                </div>
-                <div class="card-body">
-                    <div class="button-group">
-                        {% if room.status == 'available' %}
-                        <form method="POST" action="{{ url_for('rooms.mark_booked', room_id=room.id) }}">
-                            <button type="submit" class="btn-success" onclick="return confirm('Mark this room as booked?')">
-                                <i class="fas fa-check-circle"></i> Mark Booked
-                            </button>
-                        </form>
-                        {% elif room.status == 'pending' %}
-                        <form method="POST" action="{{ url_for('rooms.cancel_agreement', room_id=room.id) }}">
-                            <button type="submit" class="btn-warning" onclick="return confirm('Cancel current agreement?')">
-                                <i class="fas fa-times-circle"></i> Cancel
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ url_for('rooms.mark_booked', room_id=room.id) }}">
-                            <button type="submit" class="btn-success" onclick="return confirm('Confirm booking?')">
-                                <i class="fas fa-check-circle"></i> Confirm
-                            </button>
-                        </form>
-                        {% endif %}
+            {% elif current_user.is_authenticated and current_user.id != room.seller_id %}
+                <div class="lock-section">
+                    <div class="unlock-fee">KES {{ room.get_unlock_fee() }}</div>
+                    <form method="POST" action="{{ url_for('rooms.unlock', room_id=room.id) }}">
+                        <button type="submit" class="btn-primary"><i class="fas fa-lock-open"></i> Unlock Contact</button>
+                    </form>
+                    <div class="stats-row" style="margin-top: 0.6rem; justify-content: center;">
+                        <span>{{ room.total_unlocks }} people unlocked</span>
                     </div>
-
-                    <!-- Offers Received -->
-                    {% set active_offers = room.offers|selectattr('status', 'equalto', 'active')|list if room.offers else [] %}
-                    {% if active_offers %}
-                    <hr class="divider">
-                    <h4 style="font-size: 0.9rem; margin-bottom: 0.8rem;">Offers Received ({{ active_offers|length }})</h4>
-                    {% for offer in active_offers %}
-                    <div class="offer-item">
-                        <div class="offer-header">
-                            <span><i class="fas fa-user"></i> {{ offer.offer_buyer.username }}</span>
-                        </div>
-                        <div style="font-size: 0.8rem;">
-                            {% if offer.deposit_offer %}Deposit: KES {{ "%.0f"|format(offer.deposit_offer) }}{% endif %}
-                            {% if offer.commission_offer %}{% if offer.deposit_offer %} | {% endif %}Commission: {{ offer.commission_offer }}%{% endif %}
-                        </div>
-                        {% if offer.message %}
-                        <div class="offer-message">"{{ offer.message }}"</div>
-                        {% endif %}
-                        <form method="POST" action="{{ url_for('rooms.accept_offer', offer_id=offer.id) }}" style="margin-top: 0.5rem;">
-                            <button type="submit" class="btn-primary btn-sm" onclick="return confirm('Accept this offer?')">
-                                Accept Offer
-                            </button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                    {% endif %}
                 </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Right Column: Sidebar -->
-        <div class="details-sidebar">
-            <!-- Contact Card -->
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-phone-alt"></i> Contact</h3>
+            {% elif not current_user.is_authenticated %}
+                <div class="lock-section">
+                    <a href="{{ url_for('auth.login') }}" class="btn-primary"><i class="fas fa-sign-in-alt"></i> Login to Unlock</a>
                 </div>
-                <div class="card-body">
-                    {% if is_unlocked %}
-                        <div class="contact-info">
-                            <div class="contact-item">
-                                <i class="fas fa-user"></i>
-                                <span><strong>{{ room.seller.username }}</strong></span>
-                            </div>
-                            {% if room.seller.phone_number %}
-                            <div class="contact-item">
-                                <i class="fas fa-phone"></i>
-                                <span>{{ room.seller.phone_number }}</span>
-                            </div>
-                            {% endif %}
-                            {% if room.seller.whatsapp_number %}
-                            <div class="contact-item">
-                                <i class="fab fa-whatsapp"></i>
-                                <span>{{ room.seller.whatsapp_number }}</span>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <form method="POST" action="{{ url_for('chat.start_chat', product_id=room.id) }}" style="margin-top: 1rem;">
-                            <button type="submit" class="btn-success" style="width: 100%;">
-                                <i class="fas fa-comment"></i> Chat with Host
-                            </button>
-                        </form>
-                    {% elif current_user.is_authenticated and current_user.id != room.seller_id %}
-                        <div class="lock-section">
-                            <div class="lock-icon">
-                                <i class="fas fa-lock"></i>
-                            </div>
-                            <p style="font-size: 0.85rem; color: var(--text-muted);">Contact details hidden</p>
-                            <div class="unlock-fee">KES {{ room.get_unlock_fee() }}</div>
-                            <form method="POST" action="{{ url_for('rooms.unlock', room_id=room.id) }}">
-                                <button type="submit" class="btn-primary">
-                                    <i class="fas fa-unlock-alt"></i> Unlock Contact
-                                </button>
-                            </form>
-                            <span class="form-text" style="display: block; margin-top: 0.5rem;">{{ room.total_unlocks }} people unlocked</span>
-                        </div>
-                    {% elif not current_user.is_authenticated %}
-                        <div class="lock-section">
-                            <div class="lock-icon">
-                                <i class="fas fa-lock"></i>
-                            </div>
-                            <p>Login to unlock contact details</p>
-                            <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Similar Rooms -->
-            {% if similar_rooms %}
-            <div class="info-card">
-                <div class="card-header">
-                    <h3><i class="fas fa-building"></i> Similar Rooms</h3>
-                </div>
-                <div class="card-body">
-                    {% for similar in similar_rooms %}
-                    <div class="similar-item">
-                        <a href="{{ url_for('rooms.detail', room_id=similar.id) }}" class="similar-link">
-                            {{ similar.title }}
-                        </a>
-                        <span class="similar-price">KES {{ "%.0f"|format(similar.price) }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
             {% endif %}
         </div>
     </div>
+
+    <!-- Seller Actions -->
+    {% if current_user.is_authenticated and current_user.id == room.seller_id %}
+    <div class="info-card">
+        <div class="card-header"><h3>Manage Listing</h3></div>
+        <div class="card-body">
+            <div class="action-buttons">
+                {% if room.status == 'available' %}
+                <form method="POST" action="{{ url_for('rooms.mark_booked', room_id=room.id) }}">
+                    <button type="submit" class="btn-success" onclick="return confirm('Mark this room as booked?')"><i class="fas fa-check-circle"></i> Mark Booked</button>
+                </form>
+                {% elif room.status == 'pending' %}
+                <form method="POST" action="{{ url_for('rooms.cancel_agreement', room_id=room.id) }}">
+                    <button type="submit" class="btn-secondary" onclick="return confirm('Cancel current agreement?')"><i class="fas fa-times"></i> Cancel Agreement</button>
+                </form>
+                <form method="POST" action="{{ url_for('rooms.mark_booked', room_id=room.id) }}">
+                    <button type="submit" class="btn-success" onclick="return confirm('Confirm booking?')"><i class="fas fa-check"></i> Confirm Booking</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <!-- Offers Received -->
+            {% set active_offers = room.offers|selectattr('status', 'equalto', 'active')|list if room.offers else [] %}
+            {% if active_offers %}
+            <hr class="divider">
+            <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;">Offers Received ({{ active_offers|length }})</div>
+            {% for offer in active_offers %}
+            <div class="offer-item">
+                <div class="offer-header">{{ offer.offer_buyer.username }}</div>
+                <div class="offer-details">
+                    {% if offer.deposit_offer %}Deposit: KES {{ "%.0f"|format(offer.deposit_offer) }}{% endif %}
+                    {% if offer.commission_offer %}{% if offer.deposit_offer %} | {% endif %}Commission: {{ offer.commission_offer }}%{% endif %}
+                </div>
+                {% if offer.message %}
+                <div class="offer-message">{{ offer.message }}</div>
+                {% endif %}
+                <form method="POST" action="{{ url_for('rooms.accept_offer', offer_id=offer.id) }}">
+                    <button type="submit" class="btn-primary btn-sm" onclick="return confirm('Accept this offer?')"><i class="fas fa-handshake"></i> Accept Offer</button>
+                </form>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Make Offer -->
+    {% if is_unlocked and current_user.is_authenticated and current_user.id != room.seller_id %}
+    <div class="info-card">
+        <div class="card-header"><h3>Make an Offer</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('rooms.make_offer', room_id=room.id) }}">
+                <div class="form-group">
+                    <label class="form-label">Deposit Offer (KES)</label>
+                    <input type="number" name="deposit_offer" class="form-control" placeholder="Enter deposit amount">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Commission Offer (%)</label>
+                    <input type="number" step="0.1" name="commission_offer" class="form-control" placeholder="Enter commission percentage">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message (Optional)</label>
+                    <textarea name="message" class="form-control" rows="2" placeholder="Add a message to your offer..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary"><i class="fas fa-gavel"></i> Submit Offer</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Similar Rooms -->
+    {% if similar_rooms %}
+    <div class="info-card">
+        <div class="card-header"><h3>Similar Rooms</h3></div>
+        <div class="card-body">
+            {% for similar in similar_rooms %}
+            <div class="similar-item">
+                <a href="{{ url_for('rooms.detail', room_id=similar.id) }}" class="similar-link">{{ similar.title|truncate(30) }}</a>
+                <span class="similar-price">KES {{ "%.0f"|format(similar.price) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script>
-    // Thumbnail click handler for image gallery
+    // Thumbnail switching
     const thumbnails = document.querySelectorAll('.thumbnail');
     const mainImage = document.getElementById('mainImage');
     
@@ -806,12 +834,81 @@
                 if (newSrc) {
                     mainImage.src = newSrc;
                 }
-                
-                // Update active class
                 thumbnails.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
             });
         });
+    }
+    
+    // ===== SHARE AND COPY FUNCTIONS =====
+    const roomUrl = window.location.href;
+    // FIXED: Use tojson filter instead of escapejs
+    const roomTitle = {{ room.title|tojson|safe }};
+    const shareText = `Check out this room: ${roomTitle} on CampusMarket!`;
+    
+    function copyRoomLink() {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(roomUrl).then(function() {
+                showToast('Link copied! ✅');
+            }).catch(function() {
+                fallbackCopy(roomUrl);
+            });
+        } else {
+            fallbackCopy(roomUrl);
+        }
+    }
+    
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.left = '0';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            showToast('Link copied! ✅');
+        } catch (err) {
+            showToast('Unable to copy link ❌');
+        }
+        
+        document.body.removeChild(textarea);
+    }
+    
+    function shareRoom() {
+        if (navigator.share) {
+            navigator.share({
+                title: roomTitle,
+                text: shareText,
+                url: roomUrl
+            }).catch(function(err) {
+                if (err.name !== 'AbortError') {
+                    copyRoomLink();
+                }
+            });
+        } else {
+            // Fallback to WhatsApp Web
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + roomUrl)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    }
+    
+    function showToast(message) {
+        // Remove existing toast if any
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) existingToast.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast) toast.remove();
+        }, 3000);
     }
 </script>
 {% endblock %}

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
+
 {# Override OG tags for product pages #}
 {% block og_tags %}
 {% set image_url = url_for('static', filename='uploads/product_images/' + product.images[0].filename, _external=True) if product.images and product.images|length > 0 else url_for('static', filename='images/no-image.jpg', _external=True) %}
-{# ✅ CORRECT route for product detail page #}
 {% set product_url = url_for('products.view_product', product_id=product.id, _external=True) %}
 {% set product_title = product.title|escape %}
 {% set product_description = product.description[:150]|escape %}
@@ -30,30 +30,27 @@
 <meta name="twitter:description" content="{{ product.description[:150] }}">
 <meta name="twitter:image" content="{{ image_url }}">
 {% endblock %}
+
 {% block content %}
 <div class="product-page">
     <!-- Header -->
     <div class="product-header">
         <div class="header-content">
-            <a href="{{ url_for('products.all_products') }}" class="back-btn">
-                <i class="fas fa-arrow-left"></i>
-            </a>
+            <a href="{{ url_for('products.all_products') }}" class="back-btn">Back</a>
             <div class="header-title">
-                <h1>{{ product.title|truncate(25) }}</h1>
+                <h1>{{ product.title|truncate(30) }}</h1>
                 <div class="header-meta">
                     <span class="seller-tag">{{ product.seller.username|truncate(12) }}</span>
                     <span class="date-tag">{{ product.created_at.strftime('%b %d') }}</span>
                 </div>
             </div>
-            <button class="action-btn share-btn" onclick="shareProduct()">
-                <i class="fas fa-share-alt"></i>
-            </button>
+            <button class="share-btn" onclick="shareProduct()">Share</button>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="product-content">
-        <!-- Image Gallery - Square -->
+        <!-- Image Gallery with overlay -->
         <div class="image-gallery">
             {% if product.images %}
                 <div class="main-image-container">
@@ -61,6 +58,14 @@
                          src="{{ url_for('static', filename='uploads/product_images/' + product.images[0].filename) }}" 
                          alt="{{ product.title }}" 
                          class="product-image">
+                    <!-- Overlay with price and category -->
+                    <div class="image-overlay">
+                        <div class="overlay-price">KES {{ "{:,.0f}".format(product.price) }}</div>
+                        <div class="overlay-tags">
+                            <span class="overlay-tag">{{ product.condition|replace('_',' ')|title }}</span>
+                            <span class="overlay-tag">{{ product.category.name if product.category else 'General' }}</span>
+                        </div>
+                    </div>
                 </div>
                 {% if product.images|length > 1 %}
                 <div class="thumbnail-strip">
@@ -73,22 +78,13 @@
                 {% endif %}
             {% else %}
                 <div class="image-placeholder">
-                    <i class="fas fa-camera"></i>
+                    No Image
                 </div>
             {% endif %}
         </div>
 
-        <!-- Product Info -->
+        <!-- Product Info below image -->
         <div class="product-info">
-            <!-- Price -->
-            <div class="price-card">
-                <div class="price">KES {{ "{:,.0f}".format(product.price) }}</div>
-                <div class="tags">
-                    <span class="tag">{{ product.condition|replace('_',' ')|title }}</span>
-                    <span class="tag">{{ product.category.name if product.category else 'General' }}</span>
-                </div>
-            </div>
-
             <!-- Description -->
             <div class="info-card">
                 <div class="card-title">Description</div>
@@ -113,46 +109,25 @@
             <div class="action-bar">
                 {% if is_authenticated %}
                     {% if product.seller_id == current_user.id %}
-                        <!-- Seller View -->
-                        <a href="{{ url_for('products.edit_product', product_id=product.id) }}" class="btn-primary">
-                            <i class="fas fa-edit"></i> Edit Listing
-                        </a>
-                        <a href="{{ url_for('chat.index') }}" class="btn-secondary">
-                            <i class="fas fa-comments"></i> My Chats
-                        </a>
+                        <a href="{{ url_for('products.edit_product', product_id=product.id) }}" class="btn-primary">Edit Listing</a>
+                        <a href="{{ url_for('chat.index') }}" class="btn-secondary">My Chats</a>
                     {% else %}
                         {% if product.is_sold %}
-                            <div class="sold-message">
-                                <i class="fas fa-check-circle"></i> Sold
-                            </div>
+                            <div class="sold-message">Sold</div>
                         {% else %}
                             {% if has_access %}
-                                <!-- Has access - show contact and chat -->
-                                <a href="{{ url_for('products.view_buyer_contact', product_id=product.id) }}" class="btn-primary">
-                                    <i class="fas fa-phone"></i> View Contact
-                                </a>
+                                <a href="{{ url_for('products.view_buyer_contact', product_id=product.id) }}" class="btn-primary">View Contact</a>
                                 <form action="{{ url_for('chat.start_chat', product_id=product.id) }}" method="POST" style="width: 100%;">
-                                    <button type="submit" class="btn-primary" id="chatButton">
-                                        <i class="fas fa-comment"></i> Message Seller
-                                    </button>
+                                    <button type="submit" class="btn-primary">Message Seller</button>
                                 </form>
                             {% else %}
-                                <!-- Need to unlock -->
-                                <a href="{{ url_for('products.unlock_product', product_id=product.id) }}" class="btn-primary btn-pulse">
-                                    <i class="fas fa-lock-open"></i> Unlock Contact
-                                    <span class="fee">KES {{ product.get_unlock_fee() }}</span>
-                                </a>
+                                <a href="{{ url_for('products.unlock_product', product_id=product.id) }}" class="btn-primary">Unlock Contact (KES {{ product.get_unlock_fee() }})</a>
                             {% endif %}
                         {% endif %}
                     {% endif %}
                 {% else %}
-                    <!-- Not logged in -->
-                    <a href="{{ url_for('auth.login', next=request.path) }}" class="btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Login to Contact
-                    </a>
-                    <a href="{{ url_for('auth.register') }}" class="btn-secondary">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </a>
+                    <a href="{{ url_for('auth.login', next=request.path) }}" class="btn-primary">Login to Contact</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn-secondary">Create Account</a>
                 {% endif %}
             </div>
         </div>
@@ -160,78 +135,82 @@
 </div>
 
 <style>
-/* Dark Theme Colors */
+/* Color palette with good differentiation */
 :root {
     --primary: #5f9ea0;
     --primary-dark: #4a7c7e;
-    --primary-light: #7bb2b4;
-    --secondary: #b39b8e;
-    --secondary-dark: #8e7a6f;
-    --accent: #8aa9b5;
-    --accent-purple: #9b8aa9;
+    --primary-light: #8bbfc1;
+    --accent-1: #c9a06b;
+    --accent-2: #8aa9b5;
+    --accent-3: #b39b8e;
     
     --bg-deep: #0a0f16;
-    --bg-dark: #141b24;
-    --bg-card: #1e2833;
-    --bg-surface: #2a3542;
-    --bg-hover: #334153;
+    --bg-dark: #111827;
+    --bg-card: #1a2533;
+    --bg-surface: #243042;
+    --bg-hover: #2d3b4f;
     
-    --border-light: #3e4a5a;
-    --border-medium: #4d5b6b;
+    --border-light: #334155;
+    --border-medium: #475569;
     
-    --text-primary: #ffffff;
-    --text-secondary: #d3dce6;
-    --text-muted: #9aa9b9;
-    --text-accent: #c1d0da;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-accent: #e2e8f0;
     
     --success: #6b9e7a;
     --warning: #c9a06b;
     --error: #c97b6b;
-    --info: #7b9ec9;
     
-    --radius: 16px;
-    --radius-sm: 12px;
-    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --radius: 14px;
+    --radius-sm: 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .product-page {
     background: var(--bg-deep);
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    padding-bottom: 1rem;
+    padding-bottom: 1.5rem;
 }
 
 /* Header */
 .product-header {
-    background: var(--bg-card);
+    background: var(--bg-dark);
     border-bottom: 1px solid var(--border-light);
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 1rem;
 }
 
 .header-content {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .back-btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-primary);
+    padding: 0.35rem 0.8rem;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
     text-decoration: none;
-    font-size: 1.2rem;
-    border-radius: 50%;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 500;
     flex-shrink: 0;
 }
 
 .back-btn:hover {
     background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .header-title {
@@ -240,7 +219,7 @@
 }
 
 .header-title h1 {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
     margin: 0 0 0.2rem 0;
     color: var(--text-primary);
@@ -252,7 +231,7 @@
 .header-meta {
     display: flex;
     gap: 0.75rem;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     color: var(--text-muted);
 }
 
@@ -260,32 +239,33 @@
     color: var(--primary-light);
 }
 
-.action-btn {
-    width: 36px;
-    height: 36px;
-    background: transparent;
+.share-btn {
+    padding: 0.35rem 0.8rem;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
     border: none;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    border-radius: 50%;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 500;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
-.action-btn:hover {
+.share-btn:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
 }
 
-/* Product Content */
+/* Main content */
 .product-content {
     padding: 1rem;
     max-width: 600px;
     margin: 0 auto;
 }
 
-/* Image Gallery - Square */
+/* Image gallery with overlay */
 .image-gallery {
-    background: var(--bg-card);
+    background: var(--bg-dark);
     border-radius: var(--radius);
     overflow: hidden;
     margin-bottom: 1rem;
@@ -293,6 +273,7 @@
 }
 
 .main-image-container {
+    position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     background: var(--bg-dark);
@@ -304,17 +285,53 @@
     object-fit: cover;
 }
 
+/* Overlay on image - price and category */
+.image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.4), transparent);
+    padding: 1rem 0.8rem 0.6rem 0.8rem;
+}
+
+.overlay-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-bottom: 0.3rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.overlay-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.overlay-tag {
+    padding: 0.2rem 0.6rem;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    font-size: 0.65rem;
+    color: var(--text-accent);
+    font-weight: 500;
+}
+
+/* Thumbnails */
 .thumbnail-strip {
     display: flex;
     gap: 0.5rem;
     padding: 0.75rem;
     border-top: 1px solid var(--border-light);
     overflow-x: auto;
+    background: var(--bg-dark);
 }
 
 .thumbnail {
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     flex-shrink: 0;
     border-radius: 8px;
     overflow: hidden;
@@ -339,41 +356,14 @@
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 2rem;
+    font-size: 0.9rem;
 }
 
-/* Info Cards */
+/* Info cards - different colors for differentiation */
 .product-info {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-}
-
-.price-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius);
-    padding: 1rem;
-}
-
-.price {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-light);
-    margin-bottom: 0.5rem;
-}
-
-.tags {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.tag {
-    padding: 0.25rem 0.6rem;
-    background: var(--bg-surface);
-    border-radius: 20px;
-    font-size: 0.7rem;
-    color: var(--text-muted);
 }
 
 .info-card {
@@ -383,12 +373,16 @@
     padding: 1rem;
 }
 
+.info-card:first-of-type {
+    background: var(--bg-surface);
+}
+
 .card-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--text-muted);
+    color: var(--accent-1);
     margin-bottom: 0.5rem;
 }
 
@@ -399,6 +393,7 @@
     margin: 0;
 }
 
+/* Seller card */
 .seller-row {
     display: flex;
     align-items: center;
@@ -406,16 +401,17 @@
 }
 
 .seller-avatar {
-    width: 44px;
-    height: 44px;
-    background: var(--primary);
+    width: 42px;
+    height: 42px;
+    background: var(--accent-2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 1.1rem;
-    color: white;
+    font-size: 1rem;
+    color: var(--bg-dark);
+    flex-shrink: 0;
 }
 
 .seller-info {
@@ -430,11 +426,11 @@
 }
 
 .seller-date {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
 }
 
-/* Action Bar */
+/* Action buttons */
 .action-bar {
     display: flex;
     flex-direction: column;
@@ -443,10 +439,7 @@
 }
 
 .btn-primary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    display: block;
     width: 100%;
     padding: 0.85rem;
     background: var(--primary);
@@ -454,7 +447,8 @@
     text-decoration: none;
     border-radius: 40px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    text-align: center;
     border: none;
     cursor: pointer;
     transition: all 0.2s;
@@ -466,10 +460,7 @@
 }
 
 .btn-secondary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    display: block;
     width: 100%;
     padding: 0.85rem;
     background: var(--bg-surface);
@@ -477,7 +468,8 @@
     text-decoration: none;
     border-radius: 40px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    text-align: center;
     border: 1px solid var(--border-medium);
     cursor: pointer;
     transition: all 0.2s;
@@ -487,99 +479,87 @@
     background: var(--bg-hover);
 }
 
-.btn-pulse {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.9; box-shadow: 0 0 0 2px rgba(95,158,160,0.3); }
-}
-
-.fee {
-    background: rgba(255,255,255,0.15);
-    padding: 0.2rem 0.5rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-}
-
 .sold-message {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    text-align: center;
     padding: 0.85rem;
     background: var(--bg-surface);
     border-radius: 40px;
     color: var(--success);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
-/* Status Message */
-#chatStatus {
+/* Status message for share */
+#copyStatus {
     position: fixed;
     bottom: 1rem;
     left: 1rem;
     right: 1rem;
-    padding: 0.75rem;
+    padding: 0.7rem;
     border-radius: var(--radius-sm);
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 500;
     z-index: 1000;
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.status-success {
     background: var(--success);
     color: white;
+    max-width: 300px;
+    margin: 0 auto;
 }
 
-.status-error {
-    background: var(--error);
-    color: white;
-}
-
-/* Desktop */
-@media (min-width: 768px) {
-    .product-content {
-        max-width: 480px;
-        margin: 0 auto;
-    }
-    
-    .product-header {
-        max-width: 480px;
-        margin: 0 auto;
-        border-left: 1px solid var(--border-light);
-        border-right: 1px solid var(--border-light);
-    }
-}
-
-/* Mobile */
+/* Responsive */
 @media (max-width: 480px) {
     .product-content {
         padding: 0.75rem;
     }
     
-    .price {
-        font-size: 1.3rem;
+    .overlay-price {
+        font-size: 1.1rem;
+    }
+    
+    .overlay-tag {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.5rem;
     }
     
     .thumbnail {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .btn-primary, .btn-secondary, .sold-message {
+        padding: 0.7rem;
+        font-size: 0.8rem;
+    }
+    
+    .description {
+        font-size: 0.8rem;
+    }
+    
+    .seller-name {
+        font-size: 0.85rem;
+    }
+    
+    .seller-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .product-content {
+        max-width: 500px;
+    }
+    
+    .product-header .header-content {
+        max-width: 500px;
     }
 }
 </style>
 
 <script>
-// Thumbnail click handler
+// Thumbnail switching
 document.addEventListener('DOMContentLoaded', function() {
     const thumbnails = document.querySelectorAll('.thumbnail');
     const mainImage = document.getElementById('mainProductImage');
@@ -597,29 +577,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (thumbnails[0]) thumbnails[0].classList.add('active');
     }
-    
-    // Check for flash messages about chat creation
-    const flashMessages = document.querySelectorAll('.flash-message');
-    flashMessages.forEach(msg => {
-        if (msg.textContent.includes('chat') || msg.textContent.includes('unlock')) {
-            setTimeout(() => {
-                msg.style.opacity = '0';
-                setTimeout(() => msg.remove(), 500);
-            }, 3000);
-        }
-    });
 });
 
+// Share/copy link function
 function shareProduct() {
     const url = window.location.href;
-    const title = '{{ product.title|escape }}';
     
     if (navigator.share) {
         navigator.share({
-            title: title,
-            text: 'Check out this item on CampusMarket',
+            title: '{{ product.title|escape }}',
             url: url
-        }).catch(function() {});
+        }).catch(() => {});
     } else {
         copyToClipboard(url);
     }
@@ -627,9 +595,9 @@ function shareProduct() {
 
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-            showStatus('Link copied!', 'success');
-        }).catch(function() {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopyStatus('Link copied!');
+        }).catch(() => {
             fallbackCopy(text);
         });
     } else {
@@ -646,30 +614,23 @@ function fallbackCopy(text) {
     textarea.style.opacity = '0';
     document.body.appendChild(textarea);
     textarea.select();
-    
-    try {
-        document.execCommand('copy');
-        showStatus('Link copied!', 'success');
-    } catch (err) {
-        showStatus('Unable to copy link', 'error');
-    }
-    
+    document.execCommand('copy');
     document.body.removeChild(textarea);
+    showCopyStatus('Link copied!');
 }
 
-function showStatus(message, type) {
-    const existing = document.getElementById('chatStatus');
+function showCopyStatus(message) {
+    const existing = document.getElementById('copyStatus');
     if (existing) existing.remove();
     
     const statusDiv = document.createElement('div');
-    statusDiv.id = 'chatStatus';
-    statusDiv.className = type === 'success' ? 'status-success' : 'status-error';
+    statusDiv.id = 'copyStatus';
     statusDiv.textContent = message;
     document.body.appendChild(statusDiv);
     
     setTimeout(() => {
         if (statusDiv) statusDiv.remove();
-    }, 3000);
+    }, 2000);
 }
 </script>
 {% endblock %}
