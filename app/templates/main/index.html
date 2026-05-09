@@ -1,357 +1,426 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero">
-    <div class="hero-content">
-        <h1 class="hero-title">CampusMarket</h1>
-        <p class="hero-subtitle">Buy & Sell on Campus</p>
-        <div class="hero-buttons">
-            <a href="{{ url_for('products.all_products') }}" class="btn btn-primary">
-                <i class="fas fa-shopping-bag"></i>Shop
-            </a>
-            {% if current_user.is_authenticated %}
-                <a href="{{ url_for('products.create_product') }}" class="btn btn-secondary">
-                    <i class="fas fa-plus"></i>Sell
-                </a>
-            {% else %}
-                <a href="{{ url_for('auth.register') }}" class="btn btn-secondary">
-                    <i class="fas fa-user-plus"></i>Join
-                </a>
-            {% endif %}
-        </div>
-    </div>
-    <div class="hero-animation">
-        <div class="floating-icons">
-            <i class="fas fa-laptop"></i>
-            <i class="fas fa-book"></i>
-            <i class="fas fa-couch"></i>
-            <i class="fas fa-mobile-alt"></i>
-        </div>
-    </div>
-</section>
 
-<!-- Search Radial Menu - Semi Circle -->
+<!-- ========== MOBILE LAYOUT ========== -->
+<div class="mobile-home">
+
+    <!-- Header -->
+    <div class="mh-header">
+        <span class="mh-header-title">BUY AND SELL</span>
+        <img src="{{ url_for('static', filename='og-default.png') }}" alt="Logo" class="mh-logo">
+    </div>
+
+    <!-- Search Bar (frontend filter) -->
+    <div class="mh-search-form">
+        <div class="mh-search-bar">
+            <input type="text" id="mobileSearchInput" placeholder="search" class="mh-search-input" autocomplete="off">
+            <span class="mh-search-btn"><i class="fas fa-search"></i></span>
+        </div>
+    </div>
+
+    <!-- HOT DEALS -->
+    {% if fast_moving %}
+    <div class="mh-section-label">
+        <i class="fas fa-fire"></i> Hot Deals
+        <a href="{{ url_for('products.all_products') }}" class="mh-view-all">View All</a>
+    </div>
+    <div class="mh-grid" id="mobileGrid">
+        {% for product in fast_moving %}
+            {% set loop_index = loop.index0 %}
+            <a href="{{ url_for('products.view_product', product_id=product.id) }}"
+               class="mh-card" data-title="{{ product.title|lower }}">
+                <div class="mh-card-img">
+                    {% if product.image %}
+                        <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}"
+                             alt="{{ product.title }}" loading="lazy"
+                             onerror="this.src='{{ url_for('static', filename='og-default.png') }}'">
+                    {% else %}
+                        <div class="mh-img-placeholder"><i class="fas fa-camera"></i></div>
+                    {% endif %}
+                </div>
+                <div class="mh-card-price">KES {{ "{:,.0f}".format(product.price) }}</div>
+            </a>
+
+            {% if loop.index is divisibleby 2 %}
+                {% set p1 = fast_moving[loop_index - 1] %}
+                {% set p2 = fast_moving[loop_index] %}
+                <div class="mh-seller-strip">
+                    <div class="mh-seller-item">
+                        <div class="mh-seller-avatar">
+                            {% if p1.seller.profile_picture %}
+                                <img src="{{ p1.seller.profile_picture }}" alt="{{ p1.seller.username }}">
+                            {% else %}
+                                <i class="fas fa-user-circle"></i>
+                            {% endif %}
+                        </div>
+                        <span class="mh-seller-name">{{ p1.seller.username }}</span>
+                    </div>
+                    <div class="mh-seller-item">
+                        <div class="mh-seller-avatar">
+                            {% if p2.seller.profile_picture %}
+                                <img src="{{ p2.seller.profile_picture }}" alt="{{ p2.seller.username }}">
+                            {% else %}
+                                <i class="fas fa-user-circle"></i>
+                            {% endif %}
+                        </div>
+                        <span class="mh-seller-name">{{ p2.seller.username }}</span>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% if fast_moving|length % 2 != 0 %}
+            {% set last = fast_moving[-1] %}
+            <div class="mh-seller-strip mh-seller-strip--single">
+                <div class="mh-seller-item">
+                    <div class="mh-seller-avatar">
+                        {% if last.seller.profile_picture %}
+                            <img src="{{ last.seller.profile_picture }}" alt="{{ last.seller.username }}">
+                        {% else %}
+                            <i class="fas fa-user-circle"></i>
+                        {% endif %}
+                    </div>
+                    <span class="mh-seller-name">{{ last.seller.username }}</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- LATEST -->
+    {% if all_products %}
+    <div class="mh-section-label">
+        <i class="fas fa-clock"></i> Latest
+        <a href="{{ url_for('products.all_products') }}" class="mh-view-all">View All</a>
+    </div>
+    <div class="mh-grid">
+        {% for product in all_products %}
+            {% set loop_index = loop.index0 %}
+            <a href="{{ url_for('products.view_product', product_id=product.id) }}"
+               class="mh-card" data-title="{{ product.title|lower }}">
+                <div class="mh-card-img">
+                    {% if product.image %}
+                        <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}"
+                             alt="{{ product.title }}" loading="lazy"
+                             onerror="this.src='{{ url_for('static', filename='og-default.png') }}'">
+                    {% else %}
+                        <div class="mh-img-placeholder"><i class="fas fa-camera"></i></div>
+                    {% endif %}
+                </div>
+                <div class="mh-card-price">KES {{ "{:,.0f}".format(product.price) }}</div>
+            </a>
+
+            {% if loop.index is divisibleby 2 %}
+                {% set p1 = all_products[loop_index - 1] %}
+                {% set p2 = all_products[loop_index] %}
+                <div class="mh-seller-strip">
+                    <div class="mh-seller-item">
+                        <div class="mh-seller-avatar">
+                            {% if p1.seller.profile_picture %}
+                                <img src="{{ p1.seller.profile_picture }}" alt="{{ p1.seller.username }}">
+                            {% else %}
+                                <i class="fas fa-user-circle"></i>
+                            {% endif %}
+                        </div>
+                        <span class="mh-seller-name">{{ p1.seller.username }}</span>
+                    </div>
+                    <div class="mh-seller-item">
+                        <div class="mh-seller-avatar">
+                            {% if p2.seller.profile_picture %}
+                                <img src="{{ p2.seller.profile_picture }}" alt="{{ p2.seller.username }}">
+                            {% else %}
+                                <i class="fas fa-user-circle"></i>
+                            {% endif %}
+                        </div>
+                        <span class="mh-seller-name">{{ p2.seller.username }}</span>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% if all_products|length % 2 != 0 %}
+            {% set last = all_products[-1] %}
+            <div class="mh-seller-strip mh-seller-strip--single">
+                <div class="mh-seller-item">
+                    <div class="mh-seller-avatar">
+                        {% if last.seller.profile_picture %}
+                            <img src="{{ last.seller.profile_picture }}" alt="{{ last.seller.username }}">
+                        {% else %}
+                            <i class="fas fa-user-circle"></i>
+                        {% endif %}
+                    </div>
+                    <span class="mh-seller-name">{{ last.seller.username }}</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- CATEGORIES -->
+    {% set cat_configs = [
+        ("Electronics", "electronics", "fas fa-laptop-code"),
+        ("Books",       "books",       "fas fa-book-open"),
+        ("Furniture",   "furniture",   "fas fa-couch"),
+        ("Fashion",     "fashion",     "fas fa-tshirt"),
+        ("Sports",      "sports",      "fas fa-futbol")
+    ] %}
+    {% for cat_name, cat_slug, cat_icon in cat_configs %}
+        {% set cat_obj = categories|selectattr("name", "equalto", cat_name)|first %}
+        {% if cat_obj %}
+            {% set cat_products = products_by_category.get(cat_obj.id, []) %}
+            {% if cat_products %}
+            <div class="mh-section-label">
+                <i class="{{ cat_icon }}"></i> {{ cat_name }}
+                <a href="{{ url_for('products.all_products') }}?category={{ cat_slug }}" class="mh-view-all">View All</a>
+            </div>
+            <div class="mh-grid">
+                {% for product in cat_products %}
+                    {% set loop_index = loop.index0 %}
+                    <a href="{{ url_for('products.view_product', product_id=product.id) }}"
+                       class="mh-card" data-title="{{ product.title|lower }}">
+                        <div class="mh-card-img">
+                            {% if product.image %}
+                                <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}"
+                                     alt="{{ product.title }}" loading="lazy"
+                                     onerror="this.src='{{ url_for('static', filename='og-default.png') }}'">
+                            {% else %}
+                                <div class="mh-img-placeholder"><i class="fas fa-camera"></i></div>
+                            {% endif %}
+                        </div>
+                        <div class="mh-card-price">KES {{ "{:,.0f}".format(product.price) }}</div>
+                    </a>
+
+                    {% if loop.index is divisibleby 2 %}
+                        {% set p1 = cat_products[loop_index - 1] %}
+                        {% set p2 = cat_products[loop_index] %}
+                        <div class="mh-seller-strip">
+                            <div class="mh-seller-item">
+                                <div class="mh-seller-avatar">
+                                    {% if p1.seller.profile_picture %}
+                                        <img src="{{ p1.seller.profile_picture }}" alt="{{ p1.seller.username }}">
+                                    {% else %}
+                                        <i class="fas fa-user-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="mh-seller-name">{{ p1.seller.username }}</span>
+                            </div>
+                            <div class="mh-seller-item">
+                                <div class="mh-seller-avatar">
+                                    {% if p2.seller.profile_picture %}
+                                        <img src="{{ p2.seller.profile_picture }}" alt="{{ p2.seller.username }}">
+                                    {% else %}
+                                        <i class="fas fa-user-circle"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="mh-seller-name">{{ p2.seller.username }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% if cat_products|length % 2 != 0 %}
+                    {% set last = cat_products[-1] %}
+                    <div class="mh-seller-strip mh-seller-strip--single">
+                        <div class="mh-seller-item">
+                            <div class="mh-seller-avatar">
+                                {% if last.seller.profile_picture %}
+                                    <img src="{{ last.seller.profile_picture }}" alt="{{ last.seller.username }}">
+                                {% else %}
+                                    <i class="fas fa-user-circle"></i>
+                                {% endif %}
+                            </div>
+                            <span class="mh-seller-name">{{ last.seller.username }}</span>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if not fast_moving and not all_products %}
+    <div class="mh-empty">
+        <i class="fas fa-box-open"></i>
+        <p>No items listed yet</p>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('products.create_product') }}" class="mh-empty-btn">
+                <i class="fas fa-plus"></i> List Something
+            </a>
+        {% else %}
+            <a href="{{ url_for('auth.register') }}" class="mh-empty-btn">
+                <i class="fas fa-user-plus"></i> Join Now
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div><!-- end mobile-home -->
+
+<!-- FAB -->
 <div class="search-fab">
     <button class="search-fab-btn" id="searchFabBtn">
         <i class="fas fa-search"></i>
     </button>
     <div class="radial-menu" id="radialMenu">
         <button class="radial-item" data-section="hotdeals">
-            <i class="fas fa-fire"></i>
-            <span>Hot</span>
+            <i class="fas fa-fire"></i><span>Hot</span>
         </button>
         <button class="radial-item" data-section="latest">
-            <i class="fas fa-clock"></i>
-            <span>Latest</span>
+            <i class="fas fa-clock"></i><span>Latest</span>
         </button>
         {% for category in categories %}
-            {% set cat_name = category.name %}
-            {% if cat_name == "Electronics" %}
+            {% if category.name == "Electronics" %}
             <button class="radial-item" data-section="electronics">
-                <i class="fas fa-laptop-code"></i>
-                <span>Tech</span>
+                <i class="fas fa-laptop-code"></i><span>Tech</span>
             </button>
-            {% elif cat_name == "Books" %}
+            {% elif category.name == "Books" %}
             <button class="radial-item" data-section="books">
-                <i class="fas fa-book-open"></i>
-                <span>Books</span>
+                <i class="fas fa-book-open"></i><span>Books</span>
             </button>
-            {% elif cat_name == "Furniture" %}
+            {% elif category.name == "Furniture" %}
             <button class="radial-item" data-section="furniture">
-                <i class="fas fa-couch"></i>
-                <span>Home</span>
+                <i class="fas fa-couch"></i><span>Home</span>
             </button>
-            {% elif cat_name == "Fashion" %}
+            {% elif category.name == "Fashion" %}
             <button class="radial-item" data-section="fashion">
-                <i class="fas fa-tshirt"></i>
-                <span>Fashion</span>
+                <i class="fas fa-tshirt"></i><span>Fashion</span>
             </button>
-            {% elif cat_name == "Sports" %}
+            {% elif category.name == "Sports" %}
             <button class="radial-item" data-section="sports">
-                <i class="fas fa-futbol"></i>
-                <span>Sports</span>
+                <i class="fas fa-futbol"></i><span>Sports</span>
             </button>
             {% endif %}
         {% endfor %}
     </div>
 </div>
 
-<!-- Fast Moving Items (Hot Deals) -->
-<section id="hotdeals" class="compact-section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-fire"></i> Hot Deals
-        </h2>
-        <a href="{{ url_for('products.all_products') }}" class="view-all">View All</a>
-    </div>
+<!-- ========== DESKTOP LAYOUT ========== -->
+<div class="desktop-home">
 
-    {% if fast_moving %}
-        <div class="compact-grid">
-            {% for product in fast_moving %}
-                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
-                    <div class="card-image">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
-                                 alt="{{ product.title }}"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="image-placeholder" style="display: none;">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% else %}
-                            <div class="image-placeholder">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-content">
-                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-compact">
-            <i class="fas fa-box-open"></i>
-            <p>No hot deals yet</p>
-            {% if current_user.is_authenticated %}
-                <a href="{{ url_for('products.create_product') }}" class="btn-small">
-                    <i class="fas fa-plus"></i>List Item
-                </a>
+    <!-- All products flat grid -->
+    <div class="dh-grid" id="desktopGrid">
+
+        <!-- collect ALL products across sections for desktop -->
+        {% set all_desktop = [] %}
+        {% for product in fast_moving %}{% if all_desktop.append(product) %}{% endif %}{% endfor %}
+        {% for product in all_products %}{% if product not in all_desktop %}{% if all_desktop.append(product) %}{% endif %}{% endif %}{% endfor %}
+        {% for cat_name, cat_slug, cat_icon in [
+            ("Electronics","electronics",""),("Books","books",""),
+            ("Furniture","furniture",""),("Fashion","fashion",""),("Sports","sports","")
+        ] %}
+            {% set cat_obj = categories|selectattr("name", "equalto", cat_name)|first %}
+            {% if cat_obj %}
+                {% set cat_products = products_by_category.get(cat_obj.id, []) %}
+                {% for product in cat_products %}
+                    {% if product not in all_desktop %}
+                        {% if all_desktop.append(product) %}{% endif %}
+                    {% endif %}
+                {% endfor %}
             {% endif %}
-        </div>
-    {% endif %}
-</section>
+        {% endfor %}
 
-<!-- Latest Items -->
-<section id="latest" class="compact-section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-clock"></i> Latest
-        </h2>
-        <a href="{{ url_for('products.all_products') }}" class="view-all">View All</a>
-    </div>
-
-    {% if all_products %}
-        <div class="compact-grid">
-            {% for product in all_products %}
-                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
-                    <div class="card-image">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
-                                 alt="{{ product.title }}"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="image-placeholder" style="display: none;">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% else %}
-                            <div class="image-placeholder">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-content">
-                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
-                    </div>
+        {% for product in all_desktop %}
+        <div class="dh-card" data-title="{{ product.title|lower }} {{ product.seller.username|lower }}">
+            <a href="{{ url_for('products.view_product', product_id=product.id) }}" class="dh-card-link">
+                <div class="dh-card-img">
+                    {% if product.image %}
+                        <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}"
+                             alt="{{ product.title }}" loading="lazy"
+                             onerror="this.src='{{ url_for('static', filename='og-default.png') }}'">
+                    {% else %}
+                        <div class="dh-img-placeholder"><i class="fas fa-camera"></i></div>
+                    {% endif %}
+                    <!-- Seller name on image -->
+                    <span class="dh-seller-on-img">{{ product.seller.username }}</span>
                 </div>
-            {% endfor %}
+            </a>
+            <!-- Price bar with avatar -->
+            <div class="dh-price-bar">
+                <div class="dh-avatar">
+                    {% if product.seller.profile_picture %}
+                        <img src="{{ product.seller.profile_picture }}" alt="{{ product.seller.username }}">
+                    {% else %}
+                        <i class="fas fa-user-circle"></i>
+                    {% endif %}
+                </div>
+                <span class="dh-price">KES {{ "{:,.0f}".format(product.price) }}</span>
+            </div>
         </div>
-    {% else %}
-        <div class="empty-compact">
+        {% endfor %}
+
+        {% if not all_desktop %}
+        <div class="dh-empty">
             <i class="fas fa-box-open"></i>
-            <p>No items yet</p>
+            <p>No items listed yet</p>
             {% if current_user.is_authenticated %}
-                <a href="{{ url_for('products.create_product') }}" class="btn-small">
-                    <i class="fas fa-plus"></i>List Item
+                <a href="{{ url_for('products.create_product') }}" class="mh-empty-btn">
+                    <i class="fas fa-plus"></i> List Something
                 </a>
             {% else %}
-                <a href="{{ url_for('auth.register') }}" class="btn-small">
-                    <i class="fas fa-user-plus"></i>Join Now
+                <a href="{{ url_for('auth.register') }}" class="mh-empty-btn">
+                    <i class="fas fa-user-plus"></i> Join Now
                 </a>
             {% endif %}
         </div>
-    {% endif %}
-</section>
+        {% endif %}
 
-<!-- Electronics Section - Using products_by_category -->
-<section id="electronics" class="compact-section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-laptop-code"></i> Electronics
-        </h2>
-        <a href="{{ url_for('products.all_products') }}?category=electronics" class="view-all">View All</a>
-    </div>
+    </div><!-- end dh-grid -->
+</div><!-- end desktop-home -->
 
-    {% set electronics_category = categories|selectattr("name", "equalto", "Electronics")|first %}
-    {% set electronics_products = products_by_category.get(electronics_category.id, []) if electronics_category else [] %}
-    
-    {% if electronics_products %}
-        <div class="compact-grid">
-            {% for product in electronics_products[:8] %}
-                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
-                    <div class="card-image">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
-                                 alt="{{ product.title }}"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="image-placeholder" style="display: none;">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% else %}
-                            <div class="image-placeholder">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-content">
-                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-compact">
-            <i class="fas fa-laptop-code"></i>
-            <p>No electronics yet</p>
-        </div>
-    {% endif %}
-</section>
+<!-- ========== SHARED JS ========== -->
+<script>
+/* ---- Mobile search: frontend filter ---- */
+const mobileInput = document.getElementById('mobileSearchInput');
+if (mobileInput) {
+    mobileInput.addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        /* filter all .mh-card elements across all grids */
+        document.querySelectorAll('.mh-card').forEach(card => {
+            const title = card.dataset.title || '';
+            const match = !q || title.includes(q);
+            card.style.display = match ? '' : 'none';
+        });
+        /* hide seller strips that belong to hidden cards */
+        document.querySelectorAll('.mh-grid').forEach(grid => {
+            const strips = grid.querySelectorAll('.mh-seller-strip');
+            strips.forEach(strip => { strip.style.display = q ? 'none' : ''; });
+        });
+    });
+}
 
-<!-- Books Section - Using products_by_category -->
-<section id="books" class="compact-section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-book-open"></i> Books
-        </h2>
-        <a href="{{ url_for('products.all_products') }}?category=books" class="view-all">View All</a>
-    </div>
+/* ---- Desktop search (called from navbar if base.html has a search input) ---- */
+function desktopSearch(q) {
+    const query = (q || '').toLowerCase().trim();
+    document.querySelectorAll('.dh-card').forEach(card => {
+        const title = card.dataset.title || '';
+        card.style.display = (!query || title.includes(query)) ? '' : 'none';
+    });
+}
 
-    {% set books_category = categories|selectattr("name", "equalto", "Books")|first %}
-    {% set books_products = products_by_category.get(books_category.id, []) if books_category else [] %}
-    
-    {% if books_products %}
-        <div class="compact-grid">
-            {% for product in books_products[:8] %}
-                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
-                    <div class="card-image">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
-                                 alt="{{ product.title }}"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="image-placeholder" style="display: none;">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% else %}
-                            <div class="image-placeholder">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-content">
-                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-compact">
-            <i class="fas fa-book-open"></i>
-            <p>No books yet</p>
-        </div>
-    {% endif %}
-</section>
+/* expose so base.html navbar search can call it */
+window.desktopSearch = desktopSearch;
 
-<!-- Furniture Section - Using products_by_category -->
-<section id="furniture" class="compact-section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-couch"></i> Furniture
-        </h2>
-        <a href="{{ url_for('products.all_products') }}?category=furniture" class="view-all">View All</a>
-    </div>
+/* ---- FAB radial menu ---- */
+const fabBtn = document.getElementById('searchFabBtn');
+const radialMenu = document.getElementById('radialMenu');
+if (fabBtn && radialMenu) {
+    fabBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        radialMenu.classList.toggle('open');
+    });
+    document.addEventListener('click', function () {
+        radialMenu.classList.remove('open');
+    });
+    radialMenu.querySelectorAll('.radial-item').forEach(item => {
+        item.addEventListener('click', function () {
+            const section = this.dataset.section;
+            const target = document.getElementById(section);
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+            radialMenu.classList.remove('open');
+        });
+    });
+}
+</script>
 
-    {% set furniture_category = categories|selectattr("name", "equalto", "Furniture")|first %}
-    {% set furniture_products = products_by_category.get(furniture_category.id, []) if furniture_category else [] %}
-    
-    {% if furniture_products %}
-        <div class="compact-grid">
-            {% for product in furniture_products[:8] %}
-                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
-                    <div class="card-image">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
-                                 alt="{{ product.title }}"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="image-placeholder" style="display: none;">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% else %}
-                            <div class="image-placeholder">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-content">
-                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-compact">
-            <i class="fas fa-couch"></i>
-            <p>No furniture yet</p>
-        </div>
-    {% endif %}
-</section>
-
-<!-- Fashion Section - Using products_by_category -->
-<section id="fashion" class="compact-section">
-    <div class="section-header">
-        <h2 class="section-title">
-            <i class="fas fa-tshirt"></i> Fashion
-        </h2>
-        <a href="{{ url_for('products.all_products') }}?category=fashion" class="view-all">View All</a>
-    </div>
-
-    {% set fashion_category = categories|selectattr("name", "equalto", "Fashion")|first %}
-    {% set fashion_products = products_by_category.get(fashion_category.id, []) if fashion_category else [] %}
-    
-    {% if fashion_products %}
-        <div class="compact-grid">
-            {% for product in fashion_products[:8] %}
-                <div class="compact-card" onclick="window.location='{{ url_for('products.view_product', product_id=product.id) }}'">
-                    <div class="card-image">
-                        {% if product.image %}
-                            <img src="{{ url_for('static', filename='uploads/product_images/' + product.image) }}" 
-                                 alt="{{ product.title }}"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="image-placeholder" style="display: none;">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% else %}
-                            <div class="image-placeholder">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-content">
-                        <p class="card-price">KES {{ "{:,.0f}".format(product.price) }}</p>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-compact">
-            <i class="fas fa-tshirt"></i>
-            <p>No fashion items yet</p>
-        </div>
-    {% endif %}
-</section>
 {% endblock %}

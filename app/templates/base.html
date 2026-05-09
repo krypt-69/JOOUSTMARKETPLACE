@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-   
-    
-    <!-- ===== OPEN GRAPH TAGS ===== -->
     {% block og_tags %}
     <meta property="og:title" content="CampusMarket - Buy & Sell on Campus">
     <meta property="og:description" content="Your trusted campus marketplace...">
@@ -17,20 +14,18 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="CampusMarket">
     {% endblock %}
-    
-    <!-- ===== TWITTER CARD TAGS ===== -->
+
     {% block twitter_card %}
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="CampusMarket - Buy & Sell on Campus">
     <meta name="twitter:description" content="Your trusted campus marketplace.">
     <meta name="twitter:image" content="{{ url_for('static', filename='images/og-default.jpg', _external=True) }}">
     {% endblock %}
-    <!-- ===== END OF SOCIAL TAGS ===== -->
-    <title>{% block title %}Campus Marketplace - Buy & Sell on Campus{% endblock %}</title> 
+
+    <title>{% block title %}Campus Marketplace - Buy & Sell on Campus{% endblock %}</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- CSS files -->
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
@@ -49,135 +44,172 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="{{ url_for('main.index') }}" class="logo">
-                <i class="fas fa-graduation-cap"></i>
-                <span>CampusMarket</span>
+
+    <!-- ===== DESKTOP TOP NAVBAR ===== -->
+    <nav class="desktop-navbar">
+        <div class="desktop-nav-inner">
+
+            <!-- Left links -->
+            <div class="desktop-nav-left">
+                <a href="{{ url_for('main.index') }}" class="dnav-pill">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="{{ url_for('products.all_products') }}" class="dnav-pill">
+                    <i class="fas fa-shopping-bag"></i> Product
+                </a>
+                <a href="{{ url_for('rooms.index') }}" class="dnav-pill">
+                    <i class="fas fa-door-open"></i> Rooms
+                </a>
+            </div>
+
+            <!-- Center logo -->
+            <a href="{{ url_for('main.index') }}" class="desktop-nav-logo">
+                <img src="{{ url_for('static', filename='og-default.png') }}" alt="Logo">
             </a>
-            <button class="mobile-menu-btn" onclick="toggleMenu()">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="nav-links" id="navLinks">
-                <a href="{{ url_for('main.index') }}">
-                    <i class="fas fa-home"></i>Home
-                </a>
-                <a href="{{ url_for('products.all_products') }}">
-                    <i class="fas fa-shopping-bag"></i>Products
-                </a>
-                <a href="{{ url_for('rooms.index') }}">
-                    <i class="fas fa-door-open"></i>Rooms
-                </a>
+
+            <!-- Right links -->
+            <div class="desktop-nav-right">
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('chat.index') }}" class="chat-link">
-                        <i class="fas fa-comments"></i>Messages
-                        <span class="chat-badge" id="unreadChatCount" style="display: none;">0</span>
+                    <a href="{{ url_for('products.create_product') }}" class="dnav-pill dnav-sell">
+                        <i class="fas fa-plus"></i> Sell
                     </a>
-                    <a href="{{ url_for('products.create_product') }}" class="sell-btn">
-                        <i class="fas fa-plus"></i>Sell
+                    <a href="{{ url_for('chat.index') }}" class="dnav-pill">
+                        <i class="fas fa-comments"></i> Messages
+                        <span class="dnav-badge" id="unreadChatCount" style="display:none;">0</span>
                     </a>
-                    <a href="{{ url_for('products.my_products_list') }}">
-                        <i class="fas fa-box"></i>My Items
-                    </a>
-                    <a href="{{ url_for('rooms.my_listings') }}">
-                        <i class="fas fa-door-open"></i>My Rooms
-                    </a>
-                    <a href="{{ url_for('rooms.my_unlocks') }}">
-                        <i class="fas fa-eye"></i>My Unlocks
-                    </a>
-                    <a href="{{ url_for('main.notification') }}">
-                        <i class="fas fa-bell"></i>Notifications
-                    </a>
-                    <a href="{{ url_for('announcements.index') }}">
-                        <i class="fas fa-bullhorn"></i>Announcements
-                        {% if announcement_count and announcement_count > 0 %}
-                        <span class="badge" style="background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">{{ announcement_count }}</span>
-                        {% endif %}
-                    </a>
-                    <a href="{{ url_for('auth.logout') }}">
-                        <i class="fas fa-sign-out-alt"></i>Logout
-                    </a>
+                    <!-- More dropdown -->
+                    <div class="dnav-more-wrap">
+                        <button class="dnav-pill dnav-more-btn" id="desktopMoreBtn">
+                            <i class="fas fa-grip-horizontal"></i> More
+                            <i class="fas fa-chevron-down" style="font-size:0.65rem;"></i>
+                        </button>
+                        <div class="dnav-dropdown" id="desktopDropdown">
+                            <a href="{{ url_for('products.my_products_list') }}">
+                                <i class="fas fa-box"></i> My Items
+                            </a>
+                            <a href="{{ url_for('rooms.my_listings') }}">
+                                <i class="fas fa-door-open"></i> My Rooms
+                            </a>
+                            <a href="{{ url_for('rooms.my_unlocks') }}">
+                                <i class="fas fa-eye"></i> My Unlocks
+                            </a>
+                            <a href="{{ url_for('main.notification') }}">
+                                <i class="fas fa-bell"></i> Notifications
+                            </a>
+                            <a href="{{ url_for('announcements.index') }}">
+                                <i class="fas fa-bullhorn"></i> Announcements
+                                {% if announcement_count and announcement_count > 0 %}
+                                <span class="dnav-badge-inline">{{ announcement_count }}</span>
+                                {% endif %}
+                            </a>
+                            <a href="{{ url_for('auth.logout') }}" class="dnav-logout">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
                 {% else %}
-                    <a href="{{ url_for('auth.login') }}">
-                        <i class="fas fa-sign-in-alt"></i>Login
+                    <a href="{{ url_for('auth.login') }}" class="dnav-pill">
+                        <i class="fas fa-sign-in-alt"></i> Login
                     </a>
-                    <a href="{{ url_for('auth.register') }}">
-                        <i class="fas fa-user-plus"></i>Register
+                    <a href="{{ url_for('auth.register') }}" class="dnav-pill dnav-sell">
+                        <i class="fas fa-user-plus"></i> Register
                     </a>
                 {% endif %}
             </div>
+
         </div>
     </nav>
 
-    <!-- Mobile Bottom Navigation -->
+    <!-- ===== MOBILE BOTTOM NAV ===== -->
     <nav class="mobile-bottom-nav">
-        <div class="mobile-nav-container" id="mobileNavContainer">
+        <div class="mobile-nav-container">
+
             <a href="{{ url_for('main.index') }}" class="mobile-nav-item">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </a>
-            <a href="{{ url_for('products.all_products') }}" class="mobile-nav-item">
-                <i class="fas fa-shopping-bag"></i>
-                <span>Products</span>
-            </a>
+
             <a href="{{ url_for('rooms.index') }}" class="mobile-nav-item">
                 <i class="fas fa-door-open"></i>
                 <span>Rooms</span>
             </a>
+
+            <a href="{{ url_for('products.all_products') }}" class="mobile-nav-item">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Products</span>
+            </a>
+
+            <!-- More button -->
+            <button class="mobile-nav-item mobile-more-btn" id="mobileMoreBtn">
+                <i class="fas fa-arrow-right-to-bracket" style="transform:rotate(0deg);"></i>
+                <span>More</span>
+            </button>
+
+        </div>
+    </nav>
+
+    <!-- ===== MOBILE MORE PANEL (slides from right) ===== -->
+    <div class="mobile-more-overlay" id="mobileMoreOverlay"></div>
+    <div class="mobile-more-panel" id="mobileMorePanel">
+        <div class="mobile-more-header">
+            <span>Menu</span>
+            <button class="mobile-more-close" id="mobileMoreClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mobile-more-links">
             {% if current_user.is_authenticated %}
-                <a href="{{ url_for('chat.index') }}" class="mobile-nav-item">
-                    <i class="fas fa-comments"></i>
-                    <span>Chat</span>
-                    <span class="notification-badge" id="mobileUnreadChatCount" style="display: none;">0</span>
-                </a>
-                <a href="{{ url_for('products.create_product') }}" class="mobile-nav-item sell-item">
+                <a href="{{ url_for('products.create_product') }}" class="mmp-item mmp-sell">
                     <i class="fas fa-plus"></i>
                     <span>Sell</span>
                 </a>
-                <a href="{{ url_for('products.my_products_list') }}" class="mobile-nav-item myitems-item">
+                <a href="{{ url_for('products.my_products_list') }}" class="mmp-item">
                     <i class="fas fa-box"></i>
                     <span>My Items</span>
                 </a>
-                <a href="{{ url_for('rooms.my_listings') }}" class="mobile-nav-item">
+                <a href="{{ url_for('rooms.my_listings') }}" class="mmp-item">
                     <i class="fas fa-door-open"></i>
                     <span>My Rooms</span>
                 </a>
-                <a href="{{ url_for('rooms.my_unlocks') }}" class="mobile-nav-item">
+                <a href="{{ url_for('rooms.my_unlocks') }}" class="mmp-item">
                     <i class="fas fa-eye"></i>
                     <span>My Unlocks</span>
                 </a>
-                <a href="{{ url_for('main.notification') }}" class="mobile-nav-item notification-item">
-                    <i class="fas fa-bell"></i>
-                    <span>Alerts</span>
+                <a href="{{ url_for('chat.index') }}" class="mmp-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                    <span class="mmp-badge" id="mobileUnreadChatCount" style="display:none;">0</span>
                 </a>
-                <a href="{{ url_for('announcements.index') }}" class="mobile-nav-item">
+                <a href="{{ url_for('main.notification') }}" class="mmp-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="{{ url_for('announcements.index') }}" class="mmp-item">
                     <i class="fas fa-bullhorn"></i>
                     <span>Announcements</span>
-                    {% if announcement_count %}
-                    <span class="notification-badge">{{ announcement_count }}</span>
+                    {% if announcement_count and announcement_count > 0 %}
+                    <span class="mmp-badge">{{ announcement_count }}</span>
                     {% endif %}
                 </a>
-                <a href="{{ url_for('auth.logout') }}" class="mobile-nav-item">
+                <a href="{{ url_for('auth.logout') }}" class="mmp-item mmp-logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             {% else %}
-                <a href="{{ url_for('auth.login') }}" class="mobile-nav-item">
+                <a href="{{ url_for('auth.login') }}" class="mmp-item">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Login</span>
                 </a>
-                <a href="{{ url_for('auth.register') }}" class="mobile-nav-item">
+                <a href="{{ url_for('auth.register') }}" class="mmp-item mmp-sell">
                     <i class="fas fa-user-plus"></i>
                     <span>Register</span>
                 </a>
             {% endif %}
         </div>
-    </nav>
+    </div>
 
     <!-- Main Content -->
     <div class="container">
-        <!-- Flash Messages -->
         <div class="flash-messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -190,8 +222,6 @@
                 {% endif %}
             {% endwith %}
         </div>
-
-        <!-- Page Content -->
         {% block content %}{% endblock %}
     </div>
 
@@ -200,7 +230,7 @@
         <div class="footer-content">
             <div class="footer-section">
                 <h3>About CampusMarket</h3>
-                <p>Your trusted campus marketplace for buying and selling items within the student community. Safe, reliable, and student-focused.</p>
+                <p>Your trusted campus marketplace for buying and selling items within the student community.</p>
                 <div class="social-links">
                     <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-twitter"></i></a>
@@ -208,7 +238,6 @@
                     <a href="#"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
-            
             <div class="footer-section">
                 <h3>Quick Links</h3>
                 <ul class="footer-links">
@@ -219,15 +248,13 @@
                         <li><a href="{{ url_for('products.create_product') }}">Sell Item</a></li>
                         <li><a href="{{ url_for('products.my_products_list') }}">My Products</a></li>
                         <li><a href="{{ url_for('rooms.my_listings') }}">My Rooms</a></li>
-                        <li><a href="{{ url_for('rooms.my_unlocks') }}">My Unlocks</a></li>
-                        <li><a href="{{ url_for('main.notification') }}">Notifications</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% else %}
                         <li><a href="{{ url_for('auth.register') }}">Register</a></li>
                         <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                     {% endif %}
                 </ul>
             </div>
-            
             <div class="footer-section">
                 <h3>Contact Info</h3>
                 <p><i class="fas fa-map-marker-alt"></i> Western Kenya Campus</p>
@@ -235,16 +262,12 @@
                 <p><i class="fas fa-phone"></i> +254 715 982985</p>
             </div>
         </div>
-        
         <div class="footer-bottom">
             <p>&copy; 2024 CampusMarket. All rights reserved. Built with ❤️ for students.</p>
         </div>
     </footer>
 
-    <!-- Core JavaScript (loads first) -->
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
-    
-    <!-- Page-specific JavaScript (deferred) -->
     <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/products.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/my_products.js') }}" defer></script>
@@ -255,8 +278,56 @@
     <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/announcements.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/rooms_my_unlocks.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/products.js') }}" defer></script>
 
+    <script>
+    /* ===== Desktop more dropdown ===== */
+    const desktopMoreBtn = document.getElementById('desktopMoreBtn');
+    const desktopDropdown = document.getElementById('desktopDropdown');
+    if (desktopMoreBtn) {
+        desktopMoreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            desktopDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function() {
+            desktopDropdown.classList.remove('open');
+        });
+        desktopDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+
+    /* ===== Mobile more panel ===== */
+    const mobileMoreBtn   = document.getElementById('mobileMoreBtn');
+    const mobileMorePanel = document.getElementById('mobileMorePanel');
+    const mobileMoreOverlay = document.getElementById('mobileMoreOverlay');
+    const mobileMoreClose = document.getElementById('mobileMoreClose');
+
+    function openMorePanel() {
+        mobileMorePanel.classList.add('open');
+        mobileMoreOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeMorePanel() {
+        mobileMorePanel.classList.remove('open');
+        mobileMoreOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    if (mobileMoreBtn)     mobileMoreBtn.addEventListener('click', openMorePanel);
+    if (mobileMoreClose)   mobileMoreClose.addEventListener('click', closeMorePanel);
+    if (mobileMoreOverlay) mobileMoreOverlay.addEventListener('click', closeMorePanel);
+
+    /* Mark active nav item */
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.mobile-nav-item, .mmp-item').forEach(item => {
+        if (item.href && item.href.includes(currentPath) && currentPath !== '/') {
+            item.classList.add('active');
+        }
+        if (currentPath === '/' && item.href && item.href.endsWith('/')) {
+            item.classList.add('active');
+        }
+    });
+    </script>
 
 </body>
 </html>
