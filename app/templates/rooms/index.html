@@ -3,863 +3,735 @@
 {% block title %}Room Takeover - Marketplace{% endblock %}
 
 {% block content %}
-<style>
-    /* Room Takeover Specific Styles - Clean, Professional, Square Images */
-    .rooms-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 1rem;
-    }
-    
-    /* Caution Banner - Always visible, small text, bright color */
-    .rooms-caution {
-        background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
-        border-left: 4px solid #f59e0b;
-        border-radius: 12px;
-        padding: 0.85rem 1.25rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .rooms-caution p {
-        font-size: 0.75rem;
-        line-height: 1.45;
-        color: #92400e;
-        margin: 0;
-    }
-    .rooms-caution i {
-        color: #f59e0b;
-        margin-right: 6px;
-        font-size: 0.8rem;
-    }
-    .rooms-caution strong {
-        color: #d97706;
-        font-weight: 600;
-    }
-    
-    /* Page Header */
-    .rooms-header {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        gap: 1rem;
-    }
-    .rooms-header h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        margin: 0;
-        background: linear-gradient(135deg, #1e293b, #2c7da0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .btn-list-room {
-        background: linear-gradient(135deg, #2c7da0, #1f5e7a);
-        border: none;
-        border-radius: 40px;
-        padding: 0.65rem 1.4rem;
-        font-weight: 600;
-        color: white;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.85rem;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .btn-list-room:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(44,125,160,0.3);
-        color: white;
-        text-decoration: none;
-    }
-    
-    /* Desktop Filter Toggle Button */
-    .desktop-filter-toggle {
-        display: none;
-        align-items: center;
-        gap: 8px;
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 40px;
-        padding: 0.65rem 1.4rem;
-        font-weight: 500;
-        color: #475569;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-size: 0.85rem;
-    }
-    .desktop-filter-toggle:hover {
-        background: #e2e8f0;
-    }
-    .desktop-filter-toggle i {
-        color: #2c7da0;
-    }
-    
-    /* Filter Toggle Button - Mobile Only */
-    .filter-toggle-btn {
-        width: 100%;
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 0.8rem;
-        font-weight: 500;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-bottom: 1.25rem;
-        color: #475569;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-size: 0.9rem;
-    }
-    .filter-toggle-btn i {
-        color: #2c7da0;
-    }
-    
-    /* Filters Sidebar */
-    .filters-sidebar {
-        background: white;
-        border-radius: 20px;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .filters-header {
-        padding: 1rem 1.25rem;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .filters-header h5 {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin: 0;
-        color: #1e293b;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .filters-body {
-        padding: 1.25rem;
-    }
-    .filter-group {
-        margin-bottom: 1.2rem;
-    }
-    .filter-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #64748b;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-    .filter-input, .filter-select {
-        width: 100%;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 0.6rem 0.85rem;
-        color: #1e293b;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-    .filter-input:focus, .filter-select:focus {
-        outline: none;
-        border-color: #2c7da0;
-        box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
-    }
-    .row-grid {
-        display: flex;
-        gap: 10px;
-    }
-    .row-grid > div {
-        flex: 1;
-    }
-    .checkbox-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.6rem;
-    }
-    .checkbox-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .checkbox-item input {
-        width: 16px;
-        height: 16px;
-        accent-color: #2c7da0;
-        margin: 0;
-    }
-    .checkbox-item label {
-        font-size: 0.85rem;
-        color: #475569;
-        margin: 0;
-        cursor: pointer;
-    }
-    .btn-apply-filters {
-        background: #2c7da0;
-        border: none;
-        border-radius: 40px;
-        padding: 0.7rem;
-        font-weight: 600;
-        color: white;
-        width: 100%;
-        margin-top: 0.5rem;
-        transition: all 0.2s;
-        font-size: 0.85rem;
-    }
-    .btn-clear-filters {
-        background: transparent;
-        border: 1px solid #e2e8f0;
-        border-radius: 40px;
-        padding: 0.7rem;
-        width: 100%;
-        margin-top: 0.75rem;
-        color: #64748b;
-        font-weight: 500;
-        text-align: center;
-        display: inline-block;
-        text-decoration: none;
-        font-size: 0.85rem;
-    }
-    .btn-clear-filters:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-        text-decoration: none;
-        color: #475569;
-    }
-    
-    /* Listings Grid */
-    .listings-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    /* Room Card - Square Image with Overlay Details */
-    .room-card {
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        border: 1px solid #eef2f6;
-        cursor: pointer;
-    }
-    .room-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.12);
-    }
-    
-    /* Square Image Container - 1:1 Aspect Ratio */
-    .card-image-square {
-        position: relative;
-        width: 100%;
-        padding-bottom: 100%; /* Creates perfect square */
-        background: #eef2f6;
-        overflow: hidden;
-    }
-    .image-wrapper {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
-    .room-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.4s ease;
-    }
-    .room-card:hover .room-image {
-        transform: scale(1.05);
-    }
-    .image-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-        color: #94a3b8;
-        font-size: 3rem;
-    }
-    
-    /* Overlay Details - Bottom of Image */
-    .image-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.5), transparent);
-        padding: 1rem 1rem 0.8rem 1rem;
-        color: white;
-    }
-    .overlay-price {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-bottom: 0.2rem;
-        display: flex;
-        align-items: baseline;
-        gap: 4px;
-    }
-    .overlay-price span {
-        font-size: 0.7rem;
-        font-weight: 400;
-        opacity: 0.9;
-    }
-    .overlay-hostel {
-        font-size: 0.8rem;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        opacity: 0.95;
-    }
-    .overlay-hostel i {
-        font-size: 0.7rem;
-        opacity: 0.8;
-    }
-    
-    /* Status Badge - Top Right Corner */
-    .status-badge {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        padding: 0.25rem 0.8rem;
-        border-radius: 30px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        background: rgba(0,0,0,0.7);
-        backdrop-filter: blur(4px);
-        color: white;
-        z-index: 2;
-    }
-    .status-badge.available { background: #2b7e3a; }
-    .status-badge.pending { background: #e68a2e; }
-    .status-badge.booked { background: #6c757d; }
-    .status-badge.expired { background: #b91c1c; }
-    
-    /* Details Section - Below Image (Compact) */
-    .card-details {
-        padding: 1rem 1.2rem 1.2rem;
-        background: white;
-    }
-    .detail-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 0.65rem;
-        font-size: 0.8rem;
-        color: #475569;
-    }
-    .detail-row i {
-        width: 18px;
-        color: #2c7da0;
-        font-size: 0.75rem;
-    }
-    .detail-row strong {
-        color: #1e293b;
-        font-weight: 600;
-        margin-right: 4px;
-    }
-    .commission-tag-detail {
-        background: #fef3e8;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #c2410c;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        margin-left: 8px;
-    }
-    .deposit-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .deposit-badge {
-        font-size: 0.75rem;
-        color: #475569;
-        background: #f1f5f9;
-        padding: 0.25rem 0.7rem;
-        border-radius: 20px;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .leave-date-compact {
-        font-size: 0.75rem;
-        color: #475569;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        background: #f8fafc;
-        padding: 0.25rem 0.7rem;
-        border-radius: 20px;
-    }
-    .days-badge-compact {
-        background: #e2e8f0;
-        padding: 0.2rem 0.5rem;
-        border-radius: 20px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: #1e293b;
-    }
-    .view-stats {
-        font-size: 0.7rem;
-        color: #94a3b8;
-        margin-top: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding-top: 0.5rem;
-        border-top: 1px solid #eef2f6;
-    }
-    .btn-details {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 40px;
-        padding: 0.55rem;
-        margin-top: 0.85rem;
-        font-weight: 600;
-        font-size: 0.8rem;
-        text-decoration: none;
-        color: #2c7da0;
-        transition: all 0.2s;
-    }
-    .btn-details:hover {
-        background: #2c7da0;
-        border-color: #2c7da0;
-        color: white;
-        text-decoration: none;
-    }
-    
-    /* Empty State */
-    .empty-state {
-        background: white;
-        border-radius: 24px;
-        text-align: center;
-        padding: 3rem 1.5rem;
-        border: 1px solid #eef2f6;
-    }
-    .empty-state i {
-        font-size: 3.5rem;
-        color: #cbd5e1;
-        margin-bottom: 1rem;
-    }
-    .empty-state h4 {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Pagination */
-    .pagination-wrapper {
-        display: flex;
-        justify-content: center;
-        margin-top: 2rem;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-    .page-link-custom {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 38px;
-        padding: 0.45rem 0.85rem;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        color: #475569;
-        text-decoration: none;
-        font-size: 0.85rem;
-        transition: all 0.2s;
-    }
-    .page-link-custom.active {
-        background: #2c7da0;
-        border-color: #2c7da0;
-        color: white;
-    }
-    .page-link-custom:hover:not(.active) {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-        text-decoration: none;
-    }
-    
-    /* Responsive Grid */
-    @media (min-width: 640px) {
-        .listings-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    @media (min-width: 1024px) {
-        .listings-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-    @media (min-width: 1280px) {
-        .listings-grid {
-            grid-template-columns: repeat(4, 1fr);
-        }
-    }
-    
-    /* Mobile Filter Toggle */
-    @media (max-width: 767px) {
-        .filter-toggle-btn {
-            display: flex;
-        }
-        .desktop-filter-toggle {
-            display: none !important;
-        }
-        .filters-sidebar {
-            display: none;
-        }
-        .filters-sidebar.show-mobile {
-            display: block;
-        }
-        .rooms-header h1 {
-            font-size: 1.4rem;
-        }
-        .overlay-price {
-            font-size: 1.1rem;
-        }
-        .overlay-hostel {
-            font-size: 0.75rem;
-        }
-    }
-    
-    /* Desktop styles */
-    @media (min-width: 768px) {
-        .desktop-filter-toggle {
-            display: inline-flex;
-        }
-        .filter-toggle-btn {
-            display: none;
-        }
-        .filters-sidebar {
-            display: block !important;
-        }
-        .filters-sidebar.collapsed {
-            display: none !important;
-        }
-        .rooms-container {
-            padding: 1.5rem;
-        }
-    }
-    
-    /* Animation */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .room-card {
-        animation: fadeInUp 0.4s ease-out;
-    }
-</style>
+<div class="rooms-page">
 
-<div class="rooms-container">
-    <!-- Page Header -->
-    <div class="rooms-header">
-        <h1><i class="fas fa-door-open" style="background: none; -webkit-text-fill-color: #2c7da0;"></i> Room Takeover</h1>
-        <div style="display: flex; gap: 10px;">
-            <button class="desktop-filter-toggle" id="desktopFilterToggle">
-                <i class="fas fa-sliders-h"></i> Show filters
-            </button>
-            <a href="{{ url_for('rooms.create') }}" class="btn-list-room">
-                <i class="fas fa-plus-circle"></i> List your room
-            </a>
-        </div>
+    <!-- Header -->
+    <div class="rp-header">
+        <span class="rp-header-title">list your room</span>
+        <a href="{{ url_for('rooms.create') }}" class="rp-plus-btn">
+            <i class="fas fa-plus"></i>
+        </a>
     </div>
-    
-    <!-- CAUTION MESSAGE - Always visible for all users, small text, bright color -->
-    <div class="rooms-caution">
-        <p>
-            <i class="fas fa-shield-alt"></i> 
-            <strong>Important caution:</strong> Our marketplace makes it easy for students and tenants to transition between rooms smoothly. 
-If you're leaving your hostel or apartment, you can list your room along with your expected leaving date. 
-Interested tenants can unlock contact details and submit offers with their proposed deposit or commission (typically below 10% of monthly rent, set by the person leaving). 
-Room owners see all offers instantly on their listing page and can accept the best one. 
-Both parties should clearly agree on terms and fulfill them honestly. These precautions protect everyone and ensure a trustworthy experience.
-        </p>
+
+    <!-- Filter toggle (hidden, accessible) -->
+    <div class="rp-filter-toggle-wrap">
+        <button class="rp-filter-toggle" id="filterToggleBtn">
+            <i class="fas fa-sliders-h"></i> Filter
+        </button>
     </div>
-    
-    <!-- Mobile Filter Toggle Button -->
-    <button class="filter-toggle-btn" id="mobileFilterToggle">
-        <i class="fas fa-sliders-h"></i> Filter listings
-        <i class="fas fa-chevron-down"></i>
-    </button>
-    
-    <!-- Filters Sidebar -->
-    <div class="filters-sidebar collapsed" id="filtersSidebar">
-        <div class="filters-header">
-            <h5><i class="fas fa-filter"></i> Refine results</h5>
-        </div>
-        <div class="filters-body">
-            <form method="GET" action="{{ url_for('rooms.index') }}" id="filterForm">
-                <div class="filter-group">
-                    <label class="filter-label">Location / Area</label>
-                    <input type="text" name="location" class="filter-input" value="{{ request.args.get('location', '') }}" placeholder="e.g., Westlands, CBD, Campus">
+
+    <!-- Filter panel -->
+    <div class="rp-filters collapsed" id="filtersSidebar">
+        <form method="GET" action="{{ url_for('rooms.index') }}">
+            <div class="rp-filter-grid">
+                <div class="rp-filter-group">
+                    <label>Location</label>
+                    <input type="text" name="location" class="rp-input"
+                           value="{{ request.args.get('location', '') }}"
+                           placeholder="e.g. Westlands">
                 </div>
-                <div class="filter-group">
-                    <label class="filter-label">Status</label>
-                    <select name="status" class="filter-select">
-                        <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>Available</option>
-                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="all" {% if request.args.get('status') == 'all' %}selected{% endif %}>All Listings</option>
+                <div class="rp-filter-group">
+                    <label>Status</label>
+                    <select name="status" class="rp-input">
+                        <option value="available" {% if request.args.get('status','available') == 'available' %}selected{% endif %}>Available</option>
+                        <option value="pending"   {% if request.args.get('status') == 'pending'   %}selected{% endif %}>Pending</option>
+                        <option value="all"       {% if request.args.get('status') == 'all'       %}selected{% endif %}>All</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label class="filter-label">Deposit Range (KES)</label>
-                    <div class="row-grid">
-                        <div><input type="number" name="deposit_min" class="filter-input" placeholder="Min" value="{{ request.args.get('deposit_min', '') }}"></div>
-                        <div><input type="number" name="deposit_max" class="filter-input" placeholder="Max" value="{{ request.args.get('deposit_max', '') }}"></div>
+                <div class="rp-filter-group">
+                    <label>Deposit (KES)</label>
+                    <div class="rp-range">
+                        <input type="number" name="deposit_min" class="rp-input" placeholder="Min" value="{{ request.args.get('deposit_min','') }}">
+                        <input type="number" name="deposit_max" class="rp-input" placeholder="Max" value="{{ request.args.get('deposit_max','') }}">
                     </div>
                 </div>
-                <div class="filter-group">
-                    <label class="filter-label">Monthly Rent (KES)</label>
-                    <div class="row-grid">
-                        <div><input type="number" name="price_min" class="filter-input" placeholder="Min" value="{{ request.args.get('price_min', '') }}"></div>
-                        <div><input type="number" name="price_max" class="filter-input" placeholder="Max" value="{{ request.args.get('price_max', '') }}"></div>
+                <div class="rp-filter-group">
+                    <label>Rent (KES)</label>
+                    <div class="rp-range">
+                        <input type="number" name="price_min" class="rp-input" placeholder="Min" value="{{ request.args.get('price_min','') }}">
+                        <input type="number" name="price_max" class="rp-input" placeholder="Max" value="{{ request.args.get('price_max','') }}">
                     </div>
                 </div>
-                <div class="filter-group">
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" name="commission_only" id="commissionOnly" {% if request.args.get('commission_only') %}checked{% endif %}>
-                            <label for="commissionOnly">Commission listings only</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" name="no_deposit" id="noDeposit" {% if request.args.get('no_deposit') %}checked{% endif %}>
-                            <label for="noDeposit">No deposit required</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Sort by</label>
-                    <select name="sort" class="filter-select">
-                        <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>Newest first</option>
-                        <option value="oldest" {% if request.args.get('sort') == 'oldest' %}selected{% endif %}>Oldest first</option>
-                        <option value="price_low" {% if request.args.get('sort') == 'price_low' %}selected{% endif %}>Price: Low to high</option>
-                        <option value="price_high" {% if request.args.get('sort') == 'price_high' %}selected{% endif %}>Price: High to low</option>
-                        <option value="leave_soon" {% if request.args.get('sort') == 'leave_soon' %}selected{% endif %}>Leave date: Soonest</option>
+                <div class="rp-filter-group">
+                    <label>Sort by</label>
+                    <select name="sort" class="rp-input">
+                        <option value="newest"     {% if request.args.get('sort','newest') == 'newest'     %}selected{% endif %}>Newest</option>
+                        <option value="oldest"     {% if request.args.get('sort') == 'oldest'     %}selected{% endif %}>Oldest</option>
+                        <option value="price_low"  {% if request.args.get('sort') == 'price_low'  %}selected{% endif %}>Price: Low → High</option>
+                        <option value="price_high" {% if request.args.get('sort') == 'price_high' %}selected{% endif %}>Price: High → Low</option>
+                        <option value="leave_soon" {% if request.args.get('sort') == 'leave_soon' %}selected{% endif %}>Leave: Soonest</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-apply-filters">
-                    <i class="fas fa-check-circle"></i> Apply filters
-                </button>
-                <a href="{{ url_for('rooms.index') }}" class="btn-clear-filters">
-                    <i class="fas fa-undo-alt"></i> Clear all
-                </a>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Listings Grid -->
-    {% if rooms and rooms.items %}
-    <div class="listings-grid">
-        {% for room in rooms.items %}
-        <div class="room-card">
-            <!-- Square Image Container -->
-            <div class="card-image-square">
-                <div class="image-wrapper">
-                    {% if room.image %}
-                    <img src="{{ url_for('static', filename='uploads/product_images/' + room.image) }}" class="room-image" alt="{{ room.title }}">
-                    {% else %}
-                    <div class="image-placeholder">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <!-- Status Badge - Top Right -->
-                <span class="status-badge 
-                    {% if room.status == 'available' %}available
-                    {% elif room.status == 'pending' %}pending
-                    {% elif room.status == 'booked' %}booked
-                    {% elif room.status == 'expired' %}expired{% endif %}">
-                    {% if room.status == 'available' %}Available
-                    {% elif room.status == 'pending' %}Pending
-                    {% elif room.status == 'booked' %}Booked
-                    {% elif room.status == 'expired' %}Expired{% endif %}
-                </span>
-                
-                <!-- Overlay Details at Bottom - Only Price and Hostel Name -->
-                <div class="image-overlay">
-                    <div class="overlay-price">
-                        KES {{ "%.0f"|format(room.price) }}<span>/month</span>
-                    </div>
-                    <div class="overlay-hostel">
-                        <i class="fas fa-home"></i> {{ room.hostel_name }}
-                    </div>
+                <div class="rp-filter-group">
+                    <label class="rp-checkbox">
+                        <input type="checkbox" name="commission_only" {% if request.args.get('commission_only') %}checked{% endif %}>
+                        Commission only
+                    </label>
+                    <label class="rp-checkbox">
+                        <input type="checkbox" name="no_deposit" {% if request.args.get('no_deposit') %}checked{% endif %}>
+                        No deposit
+                    </label>
                 </div>
             </div>
-            
-            <!-- Compact Details Section - Below Image -->
-            <div class="card-details">
-                <!-- Room Title/Type -->
-                <div class="detail-row">
-                    <i class="fas fa-tag"></i>
-                    <strong>{{ room.title }}</strong>
-                    {% if room.is_commission_listing %}
-                    <span class="commission-tag-detail"><i class="fas fa-handshake"></i> {{ room.commission_percentage }}%</span>
+            <div class="rp-filter-actions">
+                <button type="submit" class="rp-apply-btn">Apply</button>
+                <a href="{{ url_for('rooms.index') }}" class="rp-clear-btn">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Listings -->
+    {% if rooms and rooms.items %}
+    <div class="rp-list">
+        {% for room in rooms.items %}
+
+        <!-- Card wrapper — overflows right for the bubble -->
+        <div class="rp-card-wrap">
+
+            <!-- The card itself -->
+            <div class="rp-card">
+
+                <!-- Image with overlay -->
+                <div class="rp-img-wrap">
+                    {% if room.image %}
+                        <img src="{{ url_for('static', filename='uploads/product_images/' + room.image) }}"
+                             alt="{{ room.title }}" class="rp-img"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div class="rp-img-placeholder" style="display:none;">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    {% else %}
+                        <div class="rp-img-placeholder">
+                            <i class="fas fa-building"></i>
+                        </div>
                     {% endif %}
-                </div>
-                
-                <!-- Location -->
-                <div class="detail-row">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>{{ room.location }}</span>
-                </div>
-                
-                <!-- Leaving Date (if available) -->
-                {% if room.leave_date %}
-                <div class="detail-row">
-                    <i class="far fa-calendar-alt"></i>
-                    <span class="leave-date-compact">
-                        Leave: {{ room.leave_date.strftime('%b %d, %Y') }}
-                        {% if room.days_until_leave() > 0 %}
-                        <span class="days-badge-compact">{{ room.days_until_leave() }} days left</span>
-                        {% endif %}
+
+                    <!-- Status badge top-right inside image -->
+                    <span class="rp-status rp-status--{{ room.status }}">
+                        {% if room.status == 'available' %}Available
+                        {% elif room.status == 'pending' %}Pending
+                        {% elif room.status == 'booked' %}Booked
+                        {% else %}Expired{% endif %}
                     </span>
-                </div>
-                {% endif %}
-                
-                <!-- Deposit Info -->
-                <div class="detail-row">
-                    <i class="fas fa-wallet"></i>
-                    <div class="deposit-info">
-                        <span class="deposit-badge">
-                            {{ room.get_deposit_display() }}
+
+                    <!-- Price + name overlay bottom-left -->
+                    <div class="rp-img-overlay">
+                        <span class="rp-overlay-price">
+                            KES {{ "%.0f"|format(room.price) }}
+                        </span>
+                        <span class="rp-overlay-name">
+                            {{ room.hostel_name }}
                         </span>
                     </div>
                 </div>
-                
-                <!-- View Stats -->
-                <div class="view-stats">
-                    <i class="fas fa-eye"></i> {{ room.total_unlocks }} views
+
+                <!-- Info strip -->
+                <div class="rp-info-strip">
+                    <div class="rp-info-row">
+                        <span class="rp-info-cell">
+                            <i class="fas fa-tag"></i>
+                            {{ room.title|truncate(16, true) }}
+                            {% if room.is_commission_listing %}
+                                <span class="rp-commission">{{ room.commission_percentage }}%</span>
+                            {% endif %}
+                        </span>
+                        <span class="rp-info-cell">
+                            <i class="far fa-calendar-alt"></i>
+                            {% if room.leave_date %}
+                                {{ room.leave_date.strftime('%b %d, %Y') }}
+                                {% if room.days_until_leave() > 0 %}
+                                    <span class="rp-days">{{ room.days_until_leave() }}d</span>
+                                {% endif %}
+                            {% else %}—{% endif %}
+                        </span>
+                    </div>
+                    <div class="rp-info-row">
+                        <span class="rp-info-cell">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ room.location|truncate(18, true) }}
+                        </span>
+                        <span class="rp-info-cell">
+                            <i class="fas fa-eye"></i>
+                            {{ room.total_unlocks }} unlocked
+                        </span>
+                    </div>
                 </div>
-                
-                <!-- View Details Button -->
-                <a href="{{ url_for('rooms.detail', room_id=room.id) }}" class="btn-details">
-                    View details <i class="fas fa-arrow-right"></i>
-                </a>
+
             </div>
+            <!-- end .rp-card -->
+
+            <!-- View detail bubble — outside card, floats right -->
+            <a href="{{ url_for('rooms.detail', room_id=room.id) }}"
+               class="rp-detail-bubble">
+                view detail
+            </a>
+
         </div>
+        <!-- end .rp-card-wrap -->
+
         {% endfor %}
     </div>
-    
+
     <!-- Pagination -->
     {% if rooms.pages > 1 %}
-    <div class="pagination-wrapper">
+    <div class="rp-pagination">
         {% if rooms.has_prev %}
-        <a href="{{ url_for('rooms.index', page=rooms.prev_num, **request.args) }}" class="page-link-custom">
-            <i class="fas fa-chevron-left"></i> Prev
+        <a href="{{ url_for('rooms.index', page=rooms.prev_num, **request.args) }}" class="rp-page-btn">
+            <i class="fas fa-chevron-left"></i>
         </a>
         {% endif %}
-        
         {% for page_num in rooms.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
             {% if page_num %}
-                <a href="{{ url_for('rooms.index', page=page_num, **request.args) }}" 
-                   class="page-link-custom {% if page_num == rooms.page %}active{% endif %}">
+                <a href="{{ url_for('rooms.index', page=page_num, **request.args) }}"
+                   class="rp-page-btn {% if page_num == rooms.page %}rp-page-btn--active{% endif %}">
                     {{ page_num }}
                 </a>
             {% else %}
-                <span class="page-link-custom disabled">...</span>
+                <span class="rp-page-btn rp-page-btn--dots">…</span>
             {% endif %}
         {% endfor %}
-        
         {% if rooms.has_next %}
-        <a href="{{ url_for('rooms.index', page=rooms.next_num, **request.args) }}" class="page-link-custom">
-            Next <i class="fas fa-chevron-right"></i>
+        <a href="{{ url_for('rooms.index', page=rooms.next_num, **request.args) }}" class="rp-page-btn">
+            <i class="fas fa-chevron-right"></i>
         </a>
         {% endif %}
     </div>
     {% endif %}
-    
+
     {% else %}
-    <!-- Empty State -->
-    <div class="empty-state">
+    <div class="rp-empty">
         <i class="fas fa-door-open"></i>
-        <h4>No room listings found</h4>
-        <p style="color: #64748b; margin-top: 0.5rem;">Adjust your filters or be the first to list a room.</p>
+        <h4>No rooms found</h4>
+        <p>Be the first to list a room.</p>
         {% if current_user.is_authenticated %}
-        <a href="{{ url_for('rooms.create') }}" class="btn-list-room" style="margin-top: 1rem; display: inline-flex;">
-            <i class="fas fa-plus-circle"></i> List your room
-        </a>
+            <a href="{{ url_for('rooms.create') }}" class="rp-empty-btn">
+                <i class="fas fa-plus"></i> List your room
+            </a>
         {% else %}
-        <a href="{{ url_for('auth.login') }}" class="btn-list-room" style="margin-top: 1rem; display: inline-flex; background: #64748b;">
-            <i class="fas fa-sign-in-alt"></i> Login to list
-        </a>
+            <a href="{{ url_for('auth.login') }}" class="rp-empty-btn">
+                <i class="fas fa-sign-in-alt"></i> Login to list
+            </a>
         {% endif %}
     </div>
     {% endif %}
+
 </div>
 
+<style>
+/* ============================================
+   ROOMS INDEX — exact Figma match
+   ============================================ */
+
+.rooms-page {
+    background: #e8f5e9;
+    min-height: 100vh;
+    /* padding-right: 0 so cards bleed to edge;
+       the bubble overflows into that space */
+    padding: 1rem 0 5rem 0.75rem;
+    font-family: 'Inter', sans-serif;
+    /* clip nothing — allow bubble overflow */
+    overflow-x: clip;
+}
+
+/* ---- Header ---- */
+.rp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 0.75rem;
+    margin-bottom: 1.2rem;
+}
+
+.rp-header-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1b5e20;
+}
+
+/* Big dark-green + button */
+.rp-plus-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 44px;
+    background: #2e7d32;
+    border-radius: 20px;
+    color: white;
+    font-size: 1.4rem;
+    text-decoration: none;
+    transition: background 0.18s ease;
+    flex-shrink: 0;
+}
+
+.rp-plus-btn:hover {
+    background: #1b5e20;
+    color: white;
+}
+
+/* ---- Filter toggle ---- */
+.rp-filter-toggle-wrap {
+    padding-right: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.rp-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #c8e6c9;
+    border: 1.5px solid #a5d6a7;
+    border-radius: 25px;
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2e7d32;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ---- Filter panel ---- */
+.rp-filters {
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #c8e6c9;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    margin-right: 0.75rem;
+}
+
+.rp-filters.collapsed { display: none; }
+
+.rp-filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+}
+
+.rp-filter-group label:not(.rp-checkbox) {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #388e3c;
+    margin-bottom: 0.25rem;
+}
+
+.rp-input {
+    width: 100%;
+    background: #f1f8e9;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 10px;
+    padding: 0.45rem 0.7rem;
+    color: #1b5e20;
+    font-size: 0.82rem;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+}
+
+.rp-input:focus { border-color: #43a047; }
+
+.rp-range {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.rp-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    color: #2e7d32;
+    cursor: pointer;
+    margin-top: 0.3rem;
+}
+
+.rp-checkbox input { accent-color: #43a047; }
+
+.rp-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.rp-apply-btn {
+    flex: 1;
+    background: #43a047;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.5rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+.rp-clear-btn {
+    flex: 1;
+    text-align: center;
+    background: transparent;
+    color: #2e7d32;
+    border: 1.5px solid #a5d6a7;
+    border-radius: 20px;
+    padding: 0.5rem;
+    font-size: 0.83rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* ---- Listings list ---- */
+.rp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    /* no right padding — bubble overflows */
+}
+
+/* ---- Card wrapper ---- */
+/* This holds the card + the bubble side by side.
+   Card takes all space minus the bubble width.
+   Bubble is absolutely positioned to the right. */
+.rp-card-wrap {
+    position: relative;
+    /* right padding = bubble width (70px) + gap (8px) */
+    padding-right: 78px;
+}
+
+/* ---- Card ---- */
+.rp-card {
+    background: #ffffff;
+    border-radius: 18px 0 0 18px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.09);
+    border: 1px solid #c8e6c9;
+    /* no right border — bubble sits flush */
+    border-right: none;
+    width: 100%;
+}
+
+/* ---- Image ---- */
+.rp-img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #e8f5e9;
+    overflow: hidden;
+}
+
+.rp-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rp-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f8e9;
+    color: #a5d6a7;
+    font-size: 3rem;
+}
+
+/* Status badge */
+.rp-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+    z-index: 2;
+}
+
+.rp-status--available { background: #2e7d32; }
+.rp-status--pending   { background: #e65100; }
+.rp-status--booked    { background: #546e7a; }
+.rp-status--expired   { background: #b71c1c; }
+
+/* Price + name overlay */
+.rp-img-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.9rem 0.85rem 0.65rem;
+    background: linear-gradient(to top,
+        rgba(0,0,0,0.78),
+        rgba(0,0,0,0.35),
+        transparent);
+    pointer-events: none;
+}
+
+.rp-overlay-price {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.15rem;
+}
+
+.rp-overlay-name {
+    display: block;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+}
+
+/* ---- Info strip ---- */
+.rp-info-strip {
+    background: #c8e6c9;
+    padding: 0.6rem 0.85rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.rp-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rp-info-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    color: #1b5e20;
+    font-weight: 500;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rp-info-cell i {
+    color: #43a047;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+.rp-commission {
+    background: #ff8f00;
+    color: white;
+    border-radius: 8px;
+    padding: 0.08rem 0.4rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+}
+
+.rp-days {
+    background: #2e7d32;
+    color: white;
+    border-radius: 8px;
+    padding: 0.08rem 0.35rem;
+    font-size: 0.58rem;
+    font-weight: 700;
+}
+
+/* ---- View detail bubble ---- */
+/* Absolutely positioned to the right of the card,
+   vertically centered on the image area */
+.rp-detail-bubble {
+    position: absolute;
+    /* align to vertical center of image.
+       image is aspect-ratio 4/3 of (100% - 78px).
+       We use top + transform to center it. */
+    top: 20%;
+    right: 0;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #b2dfdb;
+    color: #1b5e20;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    line-height: 1.25;
+    padding: 0.3rem;
+    transition: background 0.18s ease, transform 0.18s ease;
+    z-index: 4;
+}
+
+.rp-detail-bubble:hover {
+    background: #80cbc4;
+    transform: scale(1.07);
+    color: #1b5e20;
+}
+
+/* ---- Empty state ---- */
+.rp-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #c8e6c9;
+    margin-right: 0.75rem;
+}
+
+.rp-empty i {
+    font-size: 3rem;
+    color: #a5d6a7;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.rp-empty h4 {
+    color: #1b5e20;
+    font-size: 1.05rem;
+    margin-bottom: 0.4rem;
+}
+
+.rp-empty p {
+    color: #4caf50;
+    font-size: 0.83rem;
+    margin-bottom: 1rem;
+}
+
+.rp-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #43a047;
+    color: white;
+    padding: 0.55rem 1.3rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.rp-empty-btn:hover {
+    background: #2e7d32;
+    color: white;
+}
+
+/* ---- Pagination ---- */
+.rp-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    padding-right: 0.75rem;
+}
+
+.rp-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.7rem;
+    background: #fff;
+    border: 1.5px solid #c8e6c9;
+    border-radius: 10px;
+    color: #2e7d32;
+    text-decoration: none;
+    font-size: 0.83rem;
+    font-weight: 600;
+    transition: all 0.18s ease;
+}
+
+.rp-page-btn:hover:not(.rp-page-btn--active) {
+    background: #e8f5e9;
+}
+
+.rp-page-btn--active {
+    background: #43a047;
+    border-color: #43a047;
+    color: white;
+}
+
+.rp-page-btn--dots {
+    border: none;
+    background: transparent;
+    color: #81c784;
+}
+
+/* ---- Desktop ---- */
+@media (min-width: 769px) {
+    .rooms-page {
+        padding: 1.5rem 0 4rem 1.5rem;
+        background: linear-gradient(135deg,
+            #43a047 0%, #81c784 40%,
+            #c8e6c9 75%, #f1f8e9 100%);
+        overflow-x: clip;
+    }
+
+    .rp-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        padding-right: 5rem;
+    }
+
+    .rp-card {
+        border-radius: 18px;
+        border-right: 1px solid #c8e6c9;
+    }
+
+    .rp-header { padding-right: 1.5rem; }
+    .rp-filter-toggle-wrap { padding-right: 1.5rem; }
+    .rp-filters { margin-right: 1.5rem; }
+    .rp-filter-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1200px) {
+    .rp-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ---- Tiny phone ---- */
+@media (max-width: 360px) {
+    .rp-header-title  { font-size: 1.15rem; }
+    .rp-overlay-price { font-size: 1rem; }
+    .rp-info-cell     { font-size: 0.7rem; }
+    .rp-detail-bubble { width: 60px; height: 60px; font-size: 0.62rem; }
+    .rp-card-wrap     { padding-right: 68px; }
+}
+</style>
+
 <script>
-    // Simple filter toggle for desktop
-    const desktopFilterToggle = document.getElementById('desktopFilterToggle');
-    const filtersSidebar = document.getElementById('filtersSidebar');
-    const mobileFilterToggle = document.getElementById('mobileFilterToggle');
-    
-    // Desktop filter toggle (hidden by default, show when clicked)
-    if (desktopFilterToggle) {
-        desktopFilterToggle.addEventListener('click', function() {
-            if (filtersSidebar.classList.contains('collapsed')) {
-                filtersSidebar.classList.remove('collapsed');
-                desktopFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Hide filters';
-            } else {
-                filtersSidebar.classList.add('collapsed');
-                desktopFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Show filters';
-            }
-        });
-    }
-    
-    // Mobile filter toggle
-    if (mobileFilterToggle) {
-        mobileFilterToggle.addEventListener('click', function() {
-            filtersSidebar.classList.toggle('show-mobile');
-            if (filtersSidebar.classList.contains('show-mobile')) {
-                mobileFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Hide filters <i class="fas fa-chevron-up"></i>';
-            } else {
-                mobileFilterToggle.innerHTML = '<i class="fas fa-sliders-h"></i> Filter listings <i class="fas fa-chevron-down"></i>';
-            }
-        });
-    }
-    
-    // Make entire card clickable for better UX
-    document.querySelectorAll('.room-card').forEach(card => {
-        const detailLink = card.querySelector('.btn-details');
-        if (detailLink) {
-            card.style.cursor = 'pointer';
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-details')) return;
-                window.location.href = detailLink.href;
-            });
-        }
+/* Filter toggle */
+const filterToggleBtn = document.getElementById('filterToggleBtn');
+const filtersSidebar  = document.getElementById('filtersSidebar');
+
+if (filterToggleBtn) {
+    filterToggleBtn.addEventListener('click', function () {
+        filtersSidebar.classList.toggle('collapsed');
+        this.querySelector('i:last-child') &&
+            (this.querySelector('i:last-child').style.transform =
+                filtersSidebar.classList.contains('collapsed') ? '' : 'rotate(180deg)');
     });
+}
+
+/* Whole card clickable */
+document.querySelectorAll('.rp-card-wrap').forEach(wrap => {
+    const bubble = wrap.querySelector('.rp-detail-bubble');
+    if (bubble) {
+        wrap.style.cursor = 'pointer';
+        wrap.addEventListener('click', e => {
+            if (e.target.closest('.rp-detail-bubble')) return;
+            window.location.href = bubble.href;
+        });
+    }
+});
 </script>
+
 {% endblock %}
