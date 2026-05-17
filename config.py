@@ -1,6 +1,8 @@
 # config.py (in project root)
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
 # Load .env file manually to ensure it's loaded
 env_path = Path(__file__).parent / '.env'
